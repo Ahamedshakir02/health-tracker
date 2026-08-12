@@ -90,11 +90,60 @@ before anything else.
 | Screen | Contents |
 |---|---|
 | **Today** | Headline tiles, 90-day weight trend, this week's calories, a 7-day table of everything |
+| **Trainer** | Readiness score, a generated week of sessions with per-block detail, deload logic |
 | **Body** | Weight, body fat %, waist / chest / hips, BMI, trend chart with a goal line |
 | **Food** | Meals by slot, calories and macros, daily targets, one-click re-log of recent foods |
 | **Move** | Workouts (type, minutes, intensity, distance, burn), daily steps, active-minute charts |
 | **Habits** | Sleep hours and quality, resting HR, water, mood, notes, habit chips with streaks |
-| **Settings** | Profile, metric/imperial, theme, all targets, habit management, data and sync |
+| **Settings** | Profile, units, theme, targets, habits, health-data import, data and account |
+
+## Trainer
+
+The Trainer screen builds a week from what you have actually logged rather than from a
+questionnaire. It is deterministic and runs entirely offline — deliberately, because this
+is a static site and any model API key would be inlined into the bundle for anyone to
+read.
+
+It reads four signals and normalises over whichever ones have data behind them, so not
+logging resting heart rate does not permanently cap your score:
+
+| Signal | Weight | What moves it |
+|---|---|---|
+| Sleep | 35 | 7-day mean against your sleep target |
+| Freshness | 25 | Hard sessions in the last 72 h, consecutive training days |
+| Resting heart rate | 20 | Last 3 days against your own 28-day baseline |
+| Consistency | 20 | Sessions per week over the last month against your target |
+
+The score picks a verdict — push, steady, hold, deload — which sets the number of
+sessions and caps intensity. Volume steps up by about 10% a week against your real
+4-week average, every fourth week is lighter, and the split leans toward conditioning
+or lifting depending on whether your goal weight is below or above where you are.
+
+It is general fitness guidance, not medical advice.
+
+## Importing from Google Fit, Apple Health and the rest
+
+There is no live link on offer, and the reason is worth stating plainly: Google retired
+the Fit REST API, and its replacement — Health Connect — is an on-device Android
+datastore with no web-facing API at all. Apple Health is the same. A page running in a
+browser has nothing to connect to. Every one of those apps does export a file, so
+Settings → **Connect health data** reads those:
+
+| App | File |
+|---|---|
+| Google Fit | [Takeout](https://takeout.google.com) → Fit → `Daily activity metrics.csv` |
+| Apple Health | Health → profile → Export All Health Data → `export.xml` |
+| Health Connect | Its own backup is an encrypted archive — export CSV from Fitbit / Garmin / Samsung Health instead |
+| Anything else | Any CSV with a date column; the importer reads the headers |
+
+Steps, weight, sleep, resting heart rate, water and workouts are picked up; the preview
+lists what was found and what was ignored before anything is written. Merging defaults
+to **fill gaps only**, which never overwrites something you typed by hand — devices
+disagree constantly, and silently replacing a corrected weight with a bad scale reading
+is how people stop trusting an app.
+
+Apple exports are scanned linearly rather than parsed into a DOM: a few years of history
+is routinely several hundred MB, which a DOM would not survive.
 
 ## Notes on the design
 
@@ -113,13 +162,22 @@ before anything else.
 
 ```
 src/
-  components/   charts.tsx (Recharts wrappers), ui.tsx (tiles, fields, pills)
-  lib/          calc.ts, dates.ts, units.ts, store.ts, firestoreStore.ts, firebase.ts, sample.ts
-  pages/        Dashboard, Body, Food, Movement, Daily, Settings
+  components/   charts.tsx (Recharts wrappers), ui.tsx (tiles, fields, pills),
+                ErrorBoundary.tsx, HealthLink.tsx (export import UI)
+  lib/          calc.ts, dates.ts, units.ts, validate.ts, store.ts,
+                firestoreStore.ts, firebase.ts, trainer.ts, healthImport.ts, sample.ts
+                *.test.ts alongside each
+  pages/        Dashboard, Trainer, Body, Food, Movement, Daily, Settings, Login
   state/        HealthProvider.tsx — active store, auth, all mutations
   types.ts      the data model and defaults
-firestore.rules per-user access rules
+firestore.rules the enforced access rules
 ```
+
+Every path that takes data the app did not create — imported JSON, a health export,
+whatever is already in localStorage or Firestore — goes through `lib/validate.ts`, which
+rebuilds each record field by field and drops anything that fails. Non-finite numbers are
+rejected outright: `Number('1e999')` is `Infinity`, and `JSON.stringify` writes that back
+as `null`.
 
 This is a personal-tracking tool, not a medical device. BMI bands are the standard
 adult ranges and are a rough population signal, not a diagnosis.

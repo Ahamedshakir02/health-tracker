@@ -7,10 +7,12 @@ import Food from './pages/Food';
 import Movement from './pages/Movement';
 import Daily from './pages/Daily';
 import SettingsPage from './pages/Settings';
+import Trainer from './pages/Trainer';
 import Login from './pages/Login';
 
 const TABS = [
   { id: 'dashboard', label: 'Today', icon: '◎' },
+  { id: 'trainer', label: 'Trainer', icon: '🏋' },
   { id: 'body', label: 'Body', icon: '⚖' },
   { id: 'food', label: 'Food', icon: '🍽' },
   { id: 'movement', label: 'Move', icon: '🏃' },
@@ -123,6 +125,8 @@ export default function App() {
             <p className="empty">Loading your data…</p>
           ) : tab === 'dashboard' ? (
             <Dashboard onNavigate={go} />
+          ) : tab === 'trainer' ? (
+            <Trainer />
           ) : tab === 'body' ? (
             <Body />
           ) : tab === 'food' ? (

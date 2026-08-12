@@ -910,6 +910,73 @@ tbody tr:hover {
   color: var(--accent-hover);
 }
 
+/* --- trainer -------------------------------------------------------------- */
+
+.trainer-headline {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  max-width: 68ch;
+}
+
+.signals {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.signal {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+}
+
+/* Numbered session blocks: warm-up, main work, cool-down. */
+.blocks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  counter-reset: block;
+}
+
+.blocks li {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-inset);
+  border: 1px solid var(--border);
+}
+
+.block-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.block-detail {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text-primary);
+}
+
+.import-preview {
+  padding: 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-strong);
+  background: var(--surface-inset);
+}
+
 /* --- crash screen --------------------------------------------------------- */
 
 .crash {

@@ -1,6 +1,7 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { useHealth } from '../state/HealthProvider';
 import { Card, Field, Pill, Segmented } from '../components/ui';
+import HealthLink from '../components/HealthLink';
 import { sampleData } from '../lib/sample';
 import { labels, round, toCanonical, toDisplay } from '../lib/units';
 import { uid } from '../lib/calc';
@@ -354,6 +355,8 @@ export default function SettingsPage() {
             <p className="hint">Not signed in — this session is local to the browser.</p>
           )}
         </Card>
+
+        <HealthLink />
 
         <Card
           title="Your data"
