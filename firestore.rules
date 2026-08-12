@@ -3,13 +3,75 @@ rules_version = '2';
 // Paste these into Firebase console -> Firestore Database -> Rules, or deploy
 // with `firebase deploy --only firestore:rules`.
 //
-// Every document lives under users/{uid}, and a signed-in account can only ever
-// touch its own subtree. Without this, Firestore's default test rules expire
-// after 30 days and leave the database open until then.
+// This file is the actual security boundary. The matching check in the app
+// (src/lib/firebase.ts) only exists to produce a friendly error message —
+// anything shipped to the browser can be edited by whoever is holding it, so
+// nothing may depend on the client behaving.
+//
+// Without these rules, Firestore's default test rules expire after 30 days and
+// leave the database open to the entire internet until they do.
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+    // The only address allowed to touch this database. To change owner, edit
+    // this list AND VITE_ALLOWED_EMAIL in .env, then redeploy the rules.
+    function owners() {
+      return ['ahamedshakir02@gmail.com'];
+    }
+
+    // Anonymous accounts have no email, so `null is string` fails here and they
+    // are refused — which is the point: an unauthenticated visitor must not be
+    // able to mint an identity and start writing.
+    function isOwner() {
+      return request.auth != null
+        && request.auth.token.email is string
+        && request.auth.token.email.lower() in owners();
+    }
+
+    // Tighten to this if you only ever sign in with Google, which always
+    // reports a verified address. Email/password accounts stay unverified until
+    // the user clicks the confirmation link, so switching this on without
+    // verifying first will lock you out of your own data:
+    //   && request.auth.token.email_verified == true
+
+    function ownsAccount(userId) {
+      return isOwner() && request.auth.uid == userId;
+    }
+
+    // The five documents the app actually writes. Anything else is refused, so
+    // a tampered client cannot repurpose the database as free general-purpose
+    // storage under its own uid.
+    function isKnownSlice(sliceId) {
+      return sliceId in ['settings', 'weights', 'meals', 'workouts', 'days'];
+    }
+
+    // Every slice document is exactly `{ value: <list|map> }`. Rejecting extra
+    // top-level keys keeps a stray write from smuggling in fields the app will
+    // later read back and trust.
+    function wellFormed() {
+      return request.resource.data.keys().hasOnly(['value'])
+        && (request.resource.data.value is list || request.resource.data.value is map);
+    }
+
+    match /users/{userId}/slices/{sliceId} {
+      // Read is deliberately NOT narrowed by sliceId. Firestore evaluates a
+      // collection query against the rule rather than against the documents it
+      // returns, so requiring a known id here would reject the app's own
+      // `getDocs(slices)` listing outright. Nothing unknown can exist to be
+      // read anyway, because create/update below refuse to make it.
+      allow read: if ownsAccount(userId);
+
+      allow create, update: if ownsAccount(userId)
+        && isKnownSlice(sliceId)
+        && wellFormed();
+
+      allow delete: if ownsAccount(userId);
+    }
+
+    // Everything else. Firestore already denies by default; stating it means a
+    // future `match` added above this one has to be a deliberate act.
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

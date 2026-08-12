@@ -12,11 +12,14 @@ npm run dev      # http://localhost:5173
 ```
 
 ```bash
-npm run build    # typecheck + production bundle into dist/
-npm run preview  # serve the built bundle
+npm run build      # typecheck + production bundle into dist/
+npm run preview    # serve the built bundle
+npm test           # unit tests (vitest)
+npm run typecheck  # types only
+npm run audit      # fail on any high-severity dependency advisory
 ```
 
-Node 18+ required.
+Node 20.19+ required (Vite 8).
 
 ## Try it with data
 
@@ -33,19 +36,39 @@ and round-trips through a real `.json` file:
 - **Import JSON** reads one back. Import *replaces* what's currently stored rather
   than merging, so export first if you're unsure.
 
-**Firebase (optional sync).** Fill in `.env` and the app switches to Firestore once
-you sign in, syncing live across every device on the same account:
+**Firebase (sync + sign-in).** Fill in `.env` and the app gates itself behind a login
+screen and syncs live across every device on the account:
 
 1. Create a project at <https://console.firebase.google.com>.
 2. Project settings → Your apps → Web app → copy the config values.
 3. Build → Firestore Database → Create database.
-4. Build → Authentication → Sign-in method → enable **Email/Password** and **Anonymous**.
-5. `cp .env.example .env`, paste the values in, restart the dev server.
-6. Paste `firestore.rules` into Firestore → Rules so each account can only read and
-   write its own data.
+4. Build → Authentication → Sign-in method → enable **Google** and **Email/Password**.
+   Leave **Anonymous** off — this app refuses accounts with no email address.
+5. `cp .env.example .env`, paste the values in, set `VITE_ALLOWED_EMAIL`, restart the
+   dev server.
+6. Paste `firestore.rules` into Firestore → Rules and Publish.
 
-Then Settings → Cloud sync → sign in. To carry local history over, Export JSON while
-signed out, sign in, and Import it.
+The first time you sign in on a device that already has local history, that history is
+pushed up to the empty account rather than being replaced by a blank one.
+
+## Access control
+
+The app is private to a single address. That is enforced in two places, and only the
+second one counts:
+
+| Where | What it does |
+|---|---|
+| `VITE_ALLOWED_EMAIL` (`src/lib/firebase.ts`) | Produces a readable error and signs the wrong account straight back out. Cosmetic — it ships in the bundle and can be edited by anyone holding the browser. |
+| `owners()` in `firestore.rules` | The real boundary. Firebase checks it server-side on every read and write, so a tampered client gets `permission-denied` and nothing else. |
+
+**Both must be changed together** when the owner address changes, then
+`firebase deploy --only firestore:rules`.
+
+The rules also restrict writes to the five known slice documents and require each to be
+exactly `{ value: … }`, so an account cannot repurpose the database as general storage.
+If you only ever sign in with Google, uncomment the `email_verified` line in
+`firestore.rules` to tighten it further — do not do that while using an unverified
+email/password account, or you will lock yourself out of your own data.
 
 Firestore layout — one document per slice, so logging a meal rewrites only the meals
 document:

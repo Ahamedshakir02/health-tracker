@@ -9,6 +9,7 @@ import type { Habit, UnitSystem } from '../types';
 export default function SettingsPage() {
   const {
     data,
+    update,
     updateSettings,
     exportData,
     importData,
@@ -17,9 +18,6 @@ export default function SettingsPage() {
     storeKind,
     firebaseAvailable,
     user,
-    signInAnon,
-    signInEmail,
-    signUpEmail,
     signOut,
   } = useHealth();
 
@@ -30,9 +28,8 @@ export default function SettingsPage() {
   const fileInput = useRef<HTMLInputElement>(null);
 
   const [newHabit, setNewHabit] = useState({ name: '', emoji: '⭐' });
-  const [auth, setAuth] = useState({ email: '', password: '', mode: 'signin' as 'signin' | 'signup' });
-  const [authError, setAuthError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [dataError, setDataError] = useState<string | null>(null);
+  const [dataNotice, setDataNotice] = useState<string | null>(null);
 
   const setGoal = (patch: Partial<typeof goals>) =>
     updateSettings({ goals: { ...goals, ...patch } });
@@ -49,30 +46,31 @@ export default function SettingsPage() {
     setNewHabit({ name: '', emoji: '⭐' });
   }
 
-  async function runAuth(event: FormEvent) {
-    event.preventDefault();
-    setAuthError(null);
-    setBusy(true);
-    try {
-      if (auth.mode === 'signup') await signUpEmail(auth.email, auth.password);
-      else await signInEmail(auth.email, auth.password);
-      setAuth({ ...auth, password: '' });
-    } catch (e) {
-      setAuthError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setBusy(false);
-    }
+  /**
+   * Removing a habit also strips its ticks from every day log. Leaving them
+   * behind used to quietly grow the days slice forever and resurrect the old
+   * ticks if a habit was later re-added with the same id.
+   */
+  function deleteHabit(habit: Habit) {
+    if (!confirm(`Delete "${habit.name}" and its check-in history?`)) return;
+    updateSettings({ habits: settings.habits.filter((h) => h.id !== habit.id) });
+    update('days', (days) =>
+      days.map((day) => {
+        if (!(habit.id in day.habits)) return day;
+        const { [habit.id]: _removed, ...rest } = day.habits;
+        return { ...day, habits: rest };
+      }),
+    );
   }
 
-  async function guestSignIn() {
-    setAuthError(null);
-    setBusy(true);
+  async function runImport(file: File) {
+    setDataError(null);
+    setDataNotice(null);
     try {
-      await signInAnon();
+      await importData(file);
+      setDataNotice('Import complete — everything on this screen now reflects that file.');
     } catch (e) {
-      setAuthError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setBusy(false);
+      setDataError(e instanceof Error ? e.message : String(e));
     }
   }
 
@@ -285,11 +283,7 @@ export default function SettingsPage() {
                           type="button"
                           className="btn btn-icon"
                           aria-label={`Delete habit ${habit.name}`}
-                          onClick={() =>
-                            updateSettings({
-                              habits: settings.habits.filter((h) => h.id !== habit.id),
-                            })
-                          }
+                          onClick={() => deleteHabit(habit)}
                         >
                           ✕
                         </button>
@@ -325,33 +319,30 @@ export default function SettingsPage() {
         </Card>
 
         <Card
-          title="Cloud sync"
+          title="Account"
           note={
             firebaseAvailable
-              ? 'Firebase is configured for this build.'
+              ? 'Access is restricted to the owner address in firestore.rules.'
               : 'Firebase keys are not set — the app is running on local JSON only.'
           }
         >
           {!firebaseAvailable ? (
-            <div className="stack">
-              <p className="hint">
-                To turn on sync: copy <code>.env.example</code> to <code>.env</code>, paste your
-                Firebase web config, enable Firestore and the Email/Password + Anonymous sign-in
-                providers, then restart the dev server. Everything you log locally can be carried
-                over with Export → Import.
-              </p>
-            </div>
+            <p className="hint">
+              To turn on sync and sign-in: copy <code>.env.example</code> to <code>.env</code>, paste
+              your Firebase web config, enable the Google and Email/Password providers, publish{' '}
+              <code>firestore.rules</code>, then restart the dev server. Everything logged locally
+              carries over the first time you sign in.
+            </p>
           ) : user ? (
             <div className="stack">
               <div className="row">
                 <Pill status="good">Signed in</Pill>
-                <span className="hint">
-                  {user.isAnonymous ? 'Guest account (this device only until you link an email)' : user.email}
-                </span>
+                <span className="hint">{user.email}</span>
               </div>
               <p className="hint">
                 Your data lives in Firestore under <code>users/{user.uid}</code> and syncs live to
-                any other device signed into the same account.
+                any other device signed into this account. No other account can read or write it —
+                the rules check the address on every request, not just at sign-in.
               </p>
               <div className="row">
                 <button type="button" className="btn" onClick={() => void signOut()}>
@@ -360,56 +351,7 @@ export default function SettingsPage() {
               </div>
             </div>
           ) : (
-            <div className="stack">
-              <p className="hint">
-                Sign in to sync across devices. Without signing in, everything stays in local JSON on
-                this device.
-              </p>
-              <form onSubmit={runAuth} className="form-grid">
-                <Field label="Email">
-                  <input
-                    type="email"
-                    autoComplete="email"
-                    value={auth.email}
-                    onChange={(e) => setAuth({ ...auth, email: e.target.value })}
-                    required
-                  />
-                </Field>
-                <Field label="Password">
-                  <input
-                    type="password"
-                    autoComplete={auth.mode === 'signup' ? 'new-password' : 'current-password'}
-                    minLength={6}
-                    value={auth.password}
-                    onChange={(e) => setAuth({ ...auth, password: e.target.value })}
-                    required
-                  />
-                </Field>
-                <button className="btn btn-primary" type="submit" disabled={busy}>
-                  {auth.mode === 'signup' ? 'Create account' : 'Sign in'}
-                </button>
-              </form>
-              <div className="row">
-                <button
-                  type="button"
-                  className="btn btn-sm"
-                  onClick={() =>
-                    setAuth({ ...auth, mode: auth.mode === 'signup' ? 'signin' : 'signup' })
-                  }
-                >
-                  {auth.mode === 'signup' ? 'I already have an account' : 'Create an account instead'}
-                </button>
-                <button type="button" className="btn btn-sm" onClick={() => void guestSignIn()} disabled={busy}>
-                  Continue as guest
-                </button>
-              </div>
-              {authError && (
-                <div className="banner error" role="alert">
-                  <span aria-hidden="true">⚠</span>
-                  <span>{authError}</span>
-                </div>
-              )}
-            </div>
+            <p className="hint">Not signed in — this session is local to the browser.</p>
           )}
         </Card>
 
@@ -430,10 +372,12 @@ export default function SettingsPage() {
                 type="file"
                 accept="application/json,.json"
                 className="sr-only"
-                onChange={async (e) => {
+                onChange={(e) => {
                   const file = e.target.files?.[0];
-                  if (file) await importData(file);
+                  // Reset the input first so re-picking the same file fires
+                  // change again, and so a failed import can be retried.
                   e.target.value = '';
+                  if (file) void runImport(file);
                 }}
               />
               <button
@@ -441,7 +385,7 @@ export default function SettingsPage() {
                 className="btn"
                 onClick={() => {
                   if (confirm('Replace everything currently logged with 90 days of demo data?')) {
-                    void replaceAll(sampleData());
+                    void replaceAll(sampleData()).catch(() => undefined);
                   }
                 }}
               >
@@ -452,17 +396,32 @@ export default function SettingsPage() {
                 className="btn btn-danger"
                 onClick={() => {
                   if (confirm('Delete everything? Export first if you want a backup.')) {
-                    void resetData();
+                    void resetData().catch(() => undefined);
                   }
                 }}
               >
                 Delete all data
               </button>
             </div>
+
+            {dataError && (
+              <div className="banner error" role="alert">
+                <span aria-hidden="true">⚠</span>
+                <span>{dataError}</span>
+              </div>
+            )}
+            {dataNotice && (
+              <div className="banner" role="status">
+                <span aria-hidden="true">✓</span>
+                <span>{dataNotice}</span>
+              </div>
+            )}
+
             <p className="hint">
               Export writes a single <code>.json</code> file containing every entry — that file is
               the backup, and importing it anywhere restores the full history. Import replaces the
-              current contents rather than merging.
+              current contents rather than merging, and any entry that fails validation is dropped
+              rather than stored.
             </p>
           </div>
         </Card>

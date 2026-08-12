@@ -1,6 +1,17 @@
 node_modules
 dist
+
+# Local environment — real Firebase config and the owner allowlist.
+# Only .env.example belongs in the repo.
 .env
-.env.local
+.env.*
+!.env.example
+
+# Build caches
+*.tsbuildinfo
+.vite
+coverage
+
 .DS_Store
+Thumbs.db
 *.log

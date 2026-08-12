@@ -33,6 +33,15 @@ export function formatShort(date: ISODate): string {
   return parseISO(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
+/** "Tue 12 Aug" — the row label in the day-by-day tables. */
+export function formatWeekday(date: ISODate): string {
+  return parseISO(date).toLocaleDateString(undefined, {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  });
+}
+
 export function formatLong(date: ISODate): string {
   return parseISO(date).toLocaleDateString(undefined, {
     weekday: 'long',

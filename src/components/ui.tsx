@@ -1,5 +1,16 @@
 import type { ReactNode } from 'react';
 
+/**
+ * A 0–1 fraction as a whole percentage clamped to 0–100, or null when there is
+ * nothing meaningful to draw. Guards the case where a goal has been set to zero:
+ * `logged / 0` is Infinity (or NaN at 0/0), which renders as `width: NaN%` and
+ * an `aria-valuenow="Infinity"` that screen readers announce as gibberish.
+ */
+export function meterPercent(progress: number | null | undefined): number | null {
+  if (progress == null || !Number.isFinite(progress)) return null;
+  return Math.round(Math.min(100, Math.max(0, progress * 100)));
+}
+
 export function Card({
   title,
   note,
@@ -45,6 +56,7 @@ export function StatTile({
   /** 0–1; renders a meter under the value when present. */
   progress?: number | null;
 }) {
+  const percent = meterPercent(progress);
   return (
     <div className="stat">
       <div className="stat-label">
@@ -55,11 +67,11 @@ export function StatTile({
         {value}
         {unit && <span className="stat-unit">{unit}</span>}
       </div>
-      {progress != null && (
+      {percent != null && (
         <div
           className="meter"
           role="progressbar"
-          aria-valuenow={Math.round(progress * 100)}
+          aria-valuenow={percent}
           aria-valuemin={0}
           aria-valuemax={100}
           aria-label={`${label} progress`}
@@ -67,7 +79,7 @@ export function StatTile({
           <div
             className="meter-fill"
             style={{
-              width: `${Math.min(100, Math.max(0, progress * 100))}%`,
+              width: `${percent}%`,
               background: color ?? 'var(--accent)',
             }}
           />

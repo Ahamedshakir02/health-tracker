@@ -1,5 +1,5 @@
 import { DEFAULT_DATA, type DayLog, type HealthData, type MealEntry, type WorkoutEntry } from '../types';
-import { lastNDays } from './dates';
+import { lastNDays, parseISO } from './dates';
 
 /** Deterministic pseudo-random so the demo looks the same every time it loads. */
 function rng(seed: number) {
@@ -60,7 +60,9 @@ export function sampleData(): HealthData {
   const dayLogs: DayLog[] = [];
 
   days.forEach((date, dayIndex) => {
-    const weekday = new Date(date).getDay();
+    // parseISO, not `new Date(date)` — the latter reads 'YYYY-MM-DD' as UTC and
+    // lands on the wrong weekday for anyone west of Greenwich.
+    const weekday = parseISO(date).getDay();
 
     // Three meals plus a snack most days.
     const picks = [

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useHealth } from '../state/HealthProvider';
-import { Card, Empty, Field, Rating, StatTile } from '../components/ui';
+import { Card, Empty, Field, Rating, StatTile, meterPercent } from '../components/ui';
 import { DailyBars, SERIES, SleepArea } from '../components/charts';
 import { dailySeries, dayLog, habitStreak, meanOf } from '../lib/calc';
 import { formatShort, lastNDays, relativeLabel, todayISO } from '../lib/dates';
@@ -42,6 +42,8 @@ export default function Daily() {
   const showVolume = (ml: number) => round(toDisplay('volume', ml, units), 0);
   const avgSleep = meanOf(series, (d) => d.sleepHours);
   const avgWater = meanOf(series, (d) => d.waterMl);
+  // Guarded rather than inlined: a water goal of 0 makes this Infinity.
+  const waterPercent = meterPercent(goals.waterMl ? (log.waterMl ?? 0) / goals.waterMl : null);
 
   return (
     <>
@@ -187,7 +189,7 @@ export default function Daily() {
                 <div
                   className="meter"
                   role="progressbar"
-                  aria-valuenow={Math.round(((log.waterMl ?? 0) / goals.waterMl) * 100)}
+                  aria-valuenow={waterPercent ?? 0}
                   aria-valuemin={0}
                   aria-valuemax={100}
                   aria-label="Water progress"
@@ -195,7 +197,7 @@ export default function Daily() {
                   <div
                     className="meter-fill"
                     style={{
-                      width: `${Math.min(100, ((log.waterMl ?? 0) / goals.waterMl) * 100)}%`,
+                      width: `${waterPercent ?? 0}%`,
                       background: SERIES.weight,
                     }}
                   />

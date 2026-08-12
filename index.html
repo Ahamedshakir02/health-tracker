@@ -3,11 +3,55 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="description" content="Vitals — a private health tracker for weight, food, workouts, sleep and habits." />
+
+    <!--
+      Content Security Policy. Defence in depth: this app never builds HTML from
+      user input, but a health log is worth an extra wall between it and any
+      injected script.
+
+      'unsafe-inline' in style-src is unavoidable — React style props and the
+      chart library both emit inline styles. Note it is NOT granted to scripts,
+      which is where it would actually matter.
+
+      The googleapis / gstatic / accounts.google.com origins are what Firebase
+      Auth and Firestore talk to. Trim them if you turn a provider off. Deploying
+      behind a real server? Also send frame-ancestors 'none' as an HTTP header —
+      that directive is ignored in a meta tag.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
+        default-src 'self';
+        base-uri 'self';
+        object-src 'none';
+        form-action 'self';
+        img-src 'self' data: blob: https://*.googleusercontent.com;
+        style-src 'self' 'unsafe-inline';
+        font-src 'self' data:;
+        script-src 'self' https://apis.google.com https://*.gstatic.com;
+        connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://*.web.app https://accounts.google.com;
+        frame-src 'self' https://*.firebaseapp.com https://*.web.app https://accounts.google.com;
+      "
+    />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <!-- A private log has no business in a search index. -->
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f4f3f0" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#101010" media="(prefers-color-scheme: dark)" />
+    <meta
+      name="description"
+      content="Vitals — a private health tracker for weight, food, workouts, sleep and habits."
+    />
     <title>Vitals · Health Tracker</title>
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <p style="padding: 24px; font: 15px/1.5 system-ui, sans-serif">
+        Vitals needs JavaScript to render your charts and log entries. Please enable it and reload.
+      </p>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

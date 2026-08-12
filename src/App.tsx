@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useHealth } from './state/HealthProvider';
+import ErrorBoundary from './components/ErrorBoundary';
 import Dashboard from './pages/Dashboard';
 import Body from './pages/Body';
 import Food from './pages/Food';
 import Movement from './pages/Movement';
 import Daily from './pages/Daily';
 import SettingsPage from './pages/Settings';
+import Login from './pages/Login';
 
 const TABS = [
   { id: 'dashboard', label: 'Today', icon: '◎' },
@@ -24,7 +26,8 @@ function currentTab(): TabId {
 }
 
 export default function App() {
-  const { data, sync, error, storeLabel } = useHealth();
+  const { data, sync, error, storeLabel, authReady, user, firebaseAvailable, offlineMode } =
+    useHealth();
   const [tab, setTab] = useState<TabId>(currentTab);
 
   useEffect(() => {
@@ -33,12 +36,28 @@ export default function App() {
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
 
-  // Theme preference is applied to <html> so CSS tokens swap in one place.
+  // Theme preference is applied to <html> so CSS tokens swap in one place. This
+  // runs before any early return so the login screen is themed too.
   useEffect(() => {
     const root = document.documentElement;
     if (data.settings.theme === 'system') root.removeAttribute('data-theme');
     else root.setAttribute('data-theme', data.settings.theme);
   }, [data.settings.theme]);
+
+  // Waiting on Firebase to report whether a session already exists. Rendering
+  // the login screen first would flash it at an already-signed-in user.
+  if (!authReady) {
+    return (
+      <div className="auth">
+        <p className="empty">Checking your session…</p>
+      </div>
+    );
+  }
+
+  // The app is gated: signed in when Firebase is configured, or explicitly
+  // running local-only when it is not.
+  const unlocked = firebaseAvailable ? Boolean(user) : offlineMode;
+  if (!unlocked) return <Login />;
 
   const go = (id: TabId) => {
     window.location.hash = `#/${id}`;
@@ -99,21 +118,23 @@ export default function App() {
             <span>{error}</span>
           </div>
         )}
-        {sync === 'loading' ? (
-          <p className="empty">Loading your data…</p>
-        ) : tab === 'dashboard' ? (
-          <Dashboard onNavigate={go} />
-        ) : tab === 'body' ? (
-          <Body />
-        ) : tab === 'food' ? (
-          <Food />
-        ) : tab === 'movement' ? (
-          <Movement />
-        ) : tab === 'daily' ? (
-          <Daily />
-        ) : (
-          <SettingsPage />
-        )}
+        <ErrorBoundary resetKey={tab}>
+          {sync === 'loading' ? (
+            <p className="empty">Loading your data…</p>
+          ) : tab === 'dashboard' ? (
+            <Dashboard onNavigate={go} />
+          ) : tab === 'body' ? (
+            <Body />
+          ) : tab === 'food' ? (
+            <Food />
+          ) : tab === 'movement' ? (
+            <Movement />
+          ) : tab === 'daily' ? (
+            <Daily />
+          ) : (
+            <SettingsPage />
+          )}
+        </ErrorBoundary>
       </main>
     </div>
   );

@@ -13,7 +13,7 @@ import {
   weightChange,
   workoutsInLastDays,
 } from '../lib/calc';
-import { addDays, formatLong, todayISO } from '../lib/dates';
+import { addDays, formatLong, formatWeekday, todayISO } from '../lib/dates';
 import { labels, round, toDisplay } from '../lib/units';
 
 export default function Dashboard({ onNavigate }: { onNavigate: (id: 'body' | 'food' | 'movement' | 'daily') => void }) {
@@ -120,7 +120,7 @@ export default function Dashboard({ onNavigate }: { onNavigate: (id: 'body' | 'f
             value={String(weekWorkouts.length)}
             unit={`/ ${goals.workoutsPerWeek}`}
             progress={goals.workoutsPerWeek ? weekWorkouts.length / goals.workoutsPerWeek : null}
-            foot={`${weekWorkouts.reduce((s, w) => s + w.minutes, 0)} active minutes`}
+            foot={`${weekWorkouts.reduce((s, w) => s + (w.minutes || 0), 0)} active minutes`}
           />
           <StatTile
             label="Sleep last night"
@@ -194,13 +194,7 @@ export default function Dashboard({ onNavigate }: { onNavigate: (id: 'body' | 'f
               <tbody>
                 {[...last7].reverse().map((d) => (
                   <tr key={d.date}>
-                    <td className="cell-main nowrap">
-                      {new Date(d.date).toLocaleDateString(undefined, {
-                        weekday: 'short',
-                        day: 'numeric',
-                        month: 'short',
-                      })}
-                    </td>
+                    <td className="cell-main nowrap">{formatWeekday(d.date)}</td>
                     <td className="num">{d.weightKg != null ? showWeight(d.weightKg) : '—'}</td>
                     <td className="num">{d.calories ? Math.round(d.calories) : '—'}</td>
                     <td className="num">{d.proteinG ? Math.round(d.proteinG) : '—'}</td>
