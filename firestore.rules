@@ -1,0 +1,15 @@
+rules_version = '2';
+
+// Paste these into Firebase console -> Firestore Database -> Rules, or deploy
+// with `firebase deploy --only firestore:rules`.
+//
+// Every document lives under users/{uid}, and a signed-in account can only ever
+// touch its own subtree. Without this, Firestore's default test rules expire
+// after 30 days and leave the database open until then.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
