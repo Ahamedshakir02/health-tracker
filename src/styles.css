@@ -581,6 +581,23 @@ a {
   gap: 5px;
 }
 
+/* Placeholder copy standing in for a measurement — sized as prose, not as a
+   numeral, so it wraps to one or two calm lines inside the tile. */
+.stat-value-text {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0;
+  color: var(--ink-2);
+  display: block;
+}
+
+/* "No data yet" em dash: keep the numeral size but drop it back in the hierarchy
+   so it does not read as a drawn rule. */
+.stat-value-empty {
+  color: var(--ink-3);
+}
+
 .stat-unit {
   font-size: 16px;
   font-weight: 600;
@@ -906,13 +923,19 @@ input[type='radio'] {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 14px;
-  align-items: end;
+  /* Top-aligned so every label sits on the same line and every input starts at
+     the same height. Aligning to the end instead would let a field carrying a
+     hint drag its own input up out of line with its neighbours. */
+  align-items: start;
 }
 
-/* Buttons sitting in the field grid line up with the inputs rather than
-   stretching to the full height of their cell. */
+/* A button dropped straight into the field grid has no label above it, so it
+   gets pushed down by one label row to land on the input line rather than
+   floating level with the labels or stretching the full cell height. */
 .form-grid > .btn {
-  align-self: end;
+  align-self: start;
+  /* One .label line (12.5px at 1.5) plus the .field gap. */
+  margin-top: 26px;
 }
 
 /* segmented control */
@@ -1652,6 +1675,20 @@ tbody tr:hover {
 
   .mobile-only {
     display: flex;
+  }
+}
+
+/* Seven tab slots on a narrow phone: shave the label so "Settings" still fits
+   on one line at 322px rather than wrapping and shunting the bar taller. */
+@media (max-width: 380px) {
+  .tabitem {
+    font-size: 9px;
+    letter-spacing: 0;
+  }
+
+  .tabitem .ic {
+    width: 20px;
+    height: 20px;
   }
 }
 

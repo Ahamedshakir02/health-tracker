@@ -88,6 +88,13 @@ export function StatTile({
   const raw = progress != null && Number.isFinite(progress) ? progress * 100 : null;
   const state = raw != null ? goalState(raw, overIsBad) : null;
 
+  // Not every tile has a measurement to show. A sentence ("Not enough readings")
+  // set at the 44px numeral size wraps to three lines and wrecks the tile, and a
+  // bare em dash at that size reads as a drawn rule rather than as "no data".
+  const isEmpty = value.trim() === '—';
+  const isText = !isEmpty && !/\d/.test(value);
+  const valueClass = `stat-value${isEmpty ? ' stat-value-empty' : isText ? ' stat-value-text' : ''}`;
+
   return (
     <div className="stat">
       {color && <span className="stat-accent" style={{ background: color }} aria-hidden="true" />}
@@ -95,7 +102,7 @@ export function StatTile({
         <span className="stat-label">{label}</span>
         {icon}
       </div>
-      <div className="stat-value">
+      <div className={valueClass}>
         {value}
         {unit && <span className="stat-unit">{unit}</span>}
       </div>
