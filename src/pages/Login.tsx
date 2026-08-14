@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useHealth } from '../state/HealthProvider';
 import { Field } from '../components/ui';
+import { IconHeart } from '../components/icons';
 import { missingFirebaseKeys } from '../lib/firebase';
 
 type Mode = 'signin' | 'signup' | 'reset';
@@ -94,11 +95,11 @@ export default function Login() {
       <main className="auth-card">
         <div className="auth-brand">
           <span className="brand-mark" aria-hidden="true">
-            ♥
+            <IconHeart />
           </span>
-          <div>
-            <div className="brand-name">Vitals</div>
-            <div className="brand-sub">HEALTH TRACKER</div>
+          <div className="brand-text">
+            <span className="brand-name">Vitals</span>
+            <span className="brand-sub">Health Tracker</span>
           </div>
         </div>
 

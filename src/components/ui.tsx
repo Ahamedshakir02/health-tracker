@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { IconAlert, IconCheck, IconMinus } from './icons';
 
 /**
  * A 0–1 fraction as a whole percentage clamped to 0–100, or null when there is
@@ -15,19 +16,21 @@ export function Card({
   title,
   note,
   action,
+  footer,
   children,
   className = '',
 }: {
   title?: string;
   note?: string;
   action?: ReactNode;
+  footer?: ReactNode;
   children: ReactNode;
   className?: string;
 }) {
   return (
     <section className={`card ${className}`}>
       {(title || action) && (
-        <header className="card-head">
+        <header className="card-hd">
           <div>
             {title && <h2 className="card-title">{title}</h2>}
             {note && <p className="card-note">{note}</p>}
@@ -35,9 +38,27 @@ export function Card({
           {action}
         </header>
       )}
-      {children}
+      <div className="card-bd">{children}</div>
+      {footer && <div className="card-ft">{footer}</div>}
     </section>
   );
+}
+
+/**
+ * Goal states for a stat tile's meter. The design requires the state to be
+ * legible without colour, so each one carries a word and (where it matters) an
+ * icon rather than relying on the fill colour alone.
+ */
+type GoalState = { key: string; label: string; icon: ReactNode | null };
+
+function goalState(percentRaw: number, overIsBad: boolean): GoalState {
+  if (percentRaw > 105) {
+    return overIsBad
+      ? { key: 'st-over', label: 'Over', icon: <IconAlert /> }
+      : { key: 'st-good', label: 'Done', icon: <IconCheck /> };
+  }
+  if (percentRaw >= 90) return { key: 'st-at', label: 'On track', icon: <IconCheck /> };
+  return { key: 'st-under', label: 'Under', icon: <IconMinus /> };
 }
 
 export function StatTile({
@@ -47,6 +68,8 @@ export function StatTile({
   foot,
   color,
   progress,
+  icon,
+  overIsBad = false,
 }: {
   label: string;
   value: string;
@@ -55,37 +78,59 @@ export function StatTile({
   color?: string;
   /** 0–1; renders a meter under the value when present. */
   progress?: number | null;
+  icon?: ReactNode;
+  /** True where exceeding the goal is a miss (calories) rather than a win. */
+  overIsBad?: boolean;
 }) {
   const percent = meterPercent(progress);
+  // The clamped percent drives the bar; the raw one decides the state, so going
+  // 40% over a goal still reads as "Over" and not as a full bar at 100%.
+  const raw = progress != null && Number.isFinite(progress) ? progress * 100 : null;
+  const state = raw != null ? goalState(raw, overIsBad) : null;
+
   return (
     <div className="stat">
-      <div className="stat-label">
-        {color && <span className="stat-dot" style={{ background: color }} aria-hidden="true" />}
-        {label}
+      {color && <span className="stat-accent" style={{ background: color }} aria-hidden="true" />}
+      <div className="stat-top">
+        <span className="stat-label">{label}</span>
+        {icon}
       </div>
       <div className="stat-value">
         {value}
         {unit && <span className="stat-unit">{unit}</span>}
       </div>
-      {percent != null && (
-        <div
-          className="meter"
-          role="progressbar"
-          aria-valuenow={percent}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-label={`${label} progress`}
-        >
-          <div
-            className="meter-fill"
-            style={{
-              width: `${percent}%`,
-              background: color ?? 'var(--accent)',
-            }}
-          />
-        </div>
-      )}
       {foot && <div className="stat-foot">{foot}</div>}
+      <div className="meter">
+        {percent != null && (
+          <div
+            className="meter-track"
+            role="progressbar"
+            aria-valuenow={percent}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={`${label} progress`}
+          >
+            <div
+              className={`meter-fill${state?.key === 'st-over' ? ' over' : ''}`}
+              style={{
+                width: `${percent}%`,
+                background: state?.key === 'st-over' ? undefined : (color ?? 'var(--accent)'),
+              }}
+            />
+          </div>
+        )}
+        <div className="meter-cap">
+          {state ? (
+            <span className={`meter-state ${state.key}`}>
+              {state.icon}
+              {state.label}
+            </span>
+          ) : (
+            <span className="meter-state st-under">No goal</span>
+          )}
+          {percent != null && <span>{percent}%</span>}
+        </div>
+      </div>
     </div>
   );
 }
@@ -181,7 +226,7 @@ export function Pill({
   status,
   children,
 }: {
-  status?: 'good' | 'warning' | 'serious' | 'critical';
+  status?: 'good' | 'warning' | 'serious' | 'critical' | 'accent';
   children: ReactNode;
 }) {
   return (

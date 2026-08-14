@@ -23,9 +23,11 @@ export const SERIES = {
   sleep: 'var(--series-4)',
 } as const;
 
+// Axis labels are set in the mono face at a small size, matching the design's
+// `.axlab` treatment — the tick text reads as a label, not as data.
 const AXIS = {
-  stroke: 'var(--border)',
-  tick: { fill: 'var(--text-muted)', fontSize: 11 },
+  stroke: 'var(--line)',
+  tick: { fill: 'var(--axis)', fontSize: 10, fontFamily: 'var(--mono)' },
 };
 
 interface TooltipRow {
@@ -72,8 +74,8 @@ function ChartTooltip({ rows }: { rows: TooltipRow[] }) {
   };
 }
 
-const CURSOR = { stroke: 'var(--border-strong)', strokeWidth: 1 };
-const BAR_CURSOR = { fill: 'var(--surface-2)', opacity: 0.55 };
+const CURSOR = { stroke: 'var(--line-2)', strokeWidth: 1 };
+const BAR_CURSOR = { fill: 'var(--sunken)', opacity: 0.55 };
 
 export interface WeightPoint {
   date: string;
@@ -131,8 +133,8 @@ export function WeightChart({
               <ReferenceLine
                 y={goal}
                 stroke="var(--good)"
-                strokeDasharray="4 4"
-                strokeWidth={2}
+                strokeDasharray="5 4"
+                strokeWidth={1.5}
                 label={{
                   value: 'Goal',
                   position: 'insideTopLeft',
@@ -220,8 +222,8 @@ export function DailyBars({
             <ReferenceLine
               y={target}
               stroke="var(--text-secondary)"
-              strokeDasharray="4 4"
-              strokeWidth={2}
+              strokeDasharray="5 4"
+              strokeWidth={1.5}
               label={{
                 value: targetLabel,
                 position: 'insideTopLeft',
@@ -361,8 +363,8 @@ export function SleepArea({
           <ReferenceLine
             y={target}
             stroke="var(--text-secondary)"
-            strokeDasharray="4 4"
-            strokeWidth={2}
+            strokeDasharray="5 4"
+            strokeWidth={1.5}
             label={{
               value: 'Target',
               position: 'insideTopLeft',

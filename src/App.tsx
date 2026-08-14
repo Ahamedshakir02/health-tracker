@@ -1,6 +1,17 @@
 import { useEffect, useState } from 'react';
+import type { ComponentType } from 'react';
 import { useHealth } from './state/HealthProvider';
 import ErrorBoundary from './components/ErrorBoundary';
+import {
+  IconBody,
+  IconFood,
+  IconHabits,
+  IconHeart,
+  IconMovement,
+  IconSettings,
+  IconToday,
+  IconTrainer,
+} from './components/icons';
 import Dashboard from './pages/Dashboard';
 import Body from './pages/Body';
 import Food from './pages/Food';
@@ -11,14 +22,14 @@ import Trainer from './pages/Trainer';
 import Login from './pages/Login';
 
 const TABS = [
-  { id: 'dashboard', label: 'Today', icon: '◎' },
-  { id: 'trainer', label: 'Trainer', icon: '🏋' },
-  { id: 'body', label: 'Body', icon: '⚖' },
-  { id: 'food', label: 'Food', icon: '🍽' },
-  { id: 'movement', label: 'Move', icon: '🏃' },
-  { id: 'daily', label: 'Habits', icon: '✓' },
-  { id: 'settings', label: 'Settings', icon: '⚙' },
-] as const;
+  { id: 'dashboard', label: 'Today', Icon: IconToday },
+  { id: 'trainer', label: 'Trainer', Icon: IconTrainer },
+  { id: 'body', label: 'Body', Icon: IconBody },
+  { id: 'food', label: 'Food', Icon: IconFood },
+  { id: 'movement', label: 'Move', Icon: IconMovement },
+  { id: 'daily', label: 'Habits', Icon: IconHabits },
+  { id: 'settings', label: 'Settings', Icon: IconSettings },
+] as const satisfies readonly { id: string; label: string; Icon: ComponentType }[];
 
 type TabId = (typeof TABS)[number]['id'];
 
@@ -66,50 +77,39 @@ export default function App() {
     setTab(id);
   };
 
+  const syncDot =
+    sync === 'error' ? 'var(--crit)' : sync === 'ready' ? 'var(--good)' : 'var(--warn)';
+  const syncText = sync === 'error' ? 'Save failed' : sync === 'saving' ? 'Saving…' : storeLabel;
+
   return (
     <div className="app">
       <nav className="sidebar" aria-label="Sections">
         <div className="brand">
           <span className="brand-mark" aria-hidden="true">
-            ♥
+            <IconHeart />
           </span>
-          <div>
-            <div className="brand-name">Vitals</div>
-            <div className="brand-sub">HEALTH TRACKER</div>
-          </div>
+          <span className="brand-text">
+            <span className="brand-name">Vitals</span>
+            <span className="brand-sub">Health Tracker</span>
+          </span>
         </div>
 
-        {TABS.map((t) => (
+        {TABS.map(({ id, label, Icon }) => (
           <button
-            key={t.id}
+            key={id}
             type="button"
-            className="nav-item"
-            aria-current={tab === t.id ? 'page' : undefined}
-            onClick={() => go(t.id)}
+            className="navitem"
+            aria-current={tab === id ? 'page' : undefined}
+            onClick={() => go(id)}
           >
-            <span className="nav-icon" aria-hidden="true">
-              {t.icon}
-            </span>
-            {t.label}
+            <Icon />
+            <span className="nav-text">{label}</span>
           </button>
         ))}
 
-        <div className="sidebar-foot">
-          <span className="pill">
-            <span
-              className="pill-dot"
-              style={{
-                background:
-                  sync === 'error'
-                    ? 'var(--critical)'
-                    : sync === 'ready'
-                      ? 'var(--good)'
-                      : 'var(--warning)',
-              }}
-              aria-hidden="true"
-            />
-            {sync === 'error' ? 'Save failed' : sync === 'saving' ? 'Saving…' : storeLabel}
-          </span>
+        <div className="syncpill">
+          <span className="dot" style={{ background: syncDot }} aria-hidden="true" />
+          <span className="sync-text">{syncText}</span>
         </div>
       </nav>
 
@@ -140,6 +140,23 @@ export default function App() {
           )}
         </ErrorBoundary>
       </main>
+
+      {/* Phone navigation. The design mocks a five-slot bar, but every section
+          has to stay reachable on a phone, so all seven ride the bar here. */}
+      <nav className="tabbar" aria-label="Sections">
+        {TABS.map(({ id, label, Icon }) => (
+          <button
+            key={id}
+            type="button"
+            className="tabitem"
+            aria-current={tab === id ? 'page' : undefined}
+            onClick={() => go(id)}
+          >
+            <Icon />
+            {label}
+          </button>
+        ))}
+      </nav>
     </div>
   );
 }

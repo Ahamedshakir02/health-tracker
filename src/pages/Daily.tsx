@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useHealth } from '../state/HealthProvider';
 import { Card, Empty, Field, Rating, StatTile, meterPercent } from '../components/ui';
+import { IconCheck, IconFlame } from '../components/icons';
 import { DailyBars, SERIES, SleepArea } from '../components/charts';
 import { dailySeries, dayLog, habitStreak, meanOf } from '../lib/calc';
 import { formatShort, lastNDays, relativeLabel, todayISO } from '../lib/dates';
@@ -187,7 +188,7 @@ export default function Daily() {
                   <span className="stat-unit">{u.volume}</span>
                 </div>
                 <div
-                  className="meter"
+                  className="meter-track"
                   role="progressbar"
                   aria-valuenow={waterPercent ?? 0}
                   aria-valuemin={0}
@@ -204,19 +205,33 @@ export default function Daily() {
                 </div>
               </div>
               <div className="row">
-                <button type="button" className="btn" onClick={() => addWater(GLASS_ML)}>
-                  + Glass ({showVolume(GLASS_ML)} {u.volume})
-                </button>
+                {/* Stepper counts glasses; the millilitre total stays the stored
+                    value so a changed glass size never rewrites history. */}
+                <div className="stepper">
+                  <button
+                    type="button"
+                    onClick={() => addWater(-GLASS_ML)}
+                    disabled={!log.waterMl}
+                    aria-label={`Remove one glass (${showVolume(GLASS_ML)} ${u.volume})`}
+                  >
+                    −
+                  </button>
+                  <span className="num" aria-live="polite">
+                    {Math.round((log.waterMl ?? 0) / GLASS_ML)}
+                    <span className="hint" style={{ marginLeft: 4 }}>
+                      glasses
+                    </span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => addWater(GLASS_ML)}
+                    aria-label={`Add one glass (${showVolume(GLASS_ML)} ${u.volume})`}
+                  >
+                    +
+                  </button>
+                </div>
                 <button type="button" className="btn" onClick={() => addWater(GLASS_ML * 2)}>
                   + Bottle ({showVolume(GLASS_ML * 2)} {u.volume})
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-sm"
-                  onClick={() => addWater(-GLASS_ML)}
-                  disabled={!log.waterMl}
-                >
-                  Undo
                 </button>
                 <button
                   type="button"
@@ -248,23 +263,32 @@ export default function Daily() {
           ) : (
             <div className="stack">
               <div className="row">
-                {activeHabits.map((habit) => (
-                  <button
-                    key={habit.id}
-                    type="button"
-                    className="habit-chip"
-                    aria-pressed={Boolean(log.habits[habit.id])}
-                    onClick={() => toggleHabit(habit.id)}
-                  >
-                    <span aria-hidden="true">{habit.emoji}</span>
-                    {habit.name}
-                    {log.habits[habit.id] && (
+                {activeHabits.map((habit) => {
+                  const streak = habitStreak(data.days, habit.id);
+                  return (
+                    <button
+                      key={habit.id}
+                      type="button"
+                      className="habit-chip"
+                      aria-pressed={Boolean(log.habits[habit.id])}
+                      onClick={() => toggleHabit(habit.id)}
+                    >
+                      {/* The box is always drawn; CSS fills it in on the pressed
+                          state so the chip's shape does not jump on toggle. */}
                       <span className="habit-check" aria-hidden="true">
-                        ✓
+                        <IconCheck />
                       </span>
-                    )}
-                  </button>
-                ))}
+                      <span aria-hidden="true">{habit.emoji}</span>
+                      {habit.name}
+                      {streak > 0 && (
+                        <span className="habit-streak">
+                          <IconFlame />
+                          {streak}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
 
               <div className="table-wrap">

@@ -1,6 +1,16 @@
 import { useMemo } from 'react';
 import { useHealth } from '../state/HealthProvider';
 import { Card, Empty, StatTile } from '../components/ui';
+import {
+  IconArrowDown,
+  IconArrowUp,
+  IconDroplet,
+  IconFlame,
+  IconHabits,
+  IconMoon,
+  IconScale,
+  IconTrainer,
+} from '../components/icons';
 import { DailyBars, SERIES, WeightChart } from '../components/charts';
 import {
   byDate,
@@ -68,18 +78,21 @@ export default function Dashboard({ onNavigate }: { onNavigate: (id: 'body' | 'f
           <p className="page-sub">{formatLong(today)}</p>
         </div>
         <div className="row">
-          <button type="button" className="btn btn-sm" onClick={() => onNavigate('food')}>
-            + Food
-          </button>
-          <button type="button" className="btn btn-sm" onClick={() => onNavigate('movement')}>
-            + Workout
-          </button>
-          <button type="button" className="btn btn-sm" onClick={() => onNavigate('body')}>
-            + Weight
-          </button>
-          <button type="button" className="btn btn-sm" onClick={() => onNavigate('daily')}>
-            + Check-in
-          </button>
+          {(
+            [
+              ['food', 'Food'],
+              ['movement', 'Workout'],
+              ['body', 'Weight'],
+              ['daily', 'Check-in'],
+            ] as const
+          ).map(([id, label]) => (
+            <button key={id} type="button" className="quickadd" onClick={() => onNavigate(id)}>
+              <span className="plus" aria-hidden="true">
+                +
+              </span>
+              {label}
+            </button>
+          ))}
         </div>
       </header>
 
@@ -98,17 +111,28 @@ export default function Dashboard({ onNavigate }: { onNavigate: (id: 'body' | 'f
           <StatTile
             label="Weight"
             color={SERIES.weight}
+            icon={<IconScale />}
             value={latest ? showWeight(latest.weightKg) : '—'}
             unit={latest ? u.weight : undefined}
             foot={
-              week
-                ? `${week.delta > 0 ? '▲' : '▼'} ${showWeight(Math.abs(week.delta))} ${u.weight} in 7 days`
-                : 'Log twice to see a trend'
+              week ? (
+                <>
+                  <span className={`stat-delta ${week.delta > 0 ? 'up' : 'down'}`}>
+                    {week.delta > 0 ? <IconArrowUp /> : <IconArrowDown />}
+                    {showWeight(Math.abs(week.delta))} {u.weight}
+                  </span>{' '}
+                  in 7 days
+                </>
+              ) : (
+                'Log twice to see a trend'
+              )
             }
           />
           <StatTile
             label="Calories today"
             color={SERIES.food}
+            icon={<IconFlame />}
+            overIsBad
             value={String(Math.round(todayMacros.calories))}
             unit={`/ ${goals.calories}`}
             progress={goals.calories ? todayMacros.calories / goals.calories : null}
@@ -117,6 +141,7 @@ export default function Dashboard({ onNavigate }: { onNavigate: (id: 'body' | 'f
           <StatTile
             label="Workouts this week"
             color={SERIES.activity}
+            icon={<IconTrainer />}
             value={String(weekWorkouts.length)}
             unit={`/ ${goals.workoutsPerWeek}`}
             progress={goals.workoutsPerWeek ? weekWorkouts.length / goals.workoutsPerWeek : null}
@@ -125,6 +150,7 @@ export default function Dashboard({ onNavigate }: { onNavigate: (id: 'body' | 'f
           <StatTile
             label="Sleep last night"
             color={SERIES.sleep}
+            icon={<IconMoon />}
             value={log.sleepHours != null ? log.sleepHours.toFixed(1) : '—'}
             unit={log.sleepHours != null ? 'h' : undefined}
             progress={log.sleepHours != null ? log.sleepHours / goals.sleepHours : null}
@@ -133,6 +159,7 @@ export default function Dashboard({ onNavigate }: { onNavigate: (id: 'body' | 'f
           <StatTile
             label="Water today"
             color={SERIES.weight}
+            icon={<IconDroplet />}
             value={String(showVolume(log.waterMl ?? 0))}
             unit={`/ ${showVolume(goals.waterMl)} ${u.volume}`}
             progress={goals.waterMl ? (log.waterMl ?? 0) / goals.waterMl : null}
@@ -140,6 +167,7 @@ export default function Dashboard({ onNavigate }: { onNavigate: (id: 'body' | 'f
           <StatTile
             label="Habits today"
             color={SERIES.activity}
+            icon={<IconHabits />}
             value={String(habitsDone)}
             unit={`/ ${activeHabits.length}`}
             progress={activeHabits.length ? habitsDone / activeHabits.length : null}
