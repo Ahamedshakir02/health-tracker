@@ -24,6 +24,11 @@
           {
             "key": "Permissions-Policy",
             "value": "geolocation=(), microphone=(), camera=(), interest-cohort=()"
+          },
+          {
+            "comment": "Default everything to revalidate. cleanUrls means the SPA shell is served at '/', which an /index.html rule never matches — without this it inherits Firebase's 1h default and a phone keeps running the previous deploy. The hashed-asset rules below override this.",
+            "key": "Cache-Control",
+            "value": "no-cache, max-age=0, must-revalidate"
           }
         ]
       },
@@ -35,10 +40,6 @@
         "comment": "Exercise illustrations are content-hash named, so they can be cached forever.",
         "source": "/exercises/**",
         "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
-      },
-      {
-        "source": "/index.html",
-        "headers": [{ "key": "Cache-Control", "value": "no-cache, max-age=0, must-revalidate" }]
       }
     ]
   }
