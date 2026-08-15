@@ -235,6 +235,10 @@ export function settings(raw: unknown): Settings {
   const birthYear = int(raw.birthYear, 1900, new Date().getFullYear());
   if (heightCm !== undefined) out.heightCm = heightCm;
   if (birthYear !== undefined) out.birthYear = birthYear;
+  // Anything not listed here is dropped on load, so a new Settings field must be
+  // added in both places or it silently fails to persist.
+  const onboardedAt = str(raw.onboardedAt, 40);
+  if (onboardedAt !== undefined) out.onboardedAt = onboardedAt;
   return out;
 }
 

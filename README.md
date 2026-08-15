@@ -90,7 +90,7 @@ before anything else.
 | Screen | Contents |
 |---|---|
 | **Today** | Headline tiles, 90-day weight trend, this week's calories, a 7-day table of everything |
-| **Trainer** | Readiness score, a generated week of sessions with per-block detail, deload logic |
+| **Trainer** | The gym schedule book — 13 schedules, 46 days, 360 illustrated exercises, set ticking and per-set weight logging |
 | **Body** | Weight, body fat %, waist / chest / hips, BMI, trend chart with a goal line |
 | **Food** | Meals by slot, calories and macros, daily targets, one-click re-log of recent foods |
 | **Move** | Workouts (type, minutes, intensity, distance, burn), daily steps, active-minute charts |
@@ -99,25 +99,28 @@ before anything else.
 
 ## Trainer
 
-The Trainer screen builds a week from what you have actually logged rather than from a
-questionnaire. It is deterministic and runs entirely offline — deliberately, because this
-is a static site and any model API key would be inlined into the bundle for anyone to
-read.
+The Trainer screen is the **Revolution Gym & Fitness Training Schedule Book**, transcribed
+from the printed original and rendered as something you can work through in the gym.
 
-It reads four signals and normalises over whichever ones have data behind them, so not
-logging resting heart rate does not permanently cap your score:
+**13 schedules · 46 training days · 360 exercises · 7 muscle groups.** Every exercise keeps
+its original section, order and number, its coaching cue, and the book's own illustration
+of the working position. Schedule 11 is absent from the source book, so the numbering runs
+1–10, then 12, 13, 14.
 
-| Signal | Weight | What moves it |
-|---|---|---|
-| Sleep | 35 | 7-day mean against your sleep target |
-| Freshness | 25 | Hard sessions in the last 72 h, consecutive training days |
-| Resting heart rate | 20 | Last 3 days against your own 28-day baseline |
-| Consistency | 20 | Sessions per week over the last month against your target |
+Pick a schedule, pick a day, and work down it:
 
-The score picks a verdict — push, steady, hold, deload — which sets the number of
-sessions and caps intensity. Volume steps up by about 10% a week against your real
-4-week average, every fourth week is lighter, and the split leans toward conditioning
-or lifting depending on whether your goal weight is below or above where you are.
+| | |
+|---|---|
+| **Rep scheme** | Shown per day — `15 x 3` means 15 reps for 3 sets of every exercise that day. The book uses 15×3, 12×3, 12×4, 12×5 and 10×3. |
+| **Set chips** | Tap to tick a set off. They fill with the muscle group's colour; a finished exercise gets a tick and a tinted card. |
+| **Weight blanks** | One field per set — the book's own logging row. Write what you actually lifted. |
+| **Day meter** | Counts in sets rather than exercises, so a half-finished movement still moves the bar. |
+
+Muscle groups are colour coded onto the same series palette the charts use, so chest reads
+orange, back reads blue, and the Trainer looks like the rest of the app.
+
+Ticked sets and weights are kept in `localStorage` on that device — they are gym scratch
+state, not health measurements, so they deliberately do not sync.
 
 It is general fitness guidance, not medical advice.
 

@@ -82,6 +82,12 @@ export interface Settings {
   theme: 'system' | 'light' | 'dark';
   goals: Goals;
   habits: Habit[];
+  /**
+   * Set once the first-run questions have been answered or skipped. Absence is
+   * what triggers onboarding, so it must be written even on skip — otherwise a
+   * user who genuinely wants no name gets asked on every sign-in.
+   */
+  onboardedAt?: string;
 }
 
 export interface HealthData {

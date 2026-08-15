@@ -1539,6 +1539,81 @@ tbody tr:hover {
   color: var(--ink);
 }
 
+/* --- first-run onboarding -------------------------------------------------- */
+
+.onboard-card {
+  max-width: 480px;
+}
+
+.onboard-steps {
+  display: flex;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.onboard-step {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  padding-bottom: 9px;
+  border-bottom: 2px solid var(--line);
+}
+
+.onboard-step.is-current {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.onboard-step.is-done {
+  color: var(--good);
+  border-bottom-color: var(--good);
+}
+
+.onboard-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sunken);
+  color: var(--ink-3);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.onboard-step.is-current .onboard-dot {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.onboard-step.is-done .onboard-dot {
+  background: var(--good);
+  color: #fff;
+}
+
+.onboard-dot .ic {
+  width: 12px;
+  height: 12px;
+  stroke-width: 3;
+}
+
+.onboard-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 4px;
+}
+
 /* --- trainer: schedule book ----------------------------------------------- */
 
 /* Schedule rail — thirteen schedules, one tap away, scrolled horizontally. */

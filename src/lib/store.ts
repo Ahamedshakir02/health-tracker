@@ -50,9 +50,25 @@ export class LocalStore implements HealthStore {
     }
   }
 
+  /**
+   * Serialises section writes. localStorage holds one blob, so saving a section
+   * is a read-modify-write — and two of them started in the same tick would both
+   * read the pre-update blob and the second would silently drop the first's
+   * change. Chaining means each write reads what the previous one left behind.
+   *
+   * FirestoreStore does not need this: it writes one document per section.
+   */
+  private queue: Promise<void> = Promise.resolve();
+
   async saveSection<K extends Section>(section: K, value: HealthData[K]): Promise<void> {
-    const current = await this.load();
-    await this.saveAll({ ...current, [section]: value });
+    const run = this.queue.then(async () => {
+      const current = await this.load();
+      await this.saveAll({ ...current, [section]: value });
+    });
+    // Keep the chain alive even if this write throws, or one failure would wedge
+    // every later save.
+    this.queue = run.catch(() => undefined);
+    return run;
   }
 
   async saveAll(data: HealthData): Promise<void> {

@@ -20,6 +20,7 @@ import Daily from './pages/Daily';
 import SettingsPage from './pages/Settings';
 import Trainer from './pages/Trainer';
 import Login from './pages/Login';
+import Onboarding from './pages/Onboarding';
 
 const TABS = [
   { id: 'dashboard', label: 'Today', Icon: IconToday },
@@ -71,6 +72,17 @@ export default function App() {
   // running local-only when it is not.
   const unlocked = firebaseAvailable ? Boolean(user) : offlineMode;
   if (!unlocked) return <Login />;
+
+  // Wait for the first load to settle before deciding this is a new account —
+  // during `loading` the record is still the default one, and onboarding would
+  // flash in front of someone who already has years of data.
+  const untouched =
+    !data.settings.name &&
+    !data.weights.length &&
+    !data.meals.length &&
+    !data.workouts.length &&
+    !data.days.length;
+  if (sync !== 'loading' && !data.settings.onboardedAt && untouched) return <Onboarding />;
 
   const go = (id: TabId) => {
     window.location.hash = `#/${id}`;
