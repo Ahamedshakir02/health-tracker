@@ -2,10 +2,12 @@ node_modules
 dist
 
 # Local environment — real Firebase config and the owner allowlist.
-# Only .env.example belongs in the repo.
+# Only .env.example and .env.offline belong in the repo; .env.offline holds
+# nothing but blank keys, which is the point of it.
 .env
 .env.*
 !.env.example
+!.env.offline
 
 # Build caches
 *.tsbuildinfo
