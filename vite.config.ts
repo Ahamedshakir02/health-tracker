@@ -19,11 +19,11 @@ export default defineConfig({
       // indexable, React-free pages; app.html is the tracker. They share only
       // the font files, so reading the marketing copy never downloads Firebase.
       input: {
-        landing: resolve(__dirname, 'index.html'),
-        app: resolve(__dirname, 'app.html'),
-        privacy: resolve(__dirname, 'privacy.html'),
-        terms: resolve(__dirname, 'terms.html'),
-        notFound: resolve(__dirname, '404.html'),
+        landing: resolve(import.meta.dirname,'index.html'),
+        app: resolve(import.meta.dirname,'app.html'),
+        privacy: resolve(import.meta.dirname,'privacy.html'),
+        terms: resolve(import.meta.dirname,'terms.html'),
+        notFound: resolve(import.meta.dirname,'404.html'),
       },
       output: {
         // Firebase and Recharts are the two heavy deps; splitting them keeps the

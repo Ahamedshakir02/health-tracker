@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "dev:local": "vite --mode offline",
-    "build": "tsc -b && vite build",
+    "build": "node scripts/csp-hash.mjs --check && tsc -b && vite build",
+    "build:csp": "node scripts/csp-hash.mjs",
     "build:media": "node scripts/build-exercise-media.mjs",
     "build:icons": "node scripts/build-icons.mjs",
     "preview": "vite preview",

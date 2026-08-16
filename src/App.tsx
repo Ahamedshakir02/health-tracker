@@ -22,6 +22,7 @@ import Trainer from './pages/Trainer';
 import Login from './pages/Login';
 import Onboarding from './pages/Onboarding';
 import { applyPageMeta } from './lib/pageMeta';
+import { markReturningVisitor } from './lib/returningVisitor';
 
 const TABS = [
   { id: 'dashboard', label: 'Today', Icon: IconToday },
@@ -118,6 +119,17 @@ export default function App() {
     else root.setAttribute('data-theme', data.settings.theme);
   }, [data.settings.theme]);
 
+  // The app is gated: signed in when Firebase is configured, or explicitly
+  // running local-only when it is not. Computed before the early returns below
+  // because the effect that follows can't sit after them.
+  const unlocked = firebaseAvailable ? Boolean(user) : offlineMode;
+
+  // Once someone is actually in, remember it, so a bookmark or home-screen icon
+  // pointing at / skips the marketing page next time.
+  useEffect(() => {
+    if (unlocked) markReturningVisitor();
+  }, [unlocked]);
+
   // Waiting on Firebase to report whether a session already exists. Rendering
   // the login screen first would flash it at an already-signed-in user.
   if (!authReady) {
@@ -128,9 +140,6 @@ export default function App() {
     );
   }
 
-  // The app is gated: signed in when Firebase is configured, or explicitly
-  // running local-only when it is not.
-  const unlocked = firebaseAvailable ? Boolean(user) : offlineMode;
   if (!unlocked) return <Login />;
 
   // Wait for the first load to settle before deciding this is a new account —

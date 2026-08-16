@@ -60,6 +60,29 @@ lets the marketing pages be indexable while the health log is not.
 > current path, so `/app/` with a trailing slash would look for
 > `/app/assets/…`. Absolute paths are correct at every depth.
 
+### Sending returning users past the marketing page
+
+Firebase Hosting is a CDN and cannot know who is signed in, and the landing page
+ships no Firebase to ask. Instead the app writes one flag to `localStorage` when
+it unlocks (`src/lib/returningVisitor.ts`), and a small **inline, synchronous**
+script in `index.html` reads it and calls `location.replace('/app')`.
+
+It has to be inline and synchronous, because a module script is deferred until
+the document has parsed — which is precisely the flash of marketing copy the
+redirect exists to avoid. That means `script-src 'self'` does not cover it, so
+the CSP carries a sha256 of the script's exact bytes. `npm run build` runs
+`scripts/csp-hash.mjs --check` and **fails** if the two have drifted;
+`npm run build:csp` rewrites the hash.
+
+Three guards keep it from trapping anyone:
+
+- `?home` always shows the landing page
+- a same-origin `document.referrer` means the visitor clicked through from
+  within the site and asked for this page, so they stay
+- the flag is set only when the app actually *unlocks*, never merely on visiting
+  `/app` — sign-up is invite-only, so a curious visitor would otherwise be
+  redirected past the landing page forever and stranded on a sign-in screen
+
 ---
 
 ## Routing

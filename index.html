@@ -21,10 +21,46 @@
         img-src 'self' data:;
         style-src 'self' 'unsafe-inline';
         font-src 'self' data:;
-        script-src 'self';
+        script-src 'self' 'sha256-jxapSIYeKEE55f5BLfuAoaeahW8nuaEJG9VQcyHRC3g=';
         connect-src 'self';
       "
     />
+    <!--
+      Send returning users straight to their log.
+
+      Inline and synchronous on purpose: it has to run before the first paint,
+      or someone with /app bookmarked at the old address gets a flash of
+      marketing copy on every launch. That is also why it is not in
+      src/landing/ — a module script is deferred until after the document
+      parses, which is exactly the flash this avoids.
+
+      `script-src 'self'` does not cover inline scripts, so the CSP above
+      carries a sha256 of this block. EDITING THIS SCRIPT — even by one
+      character — invalidates that hash and the browser will refuse to run it.
+      Regenerate with:
+
+        node scripts/csp-hash.mjs
+
+      Failure is graceful either way: a blocked or throwing script just leaves
+      the visitor on the landing page.
+    -->
+    <script>
+      (function () {
+        try {
+          // ?home is the escape hatch — it always shows the landing page.
+          if (new URLSearchParams(location.search).has('home')) return;
+          if (!localStorage.getItem('vitals.returning')) return;
+          // Clicking "Home" from /privacy or the logo is an in-site
+          // navigation; that visitor asked for this page, so leave them on it.
+          if (document.referrer && document.referrer.indexOf(location.origin) === 0) return;
+          // replace(), not assign(), so Back doesn't bounce between the two.
+          location.replace('/app');
+        } catch (e) {
+          /* storage disabled — stay put */
+        }
+      })();
+    </script>
+
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#f4f3f0" media="(prefers-color-scheme: light)" />
