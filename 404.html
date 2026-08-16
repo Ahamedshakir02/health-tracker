@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
+        default-src 'self';
+        base-uri 'self';
+        object-src 'none';
+        form-action 'self';
+        img-src 'self' data:;
+        style-src 'self' 'unsafe-inline';
+        font-src 'self' data:;
+        script-src 'self';
+        connect-src 'self';
+      "
+    />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <!-- A missing page has nothing worth indexing. -->
+    <meta name="robots" content="noindex, follow" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f4f3f0" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#101010" media="(prefers-color-scheme: dark)" />
+
+    <title>Page not found — Vitals</title>
+    <meta
+      name="description"
+      content="That page doesn't exist. Head back to the Vitals home page or open the tracker."
+    />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  </head>
+  <body class="lp">
+    <header class="lp-top">
+      <a class="lp-brand" href="/" aria-label="Vitals, home">
+        <span class="lp-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="currentColor" focusable="false">
+            <path d="M12 21c-1-.7-8-5.4-8-11a4.5 4.5 0 0 1 8-2.9A4.5 4.5 0 0 1 20 10c0 5.6-7 10.3-8 11z" />
+          </svg>
+        </span>
+        <span class="lp-brand-text">
+          <span class="lp-brand-name">Vitals</span>
+          <span class="lp-brand-sub">Health Tracker</span>
+        </span>
+      </a>
+    </header>
+
+    <main id="main" class="lp-oops">
+      <p class="lp-oops-code">404</p>
+      <h1 class="lp-h2">This page isn't here.</h1>
+      <p class="lp-sub" style="margin-inline: auto">
+        The link may be out of date, or the address may have a typo in it. Your log is fine —
+        nothing has been lost.
+      </p>
+      <div class="lp-cta">
+        <a class="lp-btn lp-btn-lg" href="/app">Open Vitals</a>
+        <a class="lp-btn lp-btn-ghost lp-btn-lg" href="/">Back to the home page</a>
+      </div>
+    </main>
+
+    <footer class="lp-foot">
+      <div class="lp-foot-in">
+        <p class="lp-foot-brand">Vitals — Health Tracker</p>
+        <nav class="lp-foot-nav" aria-label="Legal and site">
+          <a href="/">Home</a>
+          <a href="/app">Open the app</a>
+          <a href="/privacy">Privacy</a>
+          <a href="/terms">Terms</a>
+        </nav>
+      </div>
+    </footer>
+
+    <script type="module" src="/src/landing/main.ts"></script>
+  </body>
+</html>

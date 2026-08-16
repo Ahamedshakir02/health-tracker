@@ -21,6 +21,7 @@ import SettingsPage from './pages/Settings';
 import Trainer from './pages/Trainer';
 import Login from './pages/Login';
 import Onboarding from './pages/Onboarding';
+import { applyPageMeta } from './lib/pageMeta';
 
 const TABS = [
   { id: 'dashboard', label: 'Today', Icon: IconToday },
@@ -34,21 +35,80 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]['id'];
 
-function currentTab(): TabId {
-  const hash = window.location.hash.replace('#/', '');
-  return (TABS.find((t) => t.id === hash)?.id ?? 'dashboard') as TabId;
+/**
+ * The section named by the hash, or null if the hash names nothing.
+ *
+ * An empty hash is the dashboard — that's the bare `/app` URL. Anything else
+ * unrecognised returns null so a stale bookmark gets a "not found" panel rather
+ * than being silently redirected to Today, which looks like the app quietly
+ * lost your page.
+ */
+function currentTab(): TabId | null {
+  const hash = window.location.hash.replace(/^#\/?/, '');
+  if (!hash) return 'dashboard';
+  return TABS.find((t) => t.id === hash)?.id ?? null;
+}
+
+/**
+ * First-load placeholder.
+ *
+ * A skeleton rather than a spinner or a line of text: the layout it stands in
+ * for is a row of stat tiles over a chart over a table, so holding that shape
+ * stops the page jumping when the real content lands. `aria-busy` plus one
+ * polite message means a screen reader hears "Loading your data" once, rather
+ * than reading out a dozen meaningless grey boxes.
+ */
+function LoadingPanel() {
+  return (
+    <div className="skeleton-page" aria-busy="true" aria-live="polite">
+      <span className="sr-only">Loading your data…</span>
+      <div className="sk-row" aria-hidden="true">
+        <div className="sk sk-tile" />
+        <div className="sk sk-tile" />
+        <div className="sk sk-tile" />
+        <div className="sk sk-tile" />
+      </div>
+      <div className="sk sk-chart" aria-hidden="true" />
+      <div className="sk sk-table" aria-hidden="true" />
+    </div>
+  );
+}
+
+/** Shown when the URL hash names a section that doesn't exist. */
+function NotFoundPanel({ onHome }: { onHome: () => void }) {
+  return (
+    <div className="notfound">
+      <p className="notfound-code" aria-hidden="true">
+        404
+      </p>
+      <h1 className="notfound-title">This section isn't here.</h1>
+      <p className="notfound-body">
+        The link may be out of date, or the address may have a typo in it. Your log is fine —
+        nothing has been lost.
+      </p>
+      <button type="button" className="btn btn-primary" onClick={onHome}>
+        Go to Today
+      </button>
+    </div>
+  );
 }
 
 export default function App() {
   const { data, sync, error, storeLabel, authReady, user, firebaseAvailable, offlineMode } =
     useHealth();
-  const [tab, setTab] = useState<TabId>(currentTab);
+  const [tab, setTab] = useState<TabId | null>(currentTab);
 
   useEffect(() => {
     const onHash = () => setTab(currentTab());
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
+
+  // Keep the tab strip, history menu and bookmarks readable when several
+  // sections are open at once.
+  useEffect(() => {
+    applyPageMeta(tab);
+  }, [tab]);
 
   // Theme preference is applied to <html> so CSS tokens swap in one place. This
   // runs before any early return so the login screen is themed too.
@@ -132,9 +192,11 @@ export default function App() {
             <span>{error}</span>
           </div>
         )}
-        <ErrorBoundary resetKey={tab}>
+        <ErrorBoundary resetKey={tab ?? 'not-found'}>
           {sync === 'loading' ? (
-            <p className="empty">Loading your data…</p>
+            <LoadingPanel />
+          ) : tab === null ? (
+            <NotFoundPanel onHome={() => go('dashboard')} />
           ) : tab === 'dashboard' ? (
             <Dashboard onNavigate={go} />
           ) : tab === 'trainer' ? (

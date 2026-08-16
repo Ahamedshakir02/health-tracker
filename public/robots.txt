@@ -1,0 +1,18 @@
+# Vitals — https://vitals-health-tracker-6fc65.web.app
+#
+# The marketing pages are public and welcome to be indexed. The tracker itself
+# is a private health log and is not: /app also sends X-Robots-Tag noindex as an
+# HTTP header, which is what actually enforces this — robots.txt is a request,
+# not a control, and a disallowed URL can still be indexed from an inbound link.
+#
+# One group only. Per the spec a crawler obeys the first matching group and
+# ignores the rest, so a second "User-agent: *" block would silently do nothing.
+
+User-agent: *
+Allow: /$
+Allow: /privacy
+Allow: /terms
+Disallow: /app
+Disallow: /exercise-anim/
+
+Sitemap: https://vitals-health-tracker-6fc65.web.app/sitemap.xml

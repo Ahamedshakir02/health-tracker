@@ -8,6 +8,7 @@
     "dev:local": "vite --mode offline",
     "build": "tsc -b && vite build",
     "build:media": "node scripts/build-exercise-media.mjs",
+    "build:icons": "node scripts/build-icons.mjs",
     "preview": "vite preview",
     "deploy": "npm run build && firebase deploy --only hosting",
     "deploy:rules": "firebase deploy --only firestore:rules",

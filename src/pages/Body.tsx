@@ -41,6 +41,7 @@ export default function Body() {
   const u = labels(units);
   const [range, setRange] = useState(90);
   const [form, setForm] = useState(blankForm);
+  const [error, setError] = useState<string | null>(null);
 
   const showWeight = (kg: number) => toDisplay('weight', kg, units).toFixed(1);
   const showLength = (cm: number) => round(toDisplay('length', cm, units), 1);
@@ -71,7 +72,11 @@ export default function Body() {
   function submit(event: FormEvent) {
     event.preventDefault();
     const weight = Number(form.weight);
-    if (!Number.isFinite(weight) || weight <= 0) return;
+    if (!Number.isFinite(weight) || weight <= 0) {
+      setError('Enter a weight above zero.');
+      return;
+    }
+    setError(null);
 
     const entry: WeightEntry = {
       id: uid('w'),
@@ -167,7 +172,7 @@ export default function Body() {
                   required
                 />
               </Field>
-              <Field label={`Weight (${u.weight})`}>
+              <Field label={`Weight (${u.weight})`} error={error ?? undefined}>
                 <input
                   type="number"
                   step="0.1"
@@ -175,7 +180,13 @@ export default function Body() {
                   inputMode="decimal"
                   placeholder="0.0"
                   value={form.weight}
-                  onChange={(e) => setForm({ ...form, weight: e.target.value })}
+                  aria-invalid={error ? true : undefined}
+                  onChange={(e) => {
+                    setForm({ ...form, weight: e.target.value });
+                    // Clear as soon as they start fixing it — an error that
+                    // persists while you type reads as "still wrong".
+                    if (error) setError(null);
+                  }}
                   required
                 />
               </Field>

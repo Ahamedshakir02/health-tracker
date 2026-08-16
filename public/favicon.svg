@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Vitals">
+  <!-- The app's brand mark: the heart from src/components/icons.tsx on the
+       accent-blue tile used in the sidebar. Rounded square rather than a bare
+       glyph so it reads at 16px in a tab strip. -->
+  <rect width="64" height="64" rx="15" fill="#2a78d6" />
+  <path
+    d="M32 51.2c-2.67-1.87-21.33-14.4-21.33-29.33A12 12 0 0 1 32 14.4a12 12 0 0 1 21.33 7.47C53.33 36.8 34.67 49.33 32 51.2z"
+    fill="#ffffff"
+  />
+</svg>

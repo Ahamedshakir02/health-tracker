@@ -157,16 +157,31 @@ export function Field({
   label,
   children,
   hint,
+  error,
 }: {
   label: string;
   children: ReactNode;
   hint?: string;
+  /**
+   * Validation message. Replaces the hint while present — showing both stacks
+   * two lines under one input and buries the thing that needs acting on. The
+   * `role="alert"` means it is announced when it appears, which is the whole
+   * point: a form that silently refuses to submit is invisible to a screen
+   * reader user and merely baffling to everyone else.
+   */
+  error?: string;
 }) {
   return (
-    <label className="field">
+    <label className={`field${error ? ' has-error' : ''}`}>
       <span className="label">{label}</span>
       {children}
-      {hint && <span className="hint">{hint}</span>}
+      {error ? (
+        <span className="field-error" role="alert">
+          {error}
+        </span>
+      ) : (
+        hint && <span className="hint">{hint}</span>
+      )}
     </label>
   );
 }

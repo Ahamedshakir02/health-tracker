@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
+        default-src 'self';
+        base-uri 'self';
+        object-src 'none';
+        form-action 'self';
+        img-src 'self' data:;
+        style-src 'self' 'unsafe-inline';
+        font-src 'self' data:;
+        script-src 'self';
+        connect-src 'self';
+      "
+    />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f4f3f0" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#101010" media="(prefers-color-scheme: dark)" />
+
+    <title>Privacy Policy — Vitals</title>
+    <meta
+      name="description"
+      content="What Vitals stores, where it stores it, who can read it, and how to get it all back or delete it. No advertising, no trackers, no sale of personal data."
+    />
+    <link rel="canonical" href="https://vitals-health-tracker-6fc65.web.app/privacy" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Privacy Policy — Vitals" />
+    <meta
+      property="og:description"
+      content="What Vitals stores, where it stores it, who can read it, and how to get it all back or delete it."
+    />
+    <meta property="og:url" content="https://vitals-health-tracker-6fc65.web.app/privacy" />
+    <meta property="og:image" content="https://vitals-health-tracker-6fc65.web.app/og.png" />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  </head>
+  <body class="lp">
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="lp-top">
+      <a class="lp-brand" href="/" aria-label="Vitals, home">
+        <span class="lp-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="currentColor" focusable="false">
+            <path d="M12 21c-1-.7-8-5.4-8-11a4.5 4.5 0 0 1 8-2.9A4.5 4.5 0 0 1 20 10c0 5.6-7 10.3-8 11z" />
+          </svg>
+        </span>
+        <span class="lp-brand-text">
+          <span class="lp-brand-name">Vitals</span>
+          <span class="lp-brand-sub">Health Tracker</span>
+        </span>
+      </a>
+      <a class="lp-btn lp-btn-sm" href="/app" style="margin-left: auto">Open Vitals</a>
+    </header>
+
+    <main id="main" class="lp-prose">
+      <h1>Privacy Policy</h1>
+      <p class="lp-updated">Last updated 16 August 2026</p>
+
+      <p>
+        Vitals is a personal health tracker. The whole point of it is to hold information that
+        is nobody else's business, so this policy is short and specific rather than long and
+        evasive.
+      </p>
+
+      <div class="lp-callout">
+        <p>
+          <strong>The short version.</strong> Your health log is stored in your own account,
+          readable only by you. It is never sold, never used for advertising, and never shared
+          with anyone. You can export all of it, or delete all of it, whenever you want.
+        </p>
+      </div>
+
+      <h2>What is stored</h2>
+      <p>Only what you type in, plus the minimum needed to sign you in:</p>
+      <ul>
+        <li>
+          <strong>Health entries you create</strong> — weight and body measurements, meals and
+          their calories and macros, workouts, steps, sleep, mood, water, habit ticks, and your
+          training progress and per-set weights.
+        </li>
+        <li>
+          <strong>Your settings</strong> — display name, units, theme, and daily targets.
+        </li>
+        <li>
+          <strong>Account identifiers from sign-in</strong> — the email address and account ID
+          supplied by Google when you sign in, used to tie your record to you and to check you
+          are permitted to sign in at all.
+        </li>
+      </ul>
+      <p>
+        There is no tracking of how you use the app, no session recording, no device
+        fingerprinting, and no advertising identifier.
+      </p>
+
+      <h2>Where it is stored</h2>
+      <p>
+        Signed in, your record lives in Google Cloud Firestore, and sign-in is handled by
+        Firebase Authentication — both operated by Google as the hosting provider. Access is
+        restricted by server-side security rules to the single account that owns the record;
+        that restriction is enforced by the server on every read and write, not merely hidden
+        in the interface.
+      </p>
+      <p>
+        Running on one device only, everything stays in that browser's local storage and is
+        never transmitted anywhere.
+      </p>
+
+      <h2>Cookies and analytics</h2>
+      <p>
+        The signed-in app sets no advertising or analytics cookies and makes no third-party
+        requests. Fonts are served from this domain rather than a font CDN. Sign-in requires
+        Google's authentication services, which set the cookies necessary to keep you signed
+        in — those are strictly necessary for a feature you asked for, not tracking.
+      </p>
+      <p>
+        This public marketing page may use a cookieless analytics counter that records
+        aggregate page views. It stores nothing on your device, sets no cookies, assigns no
+        identifier, and cannot follow you across sites — which is why you are not being asked
+        to dismiss a consent banner. Do Not Track and Global Privacy Control signals are
+        honoured, and no analytics runs on the signed-in app at all.
+      </p>
+
+      <h2>What is never done</h2>
+      <ul>
+        <li>Your data is not sold, rented, or licensed to anyone.</li>
+        <li>It is not used to train anything or build a profile of you.</li>
+        <li>It is not shared with advertisers, data brokers, insurers, or employers.</li>
+        <li>It is not read for any purpose other than showing it back to you.</li>
+      </ul>
+
+      <h2>Your control over it</h2>
+      <ul>
+        <li>
+          <strong>Export.</strong> Settings has a one-click export of your entire record as
+          JSON — everything, in a format you can read and keep.
+        </li>
+        <li>
+          <strong>Deletion.</strong> Ask and your record is deleted in full. Local-only data is
+          removed by clearing the site data in your browser.
+        </li>
+        <li>
+          <strong>Correction.</strong> Every entry is editable in the app at any time.
+        </li>
+      </ul>
+      <p>
+        Depending on where you live you may have further statutory rights — access,
+        rectification, erasure, portability, and objection among them. Since this is a
+        single-user private tracker, the practical answer to all of them is the same: it is
+        your record, and you already hold the controls.
+      </p>
+
+      <h2>Retention</h2>
+      <p>
+        Entries are kept until you delete them, because a health log is only useful as a
+        history. Nothing is auto-expired behind your back.
+      </p>
+
+      <h2>Children</h2>
+      <p>Vitals is not directed at children under 13 and no account is knowingly created for one.</p>
+
+      <h2>Security</h2>
+      <p>
+        Traffic is served over HTTPS. The app enforces a strict Content Security Policy, does
+        not load third-party scripts, and ships no source maps of its own code. Access to
+        stored data is enforced by server-side rules. No system is perfectly secure, and no
+        promise to the contrary is made here.
+      </p>
+
+      <h2>Changes</h2>
+      <p>
+        If this policy changes materially, the date at the top changes with it. There is no
+        version of this that quietly starts selling your data.
+      </p>
+
+      <h2>Contact</h2>
+      <p>
+        Questions about this policy, or a request to export or delete your data, can be sent to
+        <a href="mailto:ahamedshakir02@gmail.com">ahamedshakir02@gmail.com</a>.
+      </p>
+    </main>
+
+    <footer class="lp-foot">
+      <div class="lp-foot-in">
+        <p class="lp-foot-brand">Vitals — Health Tracker</p>
+        <nav class="lp-foot-nav" aria-label="Legal and site">
+          <a href="/">Home</a>
+          <a href="/app">Open the app</a>
+          <a href="/terms">Terms</a>
+        </nav>
+        <p class="lp-foot-note">
+          Vitals is a personal log, not a medical device. Nothing here is medical advice.
+        </p>
+      </div>
+    </footer>
+
+    <script type="module" src="/src/landing/main.ts"></script>
+  </body>
+</html>

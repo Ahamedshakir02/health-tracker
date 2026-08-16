@@ -34,6 +34,7 @@ export default function Food() {
   const [date, setDate] = useState(todayISO());
   const [range, setRange] = useState(14);
   const [form, setForm] = useState(() => blankForm());
+  const [error, setError] = useState<string | null>(null);
 
   const dayMeals = data.meals.filter(byDate(date));
   const totals = sumMacros(dayMeals);
@@ -57,7 +58,11 @@ export default function Food() {
 
   function submit(event: FormEvent) {
     event.preventDefault();
-    if (!form.name.trim()) return;
+    if (!form.name.trim()) {
+      setError('Give the meal a name so you can recognise it later.');
+      return;
+    }
+    setError(null);
     addMeal({
       name: form.name.trim(),
       slot: form.slot,
@@ -131,12 +136,16 @@ export default function Food() {
         <Card title="Add food" note="Macros are optional — calories alone still count.">
           <form onSubmit={submit}>
             <div className="form-grid">
-              <Field label="What did you eat?">
+              <Field label="What did you eat?" error={error ?? undefined}>
                 <input
                   type="text"
                   placeholder="Greek yoghurt & berries"
                   value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  aria-invalid={error ? true : undefined}
+                  onChange={(e) => {
+                    setForm({ ...form, name: e.target.value });
+                    if (error) setError(null);
+                  }}
                   required
                 />
               </Field>

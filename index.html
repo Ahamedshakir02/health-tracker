@@ -5,18 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
     <!--
-      Content Security Policy. Defence in depth: this app never builds HTML from
-      user input, but a health log is worth an extra wall between it and any
-      injected script.
-
-      'unsafe-inline' in style-src is unavoidable — React style props and the
-      chart library both emit inline styles. Note it is NOT granted to scripts,
-      which is where it would actually matter.
-
-      The googleapis / gstatic / accounts.google.com origins are what Firebase
-      Auth and Firestore talk to. Trim them if you turn a provider off. Deploying
-      behind a real server? Also send frame-ancestors 'none' as an HTTP header —
-      that directive is ignored in a meta tag.
+      The landing page is public and static. It talks to nothing: no Firebase,
+      no fonts from a CDN, no images from anywhere but here. The one origin this
+      policy is willing to widen for is a cookieless analytics endpoint, and
+      even that stays absent until VITE_ANALYTICS_SRC is configured — see
+      src/landing/analytics.ts.
     -->
     <meta
       http-equiv="Content-Security-Policy"
@@ -25,33 +18,307 @@
         base-uri 'self';
         object-src 'none';
         form-action 'self';
-        img-src 'self' data: blob: https://*.googleusercontent.com;
+        img-src 'self' data:;
         style-src 'self' 'unsafe-inline';
         font-src 'self' data:;
-        script-src 'self' https://apis.google.com https://*.gstatic.com;
-        connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://*.web.app https://accounts.google.com;
-        frame-src 'self' https://*.firebaseapp.com https://*.web.app https://accounts.google.com;
+        script-src 'self';
+        connect-src 'self';
       "
     />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
-    <!-- A private log has no business in a search index. -->
-    <meta name="robots" content="noindex, nofollow" />
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#f4f3f0" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#101010" media="(prefers-color-scheme: dark)" />
+
+    <title>Vitals — A Private Health Tracker You Actually Own</title>
     <meta
       name="description"
-      content="Vitals — a private health tracker for weight, food, workouts, sleep and habits."
+      content="Track weight, food, workouts and habits in one place, with a 360-exercise gym plan and an animated demonstration of every lift. Your data stays yours — no ads, no trackers, no selling."
     />
-    <title>Vitals · Health Tracker</title>
+    <link rel="canonical" href="https://vitals-health-tracker-6fc65.web.app/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Vitals" />
+    <meta property="og:url" content="https://vitals-health-tracker-6fc65.web.app/" />
+    <meta property="og:title" content="Vitals — A Private Health Tracker You Actually Own" />
+    <meta
+      property="og:description"
+      content="Weight, food, workouts and habits in one place, with a 360-exercise gym plan and an animated demonstration of every lift."
+    />
+    <meta property="og:image" content="https://vitals-health-tracker-6fc65.web.app/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Vitals — a private health tracker. Weight, food, workouts, habits."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Vitals — A Private Health Tracker You Actually Own" />
+    <meta
+      name="twitter:description"
+      content="Weight, food, workouts and habits in one place, with a 360-exercise gym plan and an animated demonstration of every lift."
+    />
+    <meta name="twitter:image" content="https://vitals-health-tracker-6fc65.web.app/og.png" />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <!-- No manifest link here on purpose: its scope is /app, so this page sits
+         outside it and the install prompt would never fire anyway. You install
+         the tracker, not the page that advertises it. -->
   </head>
-  <body>
-    <div id="root"></div>
+  <body class="lp">
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="lp-top">
+      <a class="lp-brand" href="/" aria-label="Vitals, home">
+        <span class="lp-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="currentColor" focusable="false">
+            <path d="M12 21c-1-.7-8-5.4-8-11a4.5 4.5 0 0 1 8-2.9A4.5 4.5 0 0 1 20 10c0 5.6-7 10.3-8 11z" />
+          </svg>
+        </span>
+        <span class="lp-brand-text">
+          <span class="lp-brand-name">Vitals</span>
+          <span class="lp-brand-sub">Health Tracker</span>
+        </span>
+      </a>
+      <nav class="lp-nav" aria-label="Page sections">
+        <a href="#features">Features</a>
+        <a href="#trainer">Trainer</a>
+        <a href="#privacy">Privacy</a>
+      </nav>
+      <a class="lp-btn lp-btn-sm" href="/app">Open Vitals</a>
+    </header>
+
+    <main id="main">
+      <!-- Hero. The primary call to action sits above the fold on every
+           breakpoint — hence the tight vertical rhythm on small screens. -->
+      <section class="lp-hero">
+        <p class="lp-eyebrow">Weight · Food · Training · Habits</p>
+        <h1 class="lp-h1">A health tracker you actually own.</h1>
+        <p class="lp-lede">
+          One place for what you weigh, what you eat, what you lift and what you keep up.
+          No ads, no trackers, no one selling your resting heart rate.
+        </p>
+        <div class="lp-cta">
+          <a class="lp-btn lp-btn-lg" href="/app" data-cta="hero-primary">Open Vitals</a>
+          <a class="lp-btn lp-btn-ghost lp-btn-lg" href="#features" data-cta="hero-secondary">
+            See what's inside
+          </a>
+        </div>
+        <p class="lp-microcopy">
+          Runs in the browser, on the phone, in the gym. Nothing to install.
+          Accounts are invite-only.
+        </p>
+
+        <figure class="lp-shot">
+          <img
+            src="/screens/trainer.webp"
+            width="1568"
+            height="757"
+            alt="The Vitals Trainer screen: a chest and triceps day with a progress meter, and four exercise cards each showing a photograph of the lift, its coaching cue, set-tracking chips and weight fields."
+            fetchpriority="high"
+            decoding="async"
+          />
+          <figcaption>The Trainer — day 1, chest and triceps.</figcaption>
+        </figure>
+      </section>
+
+      <section class="lp-section" id="features" aria-labelledby="features-h">
+        <h2 class="lp-h2" id="features-h">Six screens, one picture of your health</h2>
+        <p class="lp-sub">
+          Each one earns its place. Nothing here is a dashboard for its own sake.
+        </p>
+
+        <ul class="lp-grid">
+          <li class="lp-card">
+            <h3>Today</h3>
+            <p>
+              Headline tiles, a 90-day weight trend, this week's calories, and a seven-day
+              table of everything you logged.
+            </p>
+          </li>
+          <li class="lp-card">
+            <h3>Trainer</h3>
+            <p>
+              A full gym schedule book — 13 schedules, 46 training days, 360 exercises — with
+              set ticking and per-set weight logging.
+            </p>
+          </li>
+          <li class="lp-card">
+            <h3>Body</h3>
+            <p>
+              Weight, body fat, waist, chest and hips. BMI and a trend chart with your goal
+              line drawn on it.
+            </p>
+          </li>
+          <li class="lp-card">
+            <h3>Food</h3>
+            <p>
+              Meals by slot with calories and macros against your daily targets, and one-click
+              re-logging of things you eat often.
+            </p>
+          </li>
+          <li class="lp-card">
+            <h3>Move</h3>
+            <p>
+              Workouts by type, minutes, intensity, distance and burn — plus daily steps and
+              active-minute charts.
+            </p>
+          </li>
+          <li class="lp-card">
+            <h3>Habits</h3>
+            <p>
+              The small daily things: sleep, water, mood, steps. The ones that only show up
+              as a pattern over weeks.
+            </p>
+          </li>
+        </ul>
+      </section>
+
+      <section class="lp-section lp-section-alt" id="trainer" aria-labelledby="trainer-h">
+        <div class="lp-split">
+          <div class="lp-split-text">
+            <p class="lp-eyebrow">The Trainer</p>
+            <h2 class="lp-h2" id="trainer-h">Every lift, demonstrated.</h2>
+            <p class="lp-sub">
+              All 360 exercises loop between the start and the finish of the movement, so you
+              can see the lift instead of decoding a name you half-recognise. Tick sets off as
+              you finish them and write down what you actually lifted.
+            </p>
+            <ul class="lp-ticks">
+              <li>13 schedules across 46 training days</li>
+              <li>Rep schemes the book actually prescribes — 15×3 through 10×3</li>
+              <li>Set chips and weight fields on every exercise</li>
+              <li>Progress counted in sets, so a half-finished movement still counts</li>
+            </ul>
+            <a class="lp-btn" href="/app" data-cta="trainer">Open the Trainer</a>
+          </div>
+          <figure class="lp-split-media">
+            <img
+              src="/screens/exercise.webp"
+              width="749"
+              height="488"
+              alt="Two exercise cards close up — Flat Bench Barbell Press and Inclined Dumbell Press — each with a photograph of the movement, its coaching cue, three set chips and three weight fields."
+              loading="lazy"
+              decoding="async"
+            />
+          </figure>
+        </div>
+      </section>
+
+      <section class="lp-section" id="privacy" aria-labelledby="privacy-h">
+        <h2 class="lp-h2" id="privacy-h">Private by construction, not by promise</h2>
+        <p class="lp-sub">
+          A health log is about as personal as data gets. This one is built so that there is
+          very little to misuse in the first place.
+        </p>
+        <ul class="lp-grid lp-grid-3">
+          <li class="lp-card">
+            <h3>No third-party requests</h3>
+            <p>
+              The signed-in app loads nothing from anyone else. Fonts are self-hosted; there
+              is no ad network and no tracking script anywhere near your log.
+            </p>
+          </li>
+          <li class="lp-card">
+            <h3>Your data, your account</h3>
+            <p>
+              Everything lives in your own record, readable only by you. Export the whole lot
+              to JSON whenever you want — and delete it just as easily.
+            </p>
+          </li>
+          <li class="lp-card">
+            <h3>Nothing is sold</h3>
+            <p>
+              There is no business model that depends on your weight. No profiling, no data
+              brokers, no "anonymised" resale.
+            </p>
+          </li>
+        </ul>
+      </section>
+
+      <section class="lp-section lp-section-alt" aria-labelledby="faq-h">
+        <h2 class="lp-h2" id="faq-h">Questions worth asking</h2>
+        <div class="lp-faq">
+          <details>
+            <summary>What does it cost?</summary>
+            <p>Nothing. There is no paid tier and no upsell waiting three screens in.</p>
+          </details>
+          <details>
+            <summary>Can I sign up?</summary>
+            <p>
+              Not at the moment. Vitals runs as a private tracker on an invite-only allowlist,
+              so sign-in only works for permitted accounts — that limit is enforced on the
+              server, not just hidden in the interface.
+            </p>
+          </details>
+          <details>
+            <summary>Do I need an account?</summary>
+            <p>
+              For syncing across devices, yes — that is what ties your data to you and nobody
+              else. It also runs on one device only, where everything stays in that browser
+              and never leaves it.
+            </p>
+          </details>
+          <details>
+            <summary>Can I get my data out?</summary>
+            <p>
+              Yes, as JSON, in one click from Settings. It is your log; a tracker you cannot
+              leave is a trap.
+            </p>
+          </details>
+          <details>
+            <summary>Is it a medical device?</summary>
+            <p>
+              No. Vitals records what you tell it and draws charts. It does not diagnose,
+              treat, or give medical advice — talk to a clinician for that.
+            </p>
+          </details>
+          <details>
+            <summary>Does it work offline?</summary>
+            <p>
+              The app runs in the browser and keeps working on a flaky gym connection; changes
+              sync when you are back on a real one.
+            </p>
+          </details>
+        </div>
+      </section>
+
+      <section class="lp-final" aria-labelledby="final-h">
+        <h2 class="lp-h2" id="final-h">Start with today's weigh-in.</h2>
+        <p class="lp-sub">It takes about ten seconds, and in a month it's a trend line.</p>
+        <a class="lp-btn lp-btn-lg" href="/app" data-cta="footer">Open Vitals</a>
+      </section>
+    </main>
+
+    <footer class="lp-foot">
+      <div class="lp-foot-in">
+        <p class="lp-foot-brand">Vitals — Health Tracker</p>
+        <nav class="lp-foot-nav" aria-label="Legal and site">
+          <a href="/app">Open the app</a>
+          <a href="/privacy">Privacy</a>
+          <a href="/terms">Terms</a>
+        </nav>
+        <p class="lp-foot-note">
+          Vitals is a personal log, not a medical device. Nothing here is medical advice.
+        </p>
+      </div>
+    </footer>
+
+    <!-- Sticky phone CTA. Hidden until the hero button has scrolled away, so it
+         never sits on top of the button it duplicates. -->
+    <div class="lp-sticky" id="sticky-cta" hidden>
+      <a class="lp-btn lp-btn-lg" href="/app" data-cta="sticky">Open Vitals — it's free</a>
+    </div>
+
     <noscript>
-      <p style="padding: 24px; font: 15px/1.5 system-ui, sans-serif">
-        Vitals needs JavaScript to render your charts and log entries. Please enable it and reload.
+      <p style="padding: 16px; text-align: center; font: 15px/1.5 system-ui, sans-serif">
+        This page works fine without JavaScript.
+        <a href="/app">Open Vitals</a>.
       </p>
     </noscript>
-    <script type="module" src="/src/main.tsx"></script>
+
+    <script type="module" src="/src/landing/main.ts"></script>
   </body>
 </html>

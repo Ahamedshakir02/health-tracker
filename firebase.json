@@ -9,8 +9,13 @@
     "cleanUrls": true,
     "rewrites": [
       {
-        "source": "**",
-        "destination": "/index.html"
+        "comment": "The tracker is a hash-routed SPA, so every path under /app must serve its shell. This must come BEFORE the catch-all below.",
+        "source": "/app/**",
+        "destination": "/app.html"
+      },
+      {
+        "source": "/app",
+        "destination": "/app.html"
       }
     ],
     "headers": [
@@ -20,17 +25,21 @@
           { "key": "X-Content-Type-Options", "value": "nosniff" },
           { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
           { "key": "Content-Security-Policy", "value": "frame-ancestors 'none'" },
-          { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
           {
             "key": "Permissions-Policy",
             "value": "geolocation=(), microphone=(), camera=(), interest-cohort=()"
           },
           {
-            "comment": "Default everything to revalidate. cleanUrls means the SPA shell is served at '/', which an /index.html rule never matches — without this it inherits Firebase's 1h default and a phone keeps running the previous deploy. The hashed-asset rules below override this.",
+            "comment": "Default everything to revalidate. cleanUrls means a page is served at '/', which an /index.html rule never matches — without this it inherits Firebase's 1h default and a phone keeps running the previous deploy. The hashed-asset rules below override this.",
             "key": "Cache-Control",
             "value": "no-cache, max-age=0, must-revalidate"
           }
         ]
+      },
+      {
+        "comment": "The tracker is private and must never be indexed. The public marketing pages at /, /privacy and /terms deliberately are, so this header is scoped to /app rather than applied site-wide.",
+        "source": "/app{,/**}",
+        "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
       },
       {
         "source": "/assets/**",
@@ -40,7 +49,17 @@
         "comment": "Exercise animation frames are content-hash named, so they can be cached forever. Regenerating a clip changes its filename, so a stale copy is never served.",
         "source": "/exercise-anim/**",
         "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+      },
+      {
+        "comment": "Marketing screenshots and the OG card are not content-hashed, so they get a day rather than a year — long enough to be free on repeat visits, short enough that replacing one is visible the next day.",
+        "source": "/screens/**",
+        "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400" }]
+      },
+      {
+        "source": "/og.png",
+        "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400" }]
       }
-    ]
+    ],
+    "trailingSlash": false
   }
 }

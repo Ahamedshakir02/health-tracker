@@ -29,6 +29,7 @@ export default function SettingsPage() {
   const fileInput = useRef<HTMLInputElement>(null);
 
   const [newHabit, setNewHabit] = useState({ name: '', emoji: '⭐' });
+  const [habitError, setHabitError] = useState<string | null>(null);
   const [dataError, setDataError] = useState<string | null>(null);
   const [dataNotice, setDataNotice] = useState<string | null>(null);
 
@@ -37,7 +38,16 @@ export default function SettingsPage() {
 
   function addHabit(event: FormEvent) {
     event.preventDefault();
-    if (!newHabit.name.trim()) return;
+    const name = newHabit.name.trim();
+    if (!name) {
+      setHabitError('Name the habit before adding it.');
+      return;
+    }
+    if (settings.habits.some((h) => h.name.toLowerCase() === name.toLowerCase())) {
+      setHabitError('You already track a habit with that name.');
+      return;
+    }
+    setHabitError(null);
     const habit: Habit = {
       id: uid('h'),
       name: newHabit.name.trim(),
@@ -304,12 +314,16 @@ export default function SettingsPage() {
                   onChange={(e) => setNewHabit({ ...newHabit, emoji: e.target.value })}
                 />
               </Field>
-              <Field label="New habit">
+              <Field label="New habit" error={habitError ?? undefined}>
                 <input
                   type="text"
                   placeholder="Read 20 minutes"
                   value={newHabit.name}
-                  onChange={(e) => setNewHabit({ ...newHabit, name: e.target.value })}
+                  aria-invalid={habitError ? true : undefined}
+                  onChange={(e) => {
+                    setNewHabit({ ...newHabit, name: e.target.value });
+                    if (habitError) setHabitError(null);
+                  }}
                 />
               </Field>
               <button className="btn" type="submit">

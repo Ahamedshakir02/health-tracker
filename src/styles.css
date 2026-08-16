@@ -883,6 +883,35 @@ a {
   line-height: 1.5;
 }
 
+/* Validation message. Sits where the hint would, so nothing below it shifts
+   when it appears and disappears. */
+.field-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--crit);
+}
+
+.field-error::before {
+  content: '⚠';
+  line-height: 1.4;
+}
+
+/* Colour alone can't carry the message — the text and the icon do that. This
+   just makes the field obvious once you already know to look at it. */
+.field.has-error :is(input, select, textarea),
+:is(input, select, textarea)[aria-invalid='true'] {
+  border-color: var(--crit);
+  background: var(--crit-soft);
+}
+
+.field.has-error :is(input, select, textarea):focus,
+:is(input, select, textarea)[aria-invalid='true']:focus {
+  outline-color: var(--crit);
+}
+
 input,
 select,
 textarea {
@@ -1810,6 +1839,90 @@ tbody tr:hover {
 
 .ex-card.is-done {
   background: color-mix(in srgb, var(--ex-color, var(--accent)) 7%, var(--card));
+}
+
+/* ---------------------------------------------------------------------------
+   Loading skeletons
+   Stand-ins for the shape of a page rather than a spinner, so the layout does
+   not jump when the data lands. Hidden from assistive tech — the one live
+   message in LoadingPanel says everything a screen reader needs.
+   --------------------------------------------------------------------------- */
+.skeleton-page {
+  display: grid;
+  gap: 16px;
+}
+
+.sk-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+}
+
+.sk {
+  border-radius: var(--r-lg);
+  background: linear-gradient(
+    90deg,
+    var(--sunken) 0%,
+    color-mix(in srgb, var(--sunken) 55%, var(--card)) 50%,
+    var(--sunken) 100%
+  );
+  background-size: 200% 100%;
+  animation: sk-sheen 1.4s linear infinite;
+}
+
+.sk-tile {
+  height: 96px;
+}
+
+.sk-chart {
+  height: 280px;
+}
+
+.sk-table {
+  height: 220px;
+}
+
+@keyframes sk-sheen {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   In-app 404
+   --------------------------------------------------------------------------- */
+.notfound {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 6px;
+  min-height: 54vh;
+  text-align: center;
+  padding: 24px;
+}
+
+.notfound-code {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: clamp(56px, 12vw, 104px);
+  line-height: 1;
+  color: var(--ink-3);
+}
+
+.notfound-title {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(21px, 4vw, 28px);
+}
+
+.notfound-body {
+  margin: 0 0 18px;
+  max-width: 46ch;
+  color: var(--ink-2);
 }
 
 /* The animated demonstration: two photographs stacked, cross-fading between the

@@ -4,11 +4,15 @@ A private health tracker for weight and body composition, food and macros, worko
 and steps, and sleep / water / mood / habits. React + TypeScript + Vite, with two
 storage backends: local JSON out of the box, Firebase Firestore when you configure it.
 
+The site is two applications on one origin: a public marketing page at `/` that ships
+~4 KB of JavaScript, and the tracker itself at `/app`. See
+**[ARCHITECTURE.md](ARCHITECTURE.md)** for how the pieces fit together.
+
 ## Run it
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173
+npm run dev      # http://localhost:5173  — landing at /, tracker at /app.html
 ```
 
 ```bash
@@ -17,6 +21,13 @@ npm run preview    # serve the built bundle
 npm test           # unit tests (vitest)
 npm run typecheck  # types only
 npm run audit      # fail on any high-severity dependency advisory
+```
+
+Two asset generators run by hand rather than on every build; their output is committed.
+
+```bash
+npm run build:media  # exercise animation frames + manifest (needs ffmpeg)
+npm run build:icons  # favicon.ico, apple-touch-icon, PWA icons
 ```
 
 Node 20.19+ required (Vite 8).

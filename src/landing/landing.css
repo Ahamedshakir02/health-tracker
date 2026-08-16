@@ -1,0 +1,692 @@
+/* ===========================================================================
+   Vitals — public landing page
+   Standalone from styles.css on purpose: the landing page ships no React and
+   no app CSS, so someone reading the marketing copy downloads a few KB rather
+   than the whole application. The token values are copied from the app's
+   palette so the two surfaces still look like one product — if you retune the
+   palette in styles.css, retune it here too.
+   =========================================================================== */
+
+:root {
+  color-scheme: light;
+
+  --page: #f4f3f0;
+  --card: #fcfcfb;
+  --sunken: #efede8;
+
+  --ink: #1c1b19;
+  --ink-2: #57544e;
+  --ink-3: #8a857c;
+
+  --line: rgba(20, 18, 14, 0.09);
+  --line-2: rgba(20, 18, 14, 0.16);
+
+  --accent: #2a78d6;
+  --accent-ink: #ffffff;
+  --accent-hover: #256abf;
+  --accent-soft: rgba(42, 120, 214, 0.1);
+
+  --sh-1: 0 1px 2px rgba(20, 18, 14, 0.05), 0 1px 1px rgba(20, 18, 14, 0.03);
+  --sh-2: 0 2px 4px rgba(20, 18, 14, 0.05), 0 8px 24px -8px rgba(20, 18, 14, 0.14);
+
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 18px;
+  --r-pill: 999px;
+
+  --font:
+    'Hanken Grotesk Variable', 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system,
+    'Segoe UI', sans-serif;
+  --serif: 'Newsreader Variable', 'Newsreader', Georgia, 'Times New Roman', serif;
+
+  /* Gutter and max width, so every section lines up on one rhythm. */
+  --pad: 24px;
+  --wide: 1120px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --page: #101010;
+    --card: #1a1a19;
+    --sunken: #0b0b0a;
+
+    --ink: #f2efe9;
+    --ink-2: #a6a199;
+    --ink-3: #6d6860;
+
+    --line: rgba(255, 252, 245, 0.1);
+    --line-2: rgba(255, 252, 245, 0.18);
+
+    --accent: #5b9be6;
+    --accent-ink: #0b1420;
+    --accent-hover: #7bb0ec;
+    --accent-soft: rgba(91, 155, 230, 0.16);
+
+    --sh-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --sh-2: 0 2px 6px rgba(0, 0, 0, 0.5), 0 16px 40px -12px rgba(0, 0, 0, 0.6);
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body.lp {
+  margin: 0;
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  /* The sticky bar is fixed over the page on phones; keep the footer clear. */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  color: var(--accent);
+}
+
+.skip {
+  position: absolute;
+  left: -9999px;
+  top: 8px;
+  padding: 10px 16px;
+  background: var(--card);
+  border-radius: var(--r-sm);
+  z-index: 100;
+}
+
+.skip:focus {
+  left: 8px;
+}
+
+:where(a, button, summary):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: var(--r-sm);
+}
+
+/* --- header --------------------------------------------------------------- */
+
+.lp-top {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  max-width: var(--wide);
+  margin: 0 auto;
+  padding: 18px var(--pad);
+}
+
+.lp-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.lp-mark {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.lp-mark svg {
+  width: 20px;
+  height: 20px;
+}
+
+.lp-brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.lp-brand-name {
+  font-weight: 650;
+  font-size: 17px;
+}
+
+.lp-brand-sub {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.lp-nav {
+  display: flex;
+  gap: 22px;
+  margin-left: auto;
+  font-size: 14.5px;
+}
+
+.lp-nav a {
+  color: var(--ink-2);
+  text-decoration: none;
+}
+
+.lp-nav a:hover {
+  color: var(--ink);
+}
+
+/* --- buttons -------------------------------------------------------------- */
+
+.lp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 20px;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: inherit;
+  font-weight: 600;
+  font-size: 15px;
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition:
+    background 0.14s,
+    transform 0.14s;
+}
+
+.lp-btn:hover {
+  background: var(--accent-hover);
+}
+
+.lp-btn:active {
+  transform: translateY(1px);
+}
+
+.lp-btn-sm {
+  padding: 8px 16px;
+  font-size: 14px;
+}
+
+.lp-btn-lg {
+  padding: 14px 26px;
+  font-size: 16.5px;
+}
+
+.lp-btn-ghost {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--line-2);
+}
+
+.lp-btn-ghost:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+/* --- hero ----------------------------------------------------------------- */
+
+.lp-hero {
+  max-width: var(--wide);
+  margin: 0 auto;
+  padding: 40px var(--pad) 24px;
+  text-align: center;
+}
+
+.lp-eyebrow {
+  margin: 0 0 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.lp-h1 {
+  margin: 0 auto 16px;
+  max-width: 15ch;
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(38px, 7vw, 68px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.lp-lede {
+  margin: 0 auto 26px;
+  max-width: 56ch;
+  font-size: clamp(16.5px, 2vw, 19px);
+  color: var(--ink-2);
+}
+
+.lp-cta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+.lp-microcopy {
+  margin: 14px 0 0;
+  font-size: 13.5px;
+  color: var(--ink-3);
+}
+
+.lp-shot {
+  margin: 40px 0 0;
+}
+
+.lp-shot img {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-2);
+  background: var(--card);
+}
+
+.lp-shot figcaption {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+/* --- sections ------------------------------------------------------------- */
+
+.lp-section {
+  max-width: var(--wide);
+  margin: 0 auto;
+  padding: 72px var(--pad);
+}
+
+.lp-section-alt {
+  max-width: none;
+  background: var(--sunken);
+  border-block: 1px solid var(--line);
+}
+
+.lp-section-alt > * {
+  max-width: var(--wide);
+  margin-inline: auto;
+}
+
+.lp-h2 {
+  margin: 0 0 10px;
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(27px, 4vw, 40px);
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+}
+
+.lp-sub {
+  margin: 0 0 32px;
+  max-width: 62ch;
+  font-size: 16.5px;
+  color: var(--ink-2);
+}
+
+/* --- feature grid --------------------------------------------------------- */
+
+.lp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lp-card {
+  padding: 22px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-1);
+}
+
+.lp-card h3 {
+  margin: 0 0 8px;
+  font-size: 17px;
+  font-weight: 650;
+}
+
+.lp-card p {
+  margin: 0;
+  font-size: 15px;
+  color: var(--ink-2);
+}
+
+/* --- split section -------------------------------------------------------- */
+
+.lp-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: center;
+}
+
+.lp-split-media {
+  margin: 0;
+}
+
+.lp-split-media img {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-2);
+}
+
+.lp-ticks {
+  margin: 0 0 28px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.lp-ticks li {
+  position: relative;
+  padding-left: 28px;
+  font-size: 15.5px;
+  color: var(--ink-2);
+}
+
+.lp-ticks li::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+/* --- FAQ ------------------------------------------------------------------ */
+
+.lp-faq {
+  display: grid;
+  gap: 10px;
+  max-width: 76ch;
+}
+
+.lp-faq details {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 4px 18px;
+}
+
+.lp-faq summary {
+  cursor: pointer;
+  padding: 14px 0;
+  font-weight: 600;
+  font-size: 16px;
+  list-style-position: inside;
+}
+
+.lp-faq p {
+  margin: 0 0 16px;
+  font-size: 15px;
+  color: var(--ink-2);
+}
+
+/* --- closing CTA ---------------------------------------------------------- */
+
+.lp-final {
+  max-width: var(--wide);
+  margin: 0 auto;
+  padding: 84px var(--pad);
+  text-align: center;
+}
+
+.lp-final .lp-sub {
+  margin-inline: auto;
+}
+
+/* --- footer --------------------------------------------------------------- */
+
+.lp-foot {
+  background: var(--sunken);
+  border-top: 1px solid var(--line);
+}
+
+.lp-foot-in {
+  max-width: var(--wide);
+  margin: 0 auto;
+  padding: 36px var(--pad) 48px;
+  display: grid;
+  gap: 12px;
+}
+
+.lp-foot-brand {
+  margin: 0;
+  font-weight: 650;
+}
+
+.lp-foot-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  font-size: 15px;
+}
+
+.lp-foot-note {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--ink-3);
+}
+
+/* --- prose (privacy, terms, 404) ------------------------------------------ */
+
+.lp-prose {
+  max-width: 74ch;
+  margin: 0 auto;
+  padding: 48px var(--pad) 88px;
+}
+
+.lp-prose h1 {
+  margin: 0 0 8px;
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(32px, 5vw, 46px);
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+}
+
+.lp-prose h2 {
+  margin: 40px 0 10px;
+  font-size: 20px;
+  font-weight: 650;
+}
+
+.lp-prose h3 {
+  margin: 24px 0 6px;
+  font-size: 16.5px;
+  font-weight: 650;
+}
+
+.lp-prose p,
+.lp-prose li {
+  color: var(--ink-2);
+  font-size: 16px;
+}
+
+.lp-prose ul {
+  padding-left: 22px;
+}
+
+.lp-prose li {
+  margin-bottom: 8px;
+}
+
+.lp-updated {
+  margin: 0 0 36px;
+  font-size: 13.5px;
+  color: var(--ink-3);
+}
+
+.lp-callout {
+  margin: 28px 0;
+  padding: 18px 20px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--r-md);
+}
+
+.lp-callout p {
+  margin: 0;
+}
+
+/* 404: centred, with the CTA the page exists to offer. */
+.lp-oops {
+  min-height: 62vh;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  gap: 6px;
+  padding: 48px var(--pad);
+}
+
+.lp-oops-code {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: clamp(64px, 14vw, 120px);
+  line-height: 1;
+  color: var(--ink-3);
+}
+
+.lp-oops .lp-cta {
+  margin-top: 22px;
+}
+
+/* --- sticky phone CTA ----------------------------------------------------- */
+
+.lp-sticky {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  display: none;
+  padding: 12px var(--pad) calc(12px + env(safe-area-inset-bottom));
+  background: color-mix(in srgb, var(--page) 88%, transparent);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--line);
+  transform: translateY(100%);
+  transition: transform 0.22s ease;
+}
+
+.lp-sticky .lp-btn {
+  width: 100%;
+}
+
+.lp-sticky.is-shown {
+  transform: translateY(0);
+}
+
+/* ===========================================================================
+   Breakpoints
+   =========================================================================== */
+
+/* Tablet and below: the split section stacks, the header nav goes away. */
+@media (max-width: 860px) {
+  :root {
+    --pad: 20px;
+  }
+
+  .lp-nav {
+    display: none;
+  }
+
+  .lp-brand {
+    margin-right: auto;
+  }
+
+  .lp-split {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  /* Picture first reads better than a wall of text on a narrow screen. */
+  .lp-split-media {
+    order: -1;
+  }
+
+  .lp-section,
+  .lp-final {
+    padding-block: 56px;
+  }
+}
+
+/* Phones: the sticky bar comes into play, so the page needs room underneath
+   it, and the hero tightens up to keep the CTA above the fold. */
+@media (max-width: 640px) {
+  .lp-sticky {
+    display: block;
+  }
+
+  .lp-foot-in {
+    padding-bottom: 104px;
+  }
+
+  .lp-hero {
+    padding-top: 24px;
+  }
+
+  .lp-h1 {
+    max-width: 100%;
+  }
+
+  .lp-lede {
+    font-size: 16px;
+  }
+
+  .lp-cta {
+    flex-direction: column;
+  }
+
+  .lp-cta .lp-btn {
+    width: 100%;
+  }
+
+  .lp-shot {
+    margin-top: 32px;
+  }
+
+  .lp-top {
+    padding-block: 14px;
+  }
+}
+
+/* Small phones: drop the header button — the hero CTA is a finger-width away
+   and two buttons on one line starts wrapping the brand. */
+@media (max-width: 380px) {
+  .lp-top .lp-btn-sm {
+    display: none;
+  }
+
+  .lp-card {
+    padding: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

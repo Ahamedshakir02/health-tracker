@@ -50,6 +50,9 @@ export default function Movement() {
   const [range, setRange] = useState(14);
   const [form, setForm] = useState(blankForm);
   const [steps, setSteps] = useState('');
+  // Two independent forms on this page, so two independent error slots.
+  const [workoutError, setWorkoutError] = useState<string | null>(null);
+  const [stepsError, setStepsError] = useState<string | null>(null);
 
   const series = useMemo(() => dailySeries(data, range), [data, range]);
   const week = workoutsInLastDays(data.workouts, 7);
@@ -60,7 +63,11 @@ export default function Movement() {
   function submit(event: FormEvent) {
     event.preventDefault();
     const minutes = Number(form.minutes);
-    if (!Number.isFinite(minutes) || minutes <= 0) return;
+    if (!Number.isFinite(minutes) || minutes <= 0) {
+      setWorkoutError('Enter how many minutes you trained.');
+      return;
+    }
+    setWorkoutError(null);
 
     const entry: WorkoutEntry = {
       id: uid('k'),
@@ -80,7 +87,11 @@ export default function Movement() {
   function saveSteps(event: FormEvent) {
     event.preventDefault();
     const value = Number(steps);
-    if (!Number.isFinite(value) || value < 0) return;
+    if (!Number.isFinite(value) || value < 0) {
+      setStepsError('Enter a step count of zero or more.');
+      return;
+    }
+    setStepsError(null);
     const date = todayISO();
     update('days', (current) => {
       const existing = current.find((d) => d.date === date);
@@ -154,14 +165,18 @@ export default function Movement() {
                   ))}
                 </select>
               </Field>
-              <Field label="Minutes">
+              <Field label="Minutes" error={workoutError ?? undefined}>
                 <input
                   type="number"
                   min="1"
                   inputMode="numeric"
                   placeholder="45"
                   value={form.minutes}
-                  onChange={(e) => setForm({ ...form, minutes: e.target.value })}
+                  aria-invalid={workoutError ? true : undefined}
+                  onChange={(e) => {
+                    setForm({ ...form, minutes: e.target.value });
+                    if (workoutError) setWorkoutError(null);
+                  }}
                   required
                 />
               </Field>
@@ -207,14 +222,18 @@ export default function Movement() {
           <hr className="divider" style={{ margin: '16px 0 12px' }} />
 
           <form onSubmit={saveSteps} className="row">
-            <Field label="Steps today">
+            <Field label="Steps today" error={stepsError ?? undefined}>
               <input
                 type="number"
                 min="0"
                 inputMode="numeric"
                 placeholder={todaySteps != null ? String(todaySteps) : '8000'}
                 value={steps}
-                onChange={(e) => setSteps(e.target.value)}
+                aria-invalid={stepsError ? true : undefined}
+                onChange={(e) => {
+                  setSteps(e.target.value);
+                  if (stepsError) setStepsError(null);
+                }}
                 style={{ width: 140 }}
               />
             </Field>
