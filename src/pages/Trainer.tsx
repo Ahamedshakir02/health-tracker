@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Card } from '../components/ui';
+import ExerciseAnim from '../components/ExerciseAnim';
 import { IconCheck, IconFlame, IconTrainer } from '../components/icons';
 import { TRAINING_PLAN, type PlanDay } from '../data/trainingPlan';
 import {
@@ -15,9 +16,10 @@ import {
  * The Revolution Gym & Fitness schedule book, rendered as the Trainer section.
  *
  * The content is the book's, unchanged — every schedule, day, section and
- * exercise in its original order, with the book's own illustrations. What this
- * adds is the working surface the paper version can't have: pick a schedule and
- * a day, tick sets off as you finish them, and record what you actually lifted.
+ * exercise in its original order. What this adds is what the paper version
+ * can't have: an animated demonstration of every movement (see ExerciseAnim),
+ * and a working surface — pick a schedule and a day, tick sets off as you
+ * finish them, and record what you actually lifted.
  */
 
 /** One colour per muscle group, drawn from the chart series so the app reads as one system. */
@@ -230,16 +232,7 @@ export default function Trainer() {
                       key={key}
                       style={{ '--ex-color': color } as React.CSSProperties}
                     >
-                      {ex.img && (
-                        <figure className="ex-fig">
-                          <img
-                            src={`${import.meta.env.BASE_URL}exercises/${ex.img}`}
-                            alt={`${ex.name} — working position`}
-                            loading="lazy"
-                            decoding="async"
-                          />
-                        </figure>
-                      )}
+                      <ExerciseAnim name={ex.name} phase={ex.n} />
 
                       <div className="ex-body">
                         <div className="ex-top">

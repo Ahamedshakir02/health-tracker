@@ -1812,25 +1812,54 @@ tbody tr:hover {
   background: color-mix(in srgb, var(--ex-color, var(--accent)) 7%, var(--card));
 }
 
-/* The book's illustration. White plate in both themes — the drawings are black
-   line art on white and invert into mud if the surface goes dark. */
+/* The animated demonstration: two photographs stacked, cross-fading between the
+   start and the finish of the movement. The source frames are 3:2 with the
+   lifter centred and dead space either side, so the box crops rather than fits.
+   Sits on --sunken in both themes; the photos carry their own background. */
 .ex-fig {
+  position: relative;
   margin: 0;
-  background: #fff;
+  aspect-ratio: 4 / 3;
+  max-height: 200px;
+  background: var(--sunken);
   border-bottom: 1px solid var(--line);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 150px;
-  padding: 10px;
+  overflow: hidden;
 }
 
-.ex-fig img {
-  max-width: 100%;
-  max-height: 190px;
-  height: auto;
-  object-fit: contain;
+.ex-frame {
+  position: absolute;
+  inset: 0;
   display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Only the finish frame animates — the start frame sits under it at full
+   opacity, so if the animation never runs the card shows a still of the lift. */
+.ex-frame-end {
+  opacity: 0;
+}
+
+.ex-fig.is-live .ex-frame-end {
+  animation: ex-rep 1.6s var(--clip-phase, 0ms) infinite;
+}
+
+/* Hold the start, drive to the finish, hold, return — roughly the tempo of a
+   controlled rep rather than a strobe. */
+@keyframes ex-rep {
+  0%,
+  35% {
+    opacity: 0;
+  }
+  50%,
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 .ex-body {

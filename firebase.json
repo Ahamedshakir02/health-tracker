@@ -37,8 +37,8 @@
         "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
       },
       {
-        "comment": "Exercise illustrations are content-hash named, so they can be cached forever.",
-        "source": "/exercises/**",
+        "comment": "Exercise animation frames are content-hash named, so they can be cached forever. Regenerating a clip changes its filename, so a stale copy is never served.",
+        "source": "/exercise-anim/**",
         "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
       }
     ]

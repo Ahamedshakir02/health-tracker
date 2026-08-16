@@ -90,7 +90,7 @@ before anything else.
 | Screen | Contents |
 |---|---|
 | **Today** | Headline tiles, 90-day weight trend, this week's calories, a 7-day table of everything |
-| **Trainer** | The gym schedule book — 13 schedules, 46 days, 360 illustrated exercises, set ticking and per-set weight logging |
+| **Trainer** | The gym schedule book — 13 schedules, 46 days, 360 exercises each with an animated demonstration, set ticking and per-set weight logging |
 | **Body** | Weight, body fat %, waist / chest / hips, BMI, trend chart with a goal line |
 | **Food** | Meals by slot, calories and macros, daily targets, one-click re-log of recent foods |
 | **Move** | Workouts (type, minutes, intensity, distance, burn), daily steps, active-minute charts |
@@ -103,9 +103,13 @@ The Trainer screen is the **Revolution Gym & Fitness Training Schedule Book**, t
 from the printed original and rendered as something you can work through in the gym.
 
 **13 schedules · 46 training days · 360 exercises · 7 muscle groups.** Every exercise keeps
-its original section, order and number, its coaching cue, and the book's own illustration
-of the working position. Schedule 11 is absent from the source book, so the numbering runs
-1–10, then 12, 13, 14.
+its original section, order and number, and its coaching cue. Schedule 11 is absent from
+the source book, so the numbering runs 1–10, then 12, 13, 14.
+
+Every exercise also gets an **animated demonstration** — a loop between the start and the
+finish of the movement, so you can see the lift rather than read it. The book's 64
+hand-drawn plates were retired for these: the drawings were reused across unrelated
+exercises, so a card often showed a movement that wasn't the one named.
 
 Pick a schedule, pick a day, and work down it:
 

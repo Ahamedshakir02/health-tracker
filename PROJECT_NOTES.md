@@ -52,10 +52,12 @@ The Trainer used to generate an adaptive week from logged data. It now presents 
 
 `Gym_Training_Plan.docx` was parsed programmatically into `src/data/trainingPlan.ts`:
 
-- **13 schedules · 46 training days · 85 sections · 360 exercises · 64 illustrations**
+- **13 schedules · 46 training days · 85 sections · 360 exercises**
 - Every exercise keeps its original section, order, number and coaching cue
-- Every exercise is mapped to its illustration from the book
 - Counts match the book's own stated totals exactly
+
+Every exercise is then mapped to an animated demonstration — see *Animated exercise
+demonstrations* below.
 
 On top of that the app adds what paper cannot: pick a schedule and day, tick sets off as
 you finish them, and record what you actually lifted per set. Muscle groups are colour
@@ -121,7 +123,7 @@ folder. There is no build step in the cloud and no CI.
 |---|---|---|
 | `/` and everything else | `no-cache, must-revalidate` | The SPA shell must always be current |
 | `/assets/**` | `immutable`, 1 year | Vite content-hashes these filenames |
-| `/exercises/**` | `immutable`, 1 year | Illustration filenames are content-hashed too |
+| `/exercise-anim/**` | `immutable`, 1 year | Animation frame filenames are content-hashed too |
 
 > **Gotcha worth remembering:** `cleanUrls: true` means the shell is served at `/`, not at
 > `/index.html`. A cache rule targeting `/index.html` silently never matches, and the
@@ -178,11 +180,10 @@ Add the Vercel domain to **Firebase Auth → Settings → Authorized domains** b
 switch, or sign-in fails with an unhelpful error. Firestore itself does not care where the
 page is served from — the rules are enforced server-side either way.
 
-> **Bandwidth note.** The 64 illustrations are ~18 MB total. Because they're
-> content-hash-named and served `immutable`, each one is downloaded once per device, ever.
-> A cold first load on a Trainer day pulls only that day's images, and they're lazy-loaded.
-> This sits well inside Firebase's 360 MB/day. If it ever became a problem, lossless PNG
-> optimisation typically halves line art with zero visible change.
+> **Bandwidth note.** The 222 animation frames are ~4 MB total (they replaced 18 MB of
+> PNG plates). Because they're content-hash-named and served `immutable`, each one is
+> downloaded once per device, ever. A cold first load on a Trainer day pulls only that
+> day's frames, and they're lazy-loaded. This sits well inside Firebase's 360 MB/day.
 
 ### The other options, briefly
 
@@ -208,11 +209,36 @@ than widen the CSP, the three families come from `@fontsource*` packages importe
 `main.tsx`. The app makes **zero** third-party requests on load — appropriate for a health
 log. Adding a webfont means adding a package, not editing the CSP.
 
-**Exercise illustrations are static files, not database rows.** They live in
-`public/exercises/`. Firestore is a document store with a 1 MB cap and no CDN — base64 in
-documents would be slower, costlier and worse in every way. Firebase Storage would need
-Blaze on this project and adds auth, latency and a CSP change to serve 64 files that are
+**Exercise media are static files, not database rows.** They live in
+`public/exercise-anim/`. Firestore is a document store with a 1 MB cap and no CDN — base64
+in documents would be slower, costlier and worse in every way. Firebase Storage would need
+Blaze on this project and adds auth, latency and a CSP change to serve files that are
 identical for everyone and not private. Static files on a CDN is simply the right shape.
+
+**Animated exercise demonstrations are two stills, not a GIF or a video.** Each movement
+loops between a start frame and a finish frame that CSS cross-fades — see
+`src/components/ExerciseAnim.tsx`. Two WebP stills are ~30 KB against ~1 MB for the
+equivalent GIF, nothing decodes frame by frame on a phone mid-workout, and the browser
+owns the loop. The global `prefers-reduced-motion` rule stops the animation, which leaves
+the start frame showing — a still photo of the lift, which is the right degraded state.
+
+Frames come from [free-exercise-db](https://github.com/yuhonas/free-exercise-db) (public
+domain, 873 exercises, two photographs each). `scripts/build-exercise-media.mjs` maps the
+book's shorthand onto that dataset, pulls the frames, re-encodes them to WebP with ffmpeg
+and writes both `public/exercise-anim/` and the generated `src/data/exerciseMedia.ts`.
+Run it with `npm run build:media`; it needs ffmpeg on PATH and is idempotent.
+
+> The mapping table in that script is **hand-curated and deliberately so.** The book writes
+> "Dumbell", "Inc", "Z Bar", "Shruggle" and hides grip variants in brackets; fuzzy matching
+> got roughly half of it wrong in confident-looking ways (`Flat Bench Barbell Press` →
+> *Barbell Guillotine Bench Press*). The script fails loudly if a plan exercise has no
+> alias or an alias points at a name the dataset doesn't have, so a rename can't silently
+> blank a card. 201 book names → 111 distinct clips; some genuinely are the same movement.
+
+> **Why the book's own drawings were retired.** The 64 plates were reused across unrelated
+> exercises — 201 distinct exercise names shared 64 images — so a card frequently showed a
+> movement that wasn't the one named. The drawings are still in git history if the
+> aesthetic is ever wanted back.
 
 **Set tracking lives in `localStorage`, not Firestore.** Key
 `vitals.trainer.progress.v1`. It is gym scratch state — which sets you ticked, what was on

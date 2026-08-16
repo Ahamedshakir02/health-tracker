@@ -1,12 +1,16 @@
 // GENERATED from Gym_Training_Plan.docx — do not hand-edit.
 // Revolution Gym & Fitness schedule book: 13 schedules,
 // 46 training days, 360 exercises.
-// Illustrations live in /exercises and are referenced by filename.
+// Exercise media is no longer keyed from here: see src/data/exerciseMedia.ts,
+// which maps exercise *name* to an animated demonstration. `img` below is the
+// book's retired line-drawing plate, kept only so this stays a faithful dump of
+// the .docx parse. Nothing reads it.
 
 export interface PlanExercise {
   n: number;
   name: string;
   cue: string;
+  /** Retired: filename of the book's plate, from the deleted /exercises set. */
   img: string | null;
 }
 
