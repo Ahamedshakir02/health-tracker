@@ -1850,6 +1850,14 @@ tbody tr:hover {
   margin-top: 10px;
 }
 
+/* A caveat about the demonstration itself, not about the exercise. */
+.ex-note {
+  margin: 4px 0 0;
+  font-size: 11.5px;
+  font-style: italic;
+  color: var(--ink-3);
+}
+
 /* History on an exercise card: what you did last time, and your record. */
 .ex-best {
   display: flex;

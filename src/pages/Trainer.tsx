@@ -12,6 +12,7 @@ import { prime } from '../lib/beep';
 import { endsAt, restEnabled } from '../lib/rest';
 import { useWakeLock } from '../lib/wakeLock';
 import { movementKey } from '../lib/movementKey';
+import { showsFirstMovementOnly } from '../data/exerciseMedia';
 import { cooldownFor, toLog } from '../lib/mobility';
 import {
   bestSet,
@@ -536,7 +537,7 @@ export default function Trainer() {
                       key={exKey}
                       style={{ '--ex-color': color } as React.CSSProperties}
                     >
-                      <ExerciseAnim name={ex.name} phase={ex.n} />
+                      <ExerciseAnim name={ex.name} section={section.name} phase={ex.n} />
 
                       <div className="ex-body">
                         <div className="ex-top">
@@ -550,6 +551,13 @@ export default function Trainer() {
                         </div>
 
                         <p className="ex-cue">{ex.cue}</p>
+
+                        {/* The book names two movements here; the dataset has a
+                            clip for each, not for the pair. Saying so makes an
+                            apparent mismatch read as deliberate. */}
+                        {showsFirstMovementOnly(ex.name) && (
+                          <p className="ex-note">Demonstration shows the first movement.</p>
+                        )}
 
                         {last ? (
                           <p className="ex-last">

@@ -12,6 +12,26 @@
  *
  * Requires ffmpeg on PATH. Re-runnable and idempotent:
  *   node scripts/build-exercise-media.mjs
+ *
+ * `--verify` prints every book name beside the dataset entry it maps to,
+ * without downloading anything, so the table below can be eyeballed after an
+ * edit:
+ *   node scripts/build-exercise-media.mjs --verify
+ *
+ * Accepted approximations — the dataset has no closer match, and these are
+ * deliberate rather than unnoticed:
+ *
+ *   Smith Press Back          → standing barbell behind-neck press
+ *   Machine Squat             → Hack Squat
+ *   Wrist Curl Machine        → Cable Wrist Curl
+ *   Z Bar French Press (+)    → Seated Triceps Press
+ *   Parallel Bar Stretch      → Dips - Chest Version (in this book that *is*
+ *                               chest dips on parallel bars, so it is correct)
+ *
+ * And the supersets, which show only the first movement of the pair:
+ * Bench Dips / Close Grip Pushups · Pec Deck with Pushups · Chinups + Barbell
+ * Curl · Cable Overhead with Pulley Pushdown · Flat Bar Bench Press and
+ * Dumbell Fly. The cards say so, rather than leaving it looking broken.
  */
 
 import { createHash } from 'node:crypto';
@@ -86,7 +106,9 @@ const ALIAS = {
   'Pec Deck with Pushups': 'Butterfly',
   'Reverse Butterfly': 'Reverse Machine Flyes',
   'Cable Crossover': 'Cable Crossover',
-  'Free Weight': 'Cable Crossover',
+  // The book means a free-weight fly here. A cable machine is the literal
+  // opposite of "free weight".
+  'Free Weight': 'Dumbbell Flyes',
   Pullover: 'Straight-Arm Dumbbell Pullover',
   'Dumbell Pullover': 'Bent-Arm Dumbbell Pullover',
   'Barbell Pullover': 'Bent-Arm Barbell Pullover',
@@ -97,12 +119,16 @@ const ALIAS = {
   'Back Pullups': 'Pullups',
   'Pull Ups': 'Pullups',
   Chinups: 'Chin-Up',
-  'Reverse Chinups': 'Chin-Up',
+  // "Reverse" in the book means pronated, which is a pull-up. A chin-up is
+  // supinated — the opposite grip.
+  'Reverse Chinups': 'Pullups',
   'Chinups + Barbell Curl': 'Chin-Up',
   'Front Lat Pull Down': 'Wide-Grip Lat Pulldown',
   'Lat Pull Down Front': 'Wide-Grip Lat Pulldown',
   'Lat Pulldown': 'Wide-Grip Lat Pulldown',
-  'Lat Pulldown Front': 'Close-Grip Front Lat Pulldown',
+  // Same movement as 'Lat Pull Down Front' above, two spellings apart. They
+  // must not map to different grips.
+  'Lat Pulldown Front': 'Wide-Grip Lat Pulldown',
   'Lat Pull Down Back': 'Wide-Grip Pulldown Behind The Neck',
   'Lat Pulldown Back': 'Wide-Grip Pulldown Behind The Neck',
   'Lat Pulldown (Rev)': 'Underhand Cable Pulldowns',
@@ -218,10 +244,16 @@ const ALIAS = {
 
   // ── SHOULDER ─────────────────────────────────────────────────────────────
   'Barbell Press': 'Barbell Shoulder Press',
+  // The one genuinely ambiguous name in the book: 'Barbell Press' appears
+  // under SHOULDER and again under CHEST, where it is a bench press. The
+  // plain key above serves the shoulder day; this qualified key overrides it
+  // on the chest day. Section-qualified keys always win.
+  'CHEST|Barbell Press': 'Barbell Bench Press - Medium Grip',
   'Barbell Press Front': 'Barbell Shoulder Press',
   'Barbell Back Press': 'Standing Barbell Press Behind Neck',
   'Smith Press Back': 'Standing Barbell Press Behind Neck',
-  'Seated Dumbell Press Back': 'Standing Barbell Press Behind Neck',
+  // Wrong equipment and wrong posture: the book says seated, with dumbbells.
+  'Seated Dumbell Press Back': 'Seated Dumbbell Press',
   'Machine Shoulder Press': 'Machine Shoulder (Military) Press',
   'Shoulder Press Machine': 'Machine Shoulder (Military) Press',
   'Smith Shoulder Press': 'Smith Machine Overhead Shoulder Press',
@@ -235,7 +267,8 @@ const ALIAS = {
   'Side Lateral Raise': 'Side Lateral Raise',
   'Side Raise': 'Side Lateral Raise',
   'Side Lateral (One Arm)': 'One-Arm Side Laterals',
-  'Side Lateral Raise with Dumbell Press': 'Side Laterals to Front Raise',
+  // The old target's second half is a front raise, not a press.
+  'Side Lateral Raise with Dumbell Press': 'Side Lateral Raise',
   'Lateral Bentover': 'Bent Over Dumbbell Rear Delt Raise With Head On Bench',
   'Dumbell Front Raise': 'Front Dumbbell Raise',
   'Barbell Front Raise': 'Standing Front Barbell Raise Over Head',
@@ -397,6 +430,19 @@ const ROUTINES = [
   ] },
 ];
 
+/**
+ * Book entries that name two movements. The dataset has one clip per movement,
+ * so these show the first of the pair — which is fine as long as the card says
+ * so rather than leaving it looking like a bad match.
+ */
+const SUPERSETS = [
+  'Bench Dips / Close Grip Pushups',
+  'Pec Deck with Pushups',
+  'Chinups + Barbell Curl',
+  'Cable Overhead with Pulley Pushdown',
+  'Flat Bar Bench Press and Dumbell Fly',
+];
+
 /** Stable id from a stretch name: "Child's Pose" -> "childs-pose". */
 function stretchId(name) {
   return name
@@ -408,19 +454,56 @@ function stretchId(name) {
     .replace(/^-+|-+$/g, '');
 }
 
-/** Pulls the 201 distinct exercise names out of the generated plan. */
-async function planExerciseNames() {
+/**
+ * Every distinct (section, name) pair in the generated plan.
+ *
+ * Section as well as name, because one book name — 'Barbell Press' — appears
+ * under two muscle headings and means a different lift under each. Everything
+ * else resolves on the name alone.
+ */
+async function planExercises() {
   const src = await readFile(PLAN, 'utf8');
   const marker = 'TRAINING_PLAN: Schedule[] = ';
   const start = src.indexOf(marker);
   if (start < 0) throw new Error(`Could not find "${marker}" in ${PLAN}`);
   const plan = JSON.parse(src.slice(start + marker.length, src.lastIndexOf(']') + 1));
 
-  const names = new Set();
+  const pairs = new Map();
   for (const s of plan)
     for (const d of s.days)
-      for (const sec of d.sections) for (const e of sec.exercises) names.add(e.name.trim());
-  return [...names];
+      for (const sec of d.sections)
+        for (const e of sec.exercises) {
+          const name = e.name.trim();
+          const section = sec.name.trim();
+          pairs.set(`${section}|${name}`, { section, name });
+        }
+  return [...pairs.values()];
+}
+
+/** Section-qualified alias first, then the plain name. */
+function aliasFor(section, name) {
+  return ALIAS[`${section}|${name}`] ?? ALIAS[name];
+}
+
+/** `--verify`: print the whole mapping without downloading a byte. */
+async function verify() {
+  const pairs = await planExercises();
+  const rows = pairs
+    .map((p) => ({ ...p, target: aliasFor(p.section, p.name) }))
+    .sort((a, b) => a.section.localeCompare(b.section) || a.name.localeCompare(b.name));
+  let section = null;
+  for (const row of rows) {
+    if (row.section !== section) {
+      section = row.section;
+      console.log(`\n${section}`);
+    }
+    const qualified = ALIAS[`${row.section}|${row.name}`] ? ' *' : '';
+    console.log(`  ${row.name.padEnd(42)} -> ${row.target ?? '(UNMAPPED)'}${qualified}`);
+  }
+  const unmapped = rows.filter((r) => !r.target);
+  console.log(`\n${rows.length} pairs, ${new Set(rows.map((r) => r.target)).size} clips` +
+    `, ${unmapped.length} unmapped   (* = section-qualified override)`);
+  if (unmapped.length) process.exitCode = 1;
 }
 
 async function fetchBuffer(url, attempts = 3) {
@@ -465,17 +548,30 @@ async function main() {
     throw new Error(`Alias targets not in dataset:\n  ${badTargets.join('\n  ')}`);
   }
 
-  const names = await planExerciseNames();
+  const pairs = await planExercises();
+  const names = [...new Set(pairs.map((p) => p.name))];
+  // Every name needs a plain alias even when a qualified one exists: the plain
+  // key is the fallback `clipFor` lands on when it is called without a section.
   const missing = names.filter((n) => !ALIAS[n]);
   if (missing.length) {
     throw new Error(
       `${missing.length} plan exercises have no alias:\n  ${missing.join('\n  ')}`,
     );
   }
-  console.log(`${names.length} plan exercises → ${new Set(Object.values(ALIAS)).size} distinct clips`);
+  const strayNotes = SUPERSETS.filter((n) => !names.includes(n));
+  if (strayNotes.length) {
+    throw new Error(
+      `Superset notes name exercises the book does not have:\n  ${strayNotes.join('\n  ')}`,
+    );
+  }
+  const qualified = Object.keys(ALIAS).filter((k) => k.includes('|'));
+  console.log(
+    `${names.length} plan exercises (${qualified.length} section-qualified) → ` +
+      `${new Set(pairs.map((p) => aliasFor(p.section, p.name))).size} distinct clips`,
+  );
 
   // One download+encode per distinct dataset entry, not per plan name.
-  const targets = [...new Set(names.map((n) => ALIAS[n]))];
+  const targets = [...new Set(pairs.map((p) => aliasFor(p.section, p.name)))];
 
   await rm(OUT_DIR, { recursive: true, force: true });
   await mkdir(OUT_DIR, { recursive: true });
@@ -554,13 +650,20 @@ async function main() {
 
   // Manifest keyed by the book's own exercise name — trainingPlan.ts is
   // generated from the .docx and must not be hand-edited.
-  const rows = names
-    .sort((a, b) => a.localeCompare(b))
-    .map((n) => {
-      const c = clips.get(ALIAS[n]);
-      return `  ${JSON.stringify(n)}: { a: '${c.a}', b: '${c.b}', source: ${JSON.stringify(c.source)} },`;
-    })
-    .join('\n');
+  const row = (key, dbName) => {
+    const c = clips.get(dbName);
+    return `  ${JSON.stringify(key)}: { a: '${c.a}', b: '${c.b}', source: ${JSON.stringify(c.source)} },`;
+  };
+  // The plain key for every name, then a section-qualified key wherever the
+  // section changes the answer. Order does not matter — the lookup tries the
+  // qualified key first regardless.
+  const rows = [
+    ...names.sort((a, b) => a.localeCompare(b)).map((n) => row(n, ALIAS[n])),
+    ...pairs
+      .filter((p) => ALIAS[`${p.section}|${p.name}`])
+      .sort((a, b) => `${a.section}|${a.name}`.localeCompare(`${b.section}|${b.name}`))
+      .map((p) => row(`${p.section}|${p.name}`, ALIAS[`${p.section}|${p.name}`])),
+  ].join('\n');
 
   await writeFile(
     MANIFEST,
@@ -582,9 +685,30 @@ const EXERCISE_MEDIA: Record<string, ExerciseClip> = {
 ${rows}
 };
 
-/** Clip for a book exercise name, or null if the plan gains a name we haven't mapped. */
-export function clipFor(name: string): ExerciseClip | null {
-  return EXERCISE_MEDIA[name.trim()] ?? null;
+/**
+ * Clip for a book exercise, or null if the plan gains a name we haven't mapped.
+ *
+ * Pass the muscle section where you have it. One book name — 'Barbell Press' —
+ * appears under two headings and means a different lift under each, so the
+ * section-qualified key is tried first and the plain name is the fallback.
+ */
+/**
+ * Book entries naming two movements, where the clip shows only the first.
+ * The card prints a note, so an apparent mismatch reads as deliberate.
+ */
+const SUPERSETS = new Set(${JSON.stringify(SUPERSETS)});
+
+export function showsFirstMovementOnly(name: string): boolean {
+  return SUPERSETS.has(name.trim());
+}
+
+export function clipFor(name: string, section?: string): ExerciseClip | null {
+  const key = name.trim();
+  if (section) {
+    const qualified = EXERCISE_MEDIA[\`\${section.trim()}|\${key}\`];
+    if (qualified) return qualified;
+  }
+  return EXERCISE_MEDIA[key] ?? null;
 }
 `,
     'utf8',
@@ -688,7 +812,9 @@ export function stretchesForArea(area: MobilityArea): Stretch[] {
   console.log(`Wrote ${STRETCHES.length} stretches → src/data/mobility.ts`);
 }
 
-main().catch((err) => {
+const task = process.argv.includes('--verify') ? verify : main;
+
+task().catch((err) => {
   console.error(`\n${err.message}`);
   process.exit(1);
 });

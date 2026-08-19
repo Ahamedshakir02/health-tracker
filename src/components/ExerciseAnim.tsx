@@ -48,14 +48,20 @@ interface Props {
    */
   clip?: { a: string; b: string } | null;
   /**
+   * The muscle heading the exercise sits under. One book name — 'Barbell
+   * Press' — means a different lift under SHOULDER than under CHEST, so the
+   * section is what tells them apart.
+   */
+  section?: string;
+  /**
    * Offsets the loop so a grid of cards doesn't pulse in lockstep. Any stable
    * per-card number works; the position in the day is the obvious one.
    */
   phase?: number;
 }
 
-export default function ExerciseAnim({ name, clip: given, phase = 0 }: Props) {
-  const clip = given ?? clipFor(name);
+export default function ExerciseAnim({ name, clip: given, section, phase = 0 }: Props) {
+  const clip = given ?? clipFor(name, section);
   const ref = useRef<HTMLElement>(null);
   const [live, setLive] = useState(false);
 
