@@ -1,7 +1,7 @@
 node_modules
 dist
 
-# Local environment — real Firebase config and the owner allowlist.
+# Local environment — the real Firebase config.
 # Only .env.example and .env.offline belong in the repo; .env.offline holds
 # nothing but blank keys, which is the point of it.
 .env

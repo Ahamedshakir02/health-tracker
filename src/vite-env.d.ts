@@ -17,8 +17,6 @@ interface ImportMetaEnv {
   readonly VITE_FIREBASE_STORAGE_BUCKET?: string;
   readonly VITE_FIREBASE_MESSAGING_SENDER_ID?: string;
   readonly VITE_FIREBASE_APP_ID?: string;
-  /** Comma-separated allowlist of addresses permitted to sign in. */
-  readonly VITE_ALLOWED_EMAIL?: string;
 }
 
 interface ImportMeta {

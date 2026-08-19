@@ -160,15 +160,27 @@
       </ul>
       <p>
         Depending on where you live you may have further statutory rights — access,
-        rectification, erasure, portability, and objection among them. Since this is a
-        single-user private tracker, the practical answer to all of them is the same: it is
-        your record, and you already hold the controls.
+        rectification, erasure, portability, and objection among them. The controls for all of
+        them are in the app itself rather than behind a request form: <strong>Export JSON</strong>
+        in Settings gives you the complete record in a portable file, every entry is editable
+        in place, and <strong>Delete account</strong> in Settings erases every document stored
+        under your account and then removes the account itself. That deletion is immediate and
+        cannot be undone, so export first if you want a copy.
       </p>
 
       <h2>Retention</h2>
       <p>
         Entries are kept until you delete them, because a health log is only useful as a
-        history. Nothing is auto-expired behind your back.
+        history. Nothing is auto-expired behind your back. Deleting your account removes
+        everything at once; there is no separate backup kept afterwards.
+      </p>
+
+      <h2>Other people's accounts</h2>
+      <p>
+        Vitals is open to anyone, and every account is stored in a separate tree keyed to its
+        own sign-in. No account can read or write another's — the database rules check the
+        signed-in identity on every request. Nothing is shared, aggregated or compared between
+        accounts, and there is no social feed, leaderboard or directory.
       </p>
 
       <h2>Children</h2>

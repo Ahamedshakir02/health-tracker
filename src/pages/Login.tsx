@@ -38,7 +38,6 @@ function GoogleMark() {
 export default function Login() {
   const {
     firebaseAvailable,
-    accessDenied,
     useOffline,
     signInGoogle,
     signInEmail,
@@ -77,9 +76,15 @@ export default function Login() {
       );
       return;
     }
-    const action = mode === 'signup' ? signUpEmail : signInEmail;
+    if (mode === 'signup') {
+      void run(async () => {
+        await signUpEmail(email, password);
+        setPassword('');
+      });
+      return;
+    }
     void run(async () => {
-      await action(email, password);
+      await signInEmail(email, password);
       setPassword('');
     });
   }
@@ -134,19 +139,10 @@ export default function Login() {
           <>
             <h1 className="auth-title">{HEADING[mode]}</h1>
             <p className="auth-sub">
-              This tracker is private to a single account. Other addresses are refused here and by
-              the database rules.
+              {mode === 'signup'
+                ? 'Your log is yours alone — every account gets its own private data.'
+                : 'Sign in to your own private log.'}
             </p>
-
-            {accessDenied && (
-              <div className="banner error" role="alert">
-                <span aria-hidden="true">⛔</span>
-                <span>
-                  <strong>{accessDenied}</strong> is not the owner of this tracker, so it was signed
-                  back out.
-                </span>
-              </div>
-            )}
 
             {mode !== 'reset' && (
               <>

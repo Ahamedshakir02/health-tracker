@@ -20,11 +20,11 @@
 export const RETURNING_KEY = 'vitals.returning';
 
 /**
- * Called once the app is actually unlocked — signed in, or explicitly running
- * local-only. Deliberately *not* called merely because someone opened `/app`:
- * sign-up is invite-only, so a curious visitor who clicks through from the
- * landing page would otherwise be redirected past it forever and stranded on a
- * sign-in screen they cannot pass.
+ * Called once the app is actually unlocked — signed in with a confirmed
+ * address, or explicitly running local-only. Deliberately *not* called merely
+ * because someone opened `/app`: a visitor who looked at the sign-in screen and
+ * backed out has not chosen this app, and marking them would redirect them past
+ * the landing page forever. Unlocking is the only unambiguous signal of intent.
  */
 export function markReturningVisitor(): void {
   try {

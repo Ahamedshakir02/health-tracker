@@ -3,46 +3,50 @@ rules_version = '2';
 // Paste these into Firebase console -> Firestore Database -> Rules, or deploy
 // with `firebase deploy --only firestore:rules`.
 //
-// This file is the actual security boundary. The matching check in the app
-// (src/lib/firebase.ts) only exists to produce a friendly error message —
-// anything shipped to the browser can be edited by whoever is holding it, so
-// nothing may depend on the client behaving.
+// This file is the actual security boundary. Nothing in the browser bundle may
+// be depended on: anything shipped to a client can be edited by whoever is
+// holding it.
 //
 // Without these rules, Firestore's default test rules expire after 30 days and
 // leave the database open to the entire internet until they do.
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // The only address allowed to touch this database. To change owner, edit
-    // this list AND VITE_ALLOWED_EMAIL in .env, then redeploy the rules.
-    function owners() {
-      return ['ahamedshakir02@gmail.com'];
-    }
-
-    // Anonymous accounts have no email, so `null is string` fails here and they
-    // are refused — which is the point: an unauthenticated visitor must not be
-    // able to mint an identity and start writing.
-    function isOwner() {
+    // Sign-up is open — anyone with a Google account, or an email/password
+    // account they have confirmed, gets their own private tree under their uid.
+    //
+    // `email_verified` does the work the old address allowlist used to do.
+    // Google always reports a verified address; an email/password account stays
+    // unverified until the confirmation link is clicked, so a throwaway address
+    // cannot write anything. Anonymous accounts carry no email at all, so
+    // `email is string` refuses them — an unauthenticated visitor must not be
+    // able to mint an identity and start writing. Keep the Anonymous provider
+    // disabled in the console as well.
+    //
+    // `email_verified` is a claim baked into the ID token, so the app must
+    // force getIdToken(true) after the link is clicked. Without that the user
+    // sits on a stale `false` and every write is refused for up to an hour.
+    function verifiedUser() {
       return request.auth != null
         && request.auth.token.email is string
-        && request.auth.token.email.lower() in owners();
+        && request.auth.token.email_verified == true;
     }
 
-    // Tighten to this if you only ever sign in with Google, which always
-    // reports a verified address. Email/password accounts stay unverified until
-    // the user clicks the confirmation link, so switching this on without
-    // verifying first will lock you out of your own data:
-    //   && request.auth.token.email_verified == true
-
+    // The whole of multi-user isolation is this line: a signed-in account can
+    // only ever reach documents under its own uid.
     function ownsAccount(userId) {
-      return isOwner() && request.auth.uid == userId;
+      return verifiedUser() && request.auth.uid == userId;
     }
 
-    // The five documents the app actually writes. Anything else is refused, so
-    // a tampered client cannot repurpose the database as free general-purpose
+    // The documents the app actually writes. Anything else is refused, so a
+    // tampered client cannot repurpose the database as free general-purpose
     // storage under its own uid.
+    //
+    // Adding a slice here and deploying is a PREREQUISITE for shipping the
+    // bundle that writes it — reversed, the live app writes to a slice the
+    // rules refuse and users see `permission-denied`.
     function isKnownSlice(sliceId) {
-      return sliceId in ['settings', 'weights', 'meals', 'workouts', 'days'];
+      return sliceId in ['settings', 'weights', 'meals', 'workouts', 'days', 'sessions'];
     }
 
     // Every slice document is exactly `{ value: <list|map> }`. Rejecting extra

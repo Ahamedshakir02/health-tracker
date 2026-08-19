@@ -20,6 +20,7 @@ export default function SettingsPage() {
     firebaseAvailable,
     user,
     signOut,
+    deleteAccount,
   } = useHealth();
 
   const settings = data.settings;
@@ -32,6 +33,23 @@ export default function SettingsPage() {
   const [habitError, setHabitError] = useState<string | null>(null);
   const [dataError, setDataError] = useState<string | null>(null);
   const [dataNotice, setDataNotice] = useState<string | null>(null);
+  // Two-step, because this one is irreversible and there is no undo anywhere.
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  async function runDeleteAccount() {
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await deleteAccount();
+    } catch (e) {
+      setDeleteError(e instanceof Error ? e.message : String(e));
+      setConfirmDelete(false);
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   const setGoal = (patch: Partial<typeof goals>) =>
     updateSettings({ goals: { ...goals, ...patch } });
@@ -337,7 +355,7 @@ export default function SettingsPage() {
           title="Account"
           note={
             firebaseAvailable
-              ? 'Access is restricted to the owner address in firestore.rules.'
+              ? 'Your log is private to this account, enforced by firestore.rules.'
               : 'Firebase keys are not set — the app is running on local JSON only.'
           }
         >
@@ -357,13 +375,62 @@ export default function SettingsPage() {
               <p className="hint">
                 Your data lives in Firestore under <code>users/{user.uid}</code> and syncs live to
                 any other device signed into this account. No other account can read or write it —
-                the rules check the address on every request, not just at sign-in.
+                the rules check the signed-in uid on every request, not just at sign-in.
               </p>
               <div className="row">
                 <button type="button" className="btn" onClick={() => void signOut()}>
                   Sign out
                 </button>
+                {!confirmDelete && (
+                  <button
+                    type="button"
+                    className="btn btn-danger"
+                    onClick={() => {
+                      setConfirmDelete(true);
+                      setDeleteError(null);
+                    }}
+                  >
+                    Delete account
+                  </button>
+                )}
               </div>
+
+              {confirmDelete && (
+                <div className="banner error" role="alert">
+                  <span aria-hidden="true">⚠</span>
+                  <span>
+                    This erases every weight, meal, workout, session and habit on this account and
+                    then removes the account itself. It cannot be undone and there is no backup —
+                    export your JSON first if you want one.
+                  </span>
+                </div>
+              )}
+              {confirmDelete && (
+                <div className="row">
+                  <button
+                    type="button"
+                    className="btn btn-danger"
+                    disabled={deleting}
+                    onClick={() => void runDeleteAccount()}
+                  >
+                    {deleting ? 'Deleting…' : 'Yes, delete everything'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn"
+                    disabled={deleting}
+                    onClick={() => setConfirmDelete(false)}
+                  >
+                    Keep my account
+                  </button>
+                </div>
+              )}
+              {deleteError && (
+                <div className="banner error" role="alert">
+                  <span aria-hidden="true">⚠</span>
+                  <span>{deleteError}</span>
+                </div>
+              )}
             </div>
           ) : (
             <p className="hint">Not signed in — this session is local to the browser.</p>

@@ -103,6 +103,25 @@ export class FirestoreStore implements HealthStore {
     }
   }
 
+  /**
+   * Erase everything under this account.
+   *
+   * Deletes whatever documents are actually there rather than the SECTIONS
+   * list, so a slice written by an older or newer bundle is still removed —
+   * "delete my data" that leaves a document behind is not deletion.
+   */
+  async deleteAll(): Promise<void> {
+    try {
+      const snap = await getDocs(this.slices());
+      if (snap.empty) return;
+      const batch = writeBatch(db());
+      for (const d of snap.docs) batch.delete(d.ref);
+      await batch.commit();
+    } catch (e) {
+      throw describe(e);
+    }
+  }
+
   subscribe(onChange: (data: HealthData) => void): () => void {
     return onSnapshot(
       this.slices(),

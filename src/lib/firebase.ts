@@ -32,25 +32,6 @@ export const missingFirebaseKeys: string[] = REQUIRED.filter((k) => !config[k]).
 /** True when .env has been filled in with a real Firebase web app config. */
 export const firebaseConfigured = missingFirebaseKeys.length === 0;
 
-/**
- * Addresses permitted to sign in. This is a convenience gate that produces a
- * clear error in the UI — it is NOT the security boundary, because anything in
- * the bundle can be edited by whoever is holding the browser. The real
- * enforcement is the matching allowlist in `firestore.rules`, which Firebase
- * applies server-side on every read and write.
- */
-export const ALLOWED_EMAILS: readonly string[] = (
-  read(import.meta.env.VITE_ALLOWED_EMAIL) ?? 'ahamedshakir02@gmail.com'
-)
-  .split(',')
-  .map((entry) => entry.trim().toLowerCase())
-  .filter(Boolean);
-
-export function isAllowedEmail(email: string | null | undefined): boolean {
-  if (!email) return false;
-  return ALLOWED_EMAILS.includes(email.trim().toLowerCase());
-}
-
 let app: FirebaseApp | null = null;
 let authInstance: Auth | null = null;
 let dbInstance: Firestore | null = null;

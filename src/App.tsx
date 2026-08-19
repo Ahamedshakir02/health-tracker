@@ -75,6 +75,96 @@ function LoadingPanel() {
   );
 }
 
+/**
+ * Signed in, but the address is still unconfirmed.
+ *
+ * `firestore.rules` refuses an account whose `email_verified` is false, so
+ * letting this state through to the app would produce a wall of
+ * `permission-denied` errors instead of an explanation. `emailVerified` is
+ * baked into the ID token, so clicking the link in a mail client does not
+ * update this tab — hence the explicit "I've confirmed it" button, which
+ * reloads the account rather than waiting for a refresh that never comes.
+ */
+function VerifyPanel() {
+  const { user, resendVerification, refreshUser, signOut } = useHealth();
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const run = async (action: () => Promise<void>, done?: string) => {
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      await action();
+      if (done) setNotice(done);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="auth">
+      <main className="auth-card">
+        <div className="auth-brand">
+          <span className="brand-mark" aria-hidden="true">
+            <IconHeart />
+          </span>
+          <div className="brand-text">
+            <span className="brand-name">Vitals</span>
+            <span className="brand-sub">Health Tracker</span>
+          </div>
+        </div>
+
+        <h1 className="auth-title">Confirm your email</h1>
+        <p className="auth-sub">
+          We sent a link to <strong>{user?.email}</strong>. Click it, then come back here. Your log
+          stays locked until the address is confirmed — that is what keeps someone else's address
+          from being used to open an account.
+        </p>
+
+        <button
+          type="button"
+          className="btn btn-primary auth-wide"
+          disabled={busy}
+          onClick={() => void run(refreshUser)}
+        >
+          {busy ? 'Checking…' : "I've confirmed it"}
+        </button>
+
+        {error && (
+          <div className="banner error" role="alert">
+            <span aria-hidden="true">⚠</span>
+            <span>{error}</span>
+          </div>
+        )}
+        {notice && (
+          <div className="banner" role="status">
+            <span aria-hidden="true">✓</span>
+            <span>{notice}</span>
+          </div>
+        )}
+
+        <div className="auth-links">
+          <button
+            type="button"
+            className="link"
+            disabled={busy}
+            onClick={() => void run(resendVerification, 'Sent. Check your inbox and spam folder.')}
+          >
+            Send the link again
+          </button>
+          <button type="button" className="link" onClick={() => void signOut()}>
+            Sign out
+          </button>
+        </div>
+      </main>
+    </div>
+  );
+}
+
 /** Shown when the URL hash names a section that doesn't exist. */
 function NotFoundPanel({ onHome }: { onHome: () => void }) {
   return (
@@ -95,7 +185,7 @@ function NotFoundPanel({ onHome }: { onHome: () => void }) {
 }
 
 export default function App() {
-  const { data, sync, error, storeLabel, authReady, user, firebaseAvailable, offlineMode } =
+  const { data, sync, error, storeLabel, authReady, user, emailVerified, firebaseAvailable, offlineMode } =
     useHealth();
   const [tab, setTab] = useState<TabId | null>(currentTab);
 
@@ -122,7 +212,7 @@ export default function App() {
   // The app is gated: signed in when Firebase is configured, or explicitly
   // running local-only when it is not. Computed before the early returns below
   // because the effect that follows can't sit after them.
-  const unlocked = firebaseAvailable ? Boolean(user) : offlineMode;
+  const unlocked = firebaseAvailable ? Boolean(user) && emailVerified : offlineMode;
 
   // Once someone is actually in, remember it, so a bookmark or home-screen icon
   // pointing at / skips the marketing page next time.
@@ -139,6 +229,10 @@ export default function App() {
       </div>
     );
   }
+
+  // Signed in but unconfirmed is its own state: showing the login form again
+  // to someone who has just signed up reads as the sign-up having failed.
+  if (firebaseAvailable && user && !emailVerified) return <VerifyPanel />;
 
   if (!unlocked) return <Login />;
 
