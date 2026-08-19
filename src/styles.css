@@ -1948,9 +1948,49 @@ tbody tr:hover {
 }
 
 /* Weight blanks, one per set — the book's own logging row. */
-.ex-weights {
-  display: flex;
+/* One row per set: number, load, reps. A grid rather than a flex row so the
+   set number column stays the same width down the card and the two inputs
+   line up between exercises. */
+.ex-logs {
+  display: grid;
   gap: 6px;
+}
+
+.ex-log {
+  display: grid;
+  grid-template-columns: 18px 1fr 1fr;
+  gap: 6px;
+  align-items: center;
+}
+
+.ex-log-n {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  text-align: center;
+}
+
+/* What history says about this movement, above the inputs. */
+.ex-last {
+  margin: 0 0 8px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+
+.finish-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  align-items: center;
+  margin-top: 14px;
+}
+
+.finish-note {
+  flex: 1;
+  min-width: 220px;
+  margin: 0;
 }
 
 .wt {

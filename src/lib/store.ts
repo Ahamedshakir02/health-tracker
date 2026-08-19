@@ -123,7 +123,11 @@ export async function importJSON(file: File): Promise<HealthData> {
 
   const data = normalize(parsed);
   const total =
-    data.weights.length + data.meals.length + data.workouts.length + data.days.length;
+    data.weights.length +
+    data.meals.length +
+    data.workouts.length +
+    data.days.length +
+    data.sessions.length;
   if (total === 0) {
     throw new Error('No usable entries were found in that file — nothing was changed.');
   }

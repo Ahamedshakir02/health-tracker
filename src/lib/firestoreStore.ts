@@ -4,7 +4,14 @@ import { db } from './firebase';
 import { normalize, type HealthStore } from './store';
 import type { HealthData, Section } from '../types';
 
-const SECTIONS: readonly Section[] = ['settings', 'weights', 'meals', 'workouts', 'days'];
+const SECTIONS: readonly Section[] = [
+  'settings',
+  'weights',
+  'meals',
+  'workouts',
+  'days',
+  'sessions',
+];
 
 /** A document id we did not write. Ignored rather than fed into `normalize`. */
 function isSection(id: string): id is Section {
@@ -151,9 +158,14 @@ export async function seedFromLocal(
     !remote.weights.length &&
     !remote.meals.length &&
     !remote.workouts.length &&
-    !remote.days.length;
+    !remote.days.length &&
+    !remote.sessions.length;
   const localHasData =
-    local.weights.length || local.meals.length || local.workouts.length || local.days.length;
+    local.weights.length ||
+    local.meals.length ||
+    local.workouts.length ||
+    local.days.length ||
+    local.sessions.length;
 
   if (remoteIsEmpty && localHasData) {
     await store.saveAll(local);

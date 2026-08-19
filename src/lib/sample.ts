@@ -111,5 +111,9 @@ export function sampleData(): HealthData {
     meals,
     workouts,
     days: dayLogs,
+    // Demo data deliberately carries no gym sessions: the Trainer is where you
+    // see your own numbers, and inventing someone else's bench press there is
+    // the one place a sample would actively mislead.
+    sessions: [],
   };
 }

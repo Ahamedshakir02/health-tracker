@@ -7,12 +7,20 @@ import type {
   Intensity,
   MealEntry,
   MealSlot,
+  MobilitySession,
+  Programme,
+  SessionExercise,
+  SetLog,
   Settings,
+  StrengthSession,
+  StretchLog,
+  TrainerPrefs,
   UnitSystem,
   WeightEntry,
   WorkoutEntry,
+  WorkoutSession,
 } from '../types';
-import { DEFAULT_DATA, DEFAULT_HABITS } from '../types';
+import { DEFAULT_DATA, DEFAULT_HABITS, DEFAULT_TRAINER_PREFS } from '../types';
 import { parseISO, todayISO } from './dates';
 
 /**
@@ -32,6 +40,15 @@ export const MAX_IMPORT_BYTES = 5 * 1024 * 1024;
 
 /** Caps on collection length, so a malformed file cannot lock up rendering. */
 const MAX_ENTRIES = 50_000;
+/**
+ * Sessions are the fattest record in the file — ~1.5 KB each against ~120
+ * bytes for a WorkoutEntry — and they share the 1 MB Firestore document cap
+ * with nothing else. 5 000 is decades of training and well inside the cap; the
+ * point of the number is that a corrupt import cannot blow the document.
+ */
+const MAX_SESSIONS = 5_000;
+const MAX_SETS = 50;
+const MAX_EXERCISES = 60;
 const MAX_HABITS = 200;
 const MAX_NAME = 200;
 const MAX_NOTE = 2_000;
@@ -141,10 +158,119 @@ function workoutEntry(raw: unknown, index: number): WorkoutEntry | null {
   const caloriesBurned = num(raw.caloriesBurned, 0, 50_000);
   const distanceKm = num(raw.distanceKm, 0, 1_000);
   const note = str(raw.note, MAX_NOTE);
+  const sessionId = str(raw.sessionId, 128);
   if (caloriesBurned !== undefined) entry.caloriesBurned = caloriesBurned;
   if (distanceKm !== undefined) entry.distanceKm = distanceKm;
   if (note !== undefined) entry.note = note;
+  if (sessionId !== undefined) entry.sessionId = sessionId;
   return entry;
+}
+
+function setLog(raw: unknown, index: number): SetLog | null {
+  if (!isRecord(raw)) return null;
+  const reps = int(raw.reps, 0, 1_000);
+  // 0 kg is legitimate — pullups, dips, bodyweight work — so it must survive.
+  const weightKg = num(raw.weightKg, 0, 1_000);
+  if (reps === undefined || weightKg === undefined) return null;
+  return { index: int(raw.index, 1, MAX_SETS) ?? index + 1, reps, weightKg };
+}
+
+function sessionExercise(raw: unknown, index: number): SessionExercise | null {
+  if (!isRecord(raw)) return null;
+  const key = str(raw.key, 200);
+  const name = str(raw.name, MAX_NAME);
+  if (!key || !name) return null;
+  const sets = collection(Array.isArray(raw.sets) ? raw.sets.slice(0, MAX_SETS) : [], setLog);
+  // An exercise with nothing completed is not a record of anything.
+  if (!sets.length) return null;
+  return {
+    key,
+    name,
+    section: str(raw.section, MAX_NAME) ?? '',
+    sectionIndex: int(raw.sectionIndex, 0, 50) ?? 0,
+    n: int(raw.n, 0, 200) ?? index + 1,
+    plannedSets: int(raw.plannedSets, 0, MAX_SETS) ?? sets.length,
+    plannedReps: int(raw.plannedReps, 0, 1_000) ?? 0,
+    sets,
+  };
+}
+
+function stretchLog(raw: unknown): StretchLog | null {
+  if (!isRecord(raw)) return null;
+  const key = str(raw.key, 200);
+  const name = str(raw.name, MAX_NAME);
+  if (!key || !name) return null;
+  return { key, name, seconds: int(raw.seconds, 0, 3_600) ?? 30 };
+}
+
+/** ISO timestamp, not a calendar day — `startedAt` is what seeds a session id. */
+function timestamp(value: unknown): string | undefined {
+  const text = str(value, 40);
+  if (!text) return undefined;
+  return Number.isNaN(Date.parse(text)) ? undefined : text;
+}
+
+/**
+ * A session is discriminated on `kind`. A record with no `kind` can only be a
+ * strength session, because mobility did not exist before the field did.
+ */
+function workoutSession(raw: unknown, index: number): WorkoutSession | null {
+  if (!isRecord(raw)) return null;
+  const date = isoDate(raw.date);
+  if (!date) return null;
+  const id = idOf(raw.id, 's', index);
+  const startedAt = timestamp(raw.startedAt) ?? `${date}T00:00:00.000Z`;
+  const finishedAt = timestamp(raw.finishedAt);
+  const durationMin = int(raw.durationMin, 0, 1_440);
+  const workoutId = str(raw.workoutId, 128);
+
+  if (raw.kind === 'mobility') {
+    const moves = collection(
+      Array.isArray(raw.moves) ? raw.moves.slice(0, MAX_EXERCISES) : [],
+      stretchLog,
+    );
+    if (!moves.length) return null;
+    const session: MobilitySession = {
+      id,
+      kind: 'mobility',
+      date,
+      startedAt,
+      routineId: str(raw.routineId, 128) ?? 'custom',
+      title: str(raw.title, MAX_NAME) ?? 'Mobility',
+      moves,
+    };
+    if (finishedAt !== undefined) session.finishedAt = finishedAt;
+    if (durationMin !== undefined) session.durationMin = durationMin;
+    if (workoutId !== undefined) session.workoutId = workoutId;
+    return session;
+  }
+
+  const exercises = collection(
+    Array.isArray(raw.exercises) ? raw.exercises.slice(0, MAX_EXERCISES) : [],
+    sessionExercise,
+  );
+  const cooldown = collection(
+    Array.isArray(raw.cooldown) ? raw.cooldown.slice(0, MAX_EXERCISES) : [],
+    stretchLog,
+  );
+  // A day where nothing at all was ticked is not history.
+  if (!exercises.length && !cooldown.length) return null;
+
+  const session: StrengthSession = {
+    id,
+    kind: 'strength',
+    date,
+    startedAt,
+    scheduleId: int(raw.scheduleId, 0, 10_000) ?? 0,
+    day: int(raw.day, 0, 100) ?? 1,
+    focus: str(raw.focus, MAX_NAME) ?? '',
+    exercises,
+  };
+  if (cooldown.length) session.cooldown = cooldown;
+  if (finishedAt !== undefined) session.finishedAt = finishedAt;
+  if (durationMin !== undefined) session.durationMin = durationMin;
+  if (workoutId !== undefined) session.workoutId = workoutId;
+  return session;
 }
 
 /** `habits` is a free-form id -> bool map, so it needs its own scrub. */
@@ -213,6 +339,34 @@ function goals(raw: unknown): Goals {
   return out;
 }
 
+function programme(raw: unknown): Programme | undefined {
+  if (!isRecord(raw)) return undefined;
+  const scheduleId = int(raw.scheduleId, 0, 10_000);
+  if (scheduleId === undefined) return undefined;
+  const out: Programme = {
+    scheduleId,
+    startedAt: timestamp(raw.startedAt) ?? new Date(0).toISOString(),
+  };
+  const skipToDay = int(raw.skipToDay, 1, 100);
+  const skipSetAt = timestamp(raw.skipSetAt);
+  if (skipToDay !== undefined) out.skipToDay = skipToDay;
+  if (skipSetAt !== undefined) out.skipSetAt = skipSetAt;
+  return out;
+}
+
+function trainerPrefs(raw: unknown): TrainerPrefs | undefined {
+  if (!isRecord(raw)) return undefined;
+  const base = DEFAULT_TRAINER_PREFS;
+  return {
+    // 0 disables the timer, so it has to be a legal value rather than a falsy
+    // one that quietly falls back to the default.
+    restSeconds: int(raw.restSeconds, 0, 600) ?? base.restSeconds,
+    sound: typeof raw.sound === 'boolean' ? raw.sound : base.sound,
+    keepAwake: typeof raw.keepAwake === 'boolean' ? raw.keepAwake : base.keepAwake,
+    cooldown: typeof raw.cooldown === 'boolean' ? raw.cooldown : base.cooldown,
+  };
+}
+
 export function settings(raw: unknown): Settings {
   const base = DEFAULT_DATA.settings;
   if (!isRecord(raw)) return { ...base, goals: { ...base.goals }, habits: [...DEFAULT_HABITS] };
@@ -239,6 +393,10 @@ export function settings(raw: unknown): Settings {
   // added in both places or it silently fails to persist.
   const onboardedAt = str(raw.onboardedAt, 40);
   if (onboardedAt !== undefined) out.onboardedAt = onboardedAt;
+  const activeProgramme = programme(raw.programme);
+  const prefs = trainerPrefs(raw.trainer);
+  if (activeProgramme !== undefined) out.programme = activeProgramme;
+  if (prefs !== undefined) out.trainer = prefs;
   return out;
 }
 
@@ -265,6 +423,18 @@ function dedupeByDate<T extends { date: ISODate }>(items: T[]): T[] {
 }
 
 /**
+ * Two devices that both promoted the same training day produce two records
+ * carrying the same id. Later wins, which matches the whole-document
+ * last-write-wins the storage layer already has — but collapsing them here
+ * means a duplicate can never reach a chart or a personal-record calculation.
+ */
+function dedupeById<T extends { id: string }>(items: T[]): T[] {
+  const byId = new Map<string, T>();
+  for (const item of items) byId.set(item.id, item);
+  return [...byId.values()];
+}
+
+/**
  * The one entry point every storage backend goes through. Anything that does
  * not survive validation is dropped, so the returned value always matches
  * `HealthData` exactly.
@@ -278,5 +448,11 @@ export function healthData(raw: unknown): HealthData {
     meals: collection(input.meals, mealEntry),
     workouts: collection(input.workouts, workoutEntry),
     days: dedupeByDate(collection(input.days, dayLog)),
+    sessions: dedupeById(
+      collection(
+        Array.isArray(input.sessions) ? input.sessions.slice(0, MAX_SESSIONS) : [],
+        workoutSession,
+      ),
+    ),
   };
 }

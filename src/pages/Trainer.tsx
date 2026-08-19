@@ -1,16 +1,30 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Card } from '../components/ui';
 import ExerciseAnim from '../components/ExerciseAnim';
 import { IconCheck, IconFlame, IconTrainer } from '../components/icons';
 import { TRAINING_PLAN, type PlanDay } from '../data/trainingPlan';
+import { useHealth } from '../state/HealthProvider';
+import { todayISO } from '../lib/dates';
+import { labels } from '../lib/units';
+import { promote, upsertSession } from '../lib/session';
 import {
-  loadProgress,
+  clearHints,
+  dayKey,
+  hasProgress,
+  hintKey,
+  loadHints,
+  loadScratch,
+  migrateLegacy,
+  newDay,
   normalise,
   parseScheme,
   progressKey,
-  saveProgress,
-  type ProgressMap,
+  saveScratch,
+  stalePromotable,
+  type ScratchDay,
+  type ScratchStore,
 } from '../lib/trainerProgress';
+import type { WorkoutEntry, WorkoutSession } from '../types';
 
 /**
  * The Revolution Gym & Fitness schedule book, rendered as the Trainer section.
@@ -20,6 +34,12 @@ import {
  * can't have: an animated demonstration of every movement (see ExerciseAnim),
  * and a working surface — pick a schedule and a day, tick sets off as you
  * finish them, and record what you actually lifted.
+ *
+ * Ticks and typed numbers go to localStorage while you are in the gym (see
+ * lib/trainerProgress.ts); "Finish day" is what turns them into a durable,
+ * synced record. That split is deliberate: a Firestore write per tap would
+ * burn the free tier on state that is worthless tomorrow, and would fail
+ * outright in a basement with no signal.
  */
 
 /** One colour per muscle group, drawn from the chart series so the app reads as one system. */
@@ -43,13 +63,33 @@ function countExercises(day: PlanDay): number {
 }
 
 export default function Trainer() {
+  const { data, update } = useHealth();
+  const units = data.settings.units;
+  const u = labels(units);
+
   const [scheduleId, setScheduleId] = useState<number>(TRAINING_PLAN[0]?.id ?? 1);
   const [dayN, setDayN] = useState<number>(1);
-  const [progress, setProgress] = useState<ProgressMap>(loadProgress);
+  const [store, setStore] = useState<ScratchStore>(() => {
+    // The undated v1 map is converted to weight hints and removed on first
+    // load. It can never become history — it has no dates, so dating it would
+    // invent a workout that did not happen.
+    migrateLegacy();
+    return loadScratch();
+  });
+  const [hints, setHints] = useState(loadHints);
+  const [saved, setSaved] = useState<string | null>(null);
 
   useEffect(() => {
-    saveProgress(progress);
-  }, [progress]);
+    saveScratch(store);
+  }, [store]);
+
+  // Real history supersedes the recovered v1 hints, so drop them once it exists.
+  useEffect(() => {
+    if (data.sessions.length && Object.keys(hints).length) {
+      clearHints();
+      setHints({});
+    }
+  }, [data.sessions.length, hints]);
 
   const schedule = useMemo(
     () => TRAINING_PLAN.find((s) => s.id === scheduleId) ?? TRAINING_PLAN[0],
@@ -61,6 +101,71 @@ export default function Trainer() {
   );
 
   const scheme = parseScheme(day.reps);
+  const today = todayISO();
+  const key = dayKey(today, schedule.id, day.n);
+  const scratch = store[key];
+
+  /**
+   * Writes a promoted session and its paired workout row.
+   *
+   * Sessions first: if the second write fails, the history is intact and the
+   * missing workout row is recoverable from `sessionId`. Reversed, a workout
+   * would count on the dashboard with nothing behind it.
+   */
+  const commitSession = useCallback(
+    (session: WorkoutSession, workout: WorkoutEntry) => {
+      update('sessions', (current) => upsertSession(current, session));
+      update('workouts', (current) => [
+        ...current.filter((w) => w.id !== workout.id),
+        workout,
+      ]);
+    },
+    [update],
+  );
+
+  /**
+   * Promote anything left over from a previous day.
+   *
+   * This is the "walked out of the gym and never tapped finish" case. It runs
+   * once per mount, guarded by a ref: without the guard StrictMode's double
+   * effect would run it twice, and while the upsert would still collapse the
+   * result, doing the work twice is pointless.
+   */
+  const swept = useRef(false);
+  useEffect(() => {
+    if (swept.current) return;
+    swept.current = true;
+    const stale = stalePromotable(store, today);
+    if (!stale.length) return;
+
+    setStore((prev) => {
+      const next = { ...prev };
+      for (const entry of stale) {
+        const sch = TRAINING_PLAN.find((s) => s.id === entry.scheduleId);
+        const d = sch?.days.find((x) => x.n === entry.day);
+        if (!sch || !d) continue;
+        const out = promote(entry, sch, d);
+        if (!out) continue;
+        commitSession(out.session, out.workout);
+        next[dayKey(entry.date, entry.scheduleId, entry.day)] = {
+          ...entry,
+          promotedAs: out.session.id,
+        };
+      }
+      return next;
+    });
+    // Intentionally mount-only: this is a catch-up sweep, not a subscription.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /** Creates today's scratch on the first interaction, not on render. */
+  const withDay = (fn: (d: ScratchDay) => ScratchDay) => {
+    setStore((prev) => {
+      const current = prev[key] ?? newDay(today, schedule.id, day.n, units);
+      return { ...prev, [key]: fn(current) };
+    });
+    setSaved(null);
+  };
 
   // Progress across the selected day, counted in sets rather than exercises so
   // a half-finished movement still moves the bar.
@@ -70,7 +175,7 @@ export default function Trainer() {
     let exercisesDone = 0;
     day.sections.forEach((section, si) => {
       section.exercises.forEach((ex) => {
-        const entry = normalise(progress[progressKey(schedule.id, day.n, si, ex.n)], scheme.sets);
+        const entry = normalise(scratch?.entries[progressKey(si, ex.n)], scheme.sets);
         const d = entry.done.filter(Boolean).length;
         done += d;
         total += scheme.sets;
@@ -78,43 +183,60 @@ export default function Trainer() {
       });
     });
     return { done, total, exercisesDone, exercises: countExercises(day) };
-  }, [day, progress, schedule.id, scheme.sets]);
+  }, [day, scratch, scheme.sets]);
 
   const pct = tally.total ? Math.round((tally.done / tally.total) * 100) : 0;
+  const alreadyLogged = Boolean(scratch?.promotedAs);
 
   const pickSchedule = (id: number) => {
     setScheduleId(id);
     setDayN(1);
+    setSaved(null);
   };
 
-  const toggleSet = (key: string, index: number) => {
-    setProgress((prev) => {
-      const entry = normalise(prev[key], scheme.sets);
+  const toggleSet = (exKey: string, index: number) => {
+    withDay((d) => {
+      const entry = normalise(d.entries[exKey], scheme.sets);
       const done = entry.done.slice();
       done[index] = !done[index];
-      return { ...prev, [key]: { ...entry, done } };
+      return { ...d, entries: { ...d.entries, [exKey]: { ...entry, done } } };
     });
   };
 
-  const setWeight = (key: string, index: number, value: string) => {
-    setProgress((prev) => {
-      const entry = normalise(prev[key], scheme.sets);
-      const weight = entry.weight.slice();
-      weight[index] = value;
-      return { ...prev, [key]: { ...entry, weight } };
+  const setField = (exKey: string, field: 'weight' | 'reps', index: number, value: string) => {
+    withDay((d) => {
+      const entry = normalise(d.entries[exKey], scheme.sets);
+      const next = entry[field].slice();
+      next[index] = value;
+      return { ...d, entries: { ...d.entries, [exKey]: { ...entry, [field]: next } } };
     });
   };
 
   const resetDay = () => {
-    setProgress((prev) => {
+    setStore((prev) => {
       const next = { ...prev };
-      day.sections.forEach((section, si) => {
-        section.exercises.forEach((ex) => {
-          delete next[progressKey(schedule.id, day.n, si, ex.n)];
-        });
-      });
+      delete next[key];
       return next;
     });
+    setSaved(null);
+  };
+
+  /**
+   * Turn today's ticks into a record.
+   *
+   * Safe to press twice: the session id is derived from the start time held in
+   * the scratch, so a second press writes the same id and the upsert replaces
+   * rather than appends.
+   */
+  const finishDay = () => {
+    if (!scratch) return;
+    const out = promote(scratch, schedule, day);
+    if (!out) return;
+    commitSession(out.session, out.workout);
+    setStore((prev) => ({ ...prev, [key]: { ...scratch, promotedAs: out.session.id } }));
+    setSaved(
+      `Saved — ${out.session.exercises.reduce((n, e) => n + e.sets.length, 0)} sets, ${out.session.durationMin} min.`,
+    );
   };
 
   return (
@@ -166,7 +288,10 @@ export default function Trainer() {
               type="button"
               className="day-tab"
               aria-current={d.n === day.n ? 'page' : undefined}
-              onClick={() => setDayN(d.n)}
+              onClick={() => {
+                setDayN(d.n);
+                setSaved(null);
+              }}
             >
               <span className="day-n">Day {d.n}</span>
               <span className="day-focus">{d.focus}</span>
@@ -204,10 +329,27 @@ export default function Trainer() {
                 {pct === 100 ? <IconCheck /> : <IconFlame />}
                 {pct === 100 ? 'Day complete' : `${tally.done} of ${tally.total} sets`}
               </span>
-              <span>
+              <span aria-live="polite">
                 {tally.exercisesDone}/{tally.exercises} exercises · {pct}%
               </span>
             </div>
+          </div>
+
+          <div className="finish-row">
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={finishDay}
+              disabled={!scratch || !hasProgress(scratch)}
+            >
+              {alreadyLogged ? 'Update today’s record' : 'Finish day'}
+            </button>
+            <p className="hint finish-note">
+              {saved ??
+                (alreadyLogged
+                  ? 'Logged. Tick more sets and update it if you carry on.'
+                  : 'Ticks stay on this device until you finish — then the day is saved and synced.')}
+            </p>
           </div>
         </Card>
 
@@ -223,13 +365,14 @@ export default function Trainer() {
 
               <div className="ex-grid">
                 {section.exercises.map((ex) => {
-                  const key = progressKey(schedule.id, day.n, si, ex.n);
-                  const entry = normalise(progress[key], scheme.sets);
+                  const exKey = progressKey(si, ex.n);
+                  const entry = normalise(scratch?.entries[exKey], scheme.sets);
                   const complete = entry.done.every(Boolean);
+                  const hint = hints[hintKey(schedule.id, day.n, si, ex.n)];
                   return (
                     <article
                       className={`ex-card${complete ? ' is-done' : ''}`}
-                      key={key}
+                      key={exKey}
                       style={{ '--ex-color': color } as React.CSSProperties}
                     >
                       <ExerciseAnim name={ex.name} phase={ex.n} />
@@ -247,10 +390,15 @@ export default function Trainer() {
 
                         <p className="ex-cue">{ex.cue}</p>
 
+                        {hint?.some((w) => w.trim()) && (
+                          <p className="ex-last">
+                            On this device: {hint.filter((w) => w.trim()).join(', ')}
+                          </p>
+                        )}
+
                         <div className="ex-sets">
                           <span className="ex-scheme">
-                            {scheme.reps ? `${scheme.reps} reps` : 'reps'} ×{' '}
-                            {scheme.sets}
+                            {scheme.reps ? `${scheme.reps} reps` : 'reps'} × {scheme.sets}
                           </span>
                           <div className="setchips" role="group" aria-label={`${ex.name} sets`}>
                             {entry.done.map((isDone, i) => (
@@ -260,7 +408,7 @@ export default function Trainer() {
                                 className="setchip"
                                 aria-pressed={isDone}
                                 aria-label={`${ex.name}, set ${i + 1} of ${scheme.sets}`}
-                                onClick={() => toggleSet(key, i)}
+                                onClick={() => toggleSet(exKey, i)}
                               >
                                 {i + 1}
                               </button>
@@ -268,19 +416,38 @@ export default function Trainer() {
                           </div>
                         </div>
 
-                        {/* The book's own "Weight — set 1 / 2 / 3" blanks. */}
-                        <div className="ex-weights">
+                        {/* The book's own "Weight — set 1 / 2 / 3" blanks, with the
+                            reps beside them so a session records what happened
+                            rather than what was prescribed. */}
+                        <div className="ex-logs">
                           {entry.weight.map((w, i) => (
-                            <input
-                              key={i}
-                              className="wt"
-                              type="text"
-                              inputMode="decimal"
-                              placeholder="—"
-                              value={w}
-                              aria-label={`${ex.name}, weight for set ${i + 1}`}
-                              onChange={(e) => setWeight(key, i, e.target.value)}
-                            />
+                            <div className="ex-log" key={i}>
+                              <span className="ex-log-n" aria-hidden="true">
+                                {i + 1}
+                              </span>
+                              <input
+                                className="wt"
+                                type="number"
+                                min="0"
+                                step="0.5"
+                                inputMode="decimal"
+                                placeholder={u.weight}
+                                value={w}
+                                aria-label={`${ex.name}, weight for set ${i + 1} in ${u.weight}`}
+                                onChange={(e) => setField(exKey, 'weight', i, e.target.value)}
+                              />
+                              <input
+                                className="wt"
+                                type="number"
+                                min="0"
+                                step="1"
+                                inputMode="numeric"
+                                placeholder={scheme.reps ? String(scheme.reps) : 'reps'}
+                                value={entry.reps[i]}
+                                aria-label={`${ex.name}, reps for set ${i + 1}`}
+                                onChange={(e) => setField(exKey, 'reps', i, e.target.value)}
+                              />
+                            </div>
                           ))}
                         </div>
                       </div>
@@ -295,7 +462,8 @@ export default function Trainer() {
         <p className="hint">
           Transcribed from the Revolution Gym &amp; Fitness schedule book — every exercise in its
           original section and order. Schedule 11 is not in the source book, so the numbering runs
-          1–10, then 12, 13, 14. Ticked sets and weights are kept on this device.
+          1–10, then 12, 13, 14. Weights are stored in {u.weight}; reps left blank are recorded as
+          the {scheme.reps || 'prescribed'} the book prescribes.
         </p>
       </div>
     </>

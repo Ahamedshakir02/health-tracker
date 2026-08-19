@@ -244,7 +244,8 @@ export default function App() {
     !data.weights.length &&
     !data.meals.length &&
     !data.workouts.length &&
-    !data.days.length;
+    !data.days.length &&
+    !data.sessions.length;
   if (sync !== 'loading' && !data.settings.onboardedAt && untouched) return <Onboarding />;
 
   const go = (id: TabId) => {
