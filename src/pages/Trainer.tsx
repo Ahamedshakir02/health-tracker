@@ -7,6 +7,10 @@ import { useHealth } from '../state/HealthProvider';
 import { formatShort, todayISO } from '../lib/dates';
 import { labels, round, toCanonical, toDisplay } from '../lib/units';
 import ProgressionPanel from '../components/ProgressionPanel';
+import RestTimer from '../components/RestTimer';
+import { prime } from '../lib/beep';
+import { endsAt, restEnabled } from '../lib/rest';
+import { useWakeLock } from '../lib/wakeLock';
 import { movementKey } from '../lib/movementKey';
 import {
   bestSet,
@@ -35,7 +39,7 @@ import {
   type ScratchDay,
   type ScratchStore,
 } from '../lib/trainerProgress';
-import type { WorkoutEntry, WorkoutSession } from '../types';
+import { DEFAULT_TRAINER_PREFS, type WorkoutEntry, type WorkoutSession } from '../types';
 
 /**
  * The Revolution Gym & Fitness schedule book, rendered as the Trainer section.
@@ -78,6 +82,7 @@ export default function Trainer() {
   const units = data.settings.units;
   const u = labels(units);
   const programme = data.settings.programme;
+  const prefs = data.settings.trainer ?? DEFAULT_TRAINER_PREFS;
   /** kg out of storage, into whatever the user reads in. */
   const toWeight = useCallback((kg: number) => round(toDisplay('weight', kg, units), 1), [units]);
 
@@ -108,6 +113,9 @@ export default function Trainer() {
   const [saved, setSaved] = useState<string | null>(null);
   /** Movement key of the exercise whose progression chart is open, if any. */
   const [openChart, setOpenChart] = useState<string | null>(null);
+  /** Epoch ms the current rest finishes, or null when nothing is resting. */
+  const [restEnd, setRestEnd] = useState<number | null>(null);
+  const [restTotal, setRestTotal] = useState(0);
 
   useEffect(() => {
     saveScratch(store);
@@ -216,6 +224,10 @@ export default function Trainer() {
   }, [day, scratch, scheme.sets]);
 
   const pct = tally.total ? Math.round((tally.done / tally.total) * 100) : 0;
+  const inSession = Boolean(scratch && hasProgress(scratch) && !scratch.promotedAs);
+  // Only while a session is genuinely under way. Holding the lock for someone
+  // reading the book on the sofa would flatten their battery for nothing.
+  useWakeLock(prefs.keepAwake && inSession);
   const alreadyLogged = Boolean(scratch?.promotedAs);
 
   const isActive = programme?.scheduleId === schedule.id;
@@ -262,12 +274,24 @@ export default function Trainer() {
   };
 
   const toggleSet = (exKey: string, index: number) => {
+    let started = false;
     withDay((d) => {
       const entry = normalise(d.entries[exKey], scheme.sets);
       const done = entry.done.slice();
       done[index] = !done[index];
+      started = done[index];
       return { ...d, entries: { ...d.entries, [exKey]: { ...entry, done } } };
     });
+
+    // Rest starts when a set is finished, not when one is un-ticked.
+    if (!started || !restEnabled(prefs.restSeconds)) return;
+    // This call is inside the tap that started the rest, which is the only
+    // moment a browser will let an AudioContext start. Priming it later —
+    // when the timer actually ends — produces a context that is suspended and
+    // silent, with no error to notice.
+    if (prefs.sound) prime();
+    setRestTotal(prefs.restSeconds);
+    setRestEnd(endsAt(Date.now(), prefs.restSeconds));
   };
 
   const setField = (exKey: string, field: 'weight' | 'reps', index: number, value: string) => {
@@ -301,6 +325,7 @@ export default function Trainer() {
     if (!out) return;
     commitSession(out.session, out.workout);
     setStore((prev) => ({ ...prev, [key]: { ...scratch, promotedAs: out.session.id } }));
+    setRestEnd(null);
     setSaved(
       `Saved — ${out.session.exercises.reduce((n, e) => n + e.sets.length, 0)} sets, ${out.session.durationMin} min.`,
     );
@@ -631,6 +656,21 @@ export default function Trainer() {
           direction rather than a number.
         </p>
       </div>
+
+      {/* Pinned rather than in the flow: the whole point is to be readable
+          from wherever you are in the day when the set ends. */}
+      {restEnd !== null && (
+        <RestTimer
+          deadline={restEnd}
+          total={restTotal}
+          sound={prefs.sound}
+          onDismiss={() => setRestEnd(null)}
+          onAdd={(secs) => {
+            setRestTotal((t) => t + secs);
+            setRestEnd((end) => (end === null ? null : end + secs * 1000));
+          }}
+        />
+      )}
     </>
   );
 }

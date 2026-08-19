@@ -5,7 +5,7 @@ import HealthLink from '../components/HealthLink';
 import { sampleData } from '../lib/sample';
 import { labels, round, toCanonical, toDisplay } from '../lib/units';
 import { uid } from '../lib/calc';
-import type { Habit, UnitSystem } from '../types';
+import { DEFAULT_TRAINER_PREFS, type Habit, type TrainerPrefs, type UnitSystem } from '../types';
 
 export default function SettingsPage() {
   const {
@@ -53,6 +53,12 @@ export default function SettingsPage() {
 
   const setGoal = (patch: Partial<typeof goals>) =>
     updateSettings({ goals: { ...goals, ...patch } });
+
+  // Written whole rather than patched, so a partial record from an older
+  // bundle is completed with defaults instead of persisting half a shape.
+  const trainer = settings.trainer ?? DEFAULT_TRAINER_PREFS;
+  const setTrainer = (patch: Partial<TrainerPrefs>) =>
+    updateSettings({ trainer: { ...trainer, ...patch } });
 
   function addHabit(event: FormEvent) {
     event.preventDefault();
@@ -189,6 +195,72 @@ export default function SettingsPage() {
                 ]}
               />
             </div>
+          </div>
+        </Card>
+
+        <Card title="In the gym" note="How the Trainer behaves while you are training.">
+          <div className="row" style={{ gap: 24 }}>
+            <div className="field">
+              <span className="label">Rest between sets</span>
+              <Segmented
+                ariaLabel="Rest between sets"
+                value={trainer.restSeconds}
+                onChange={(value: number) => setTrainer({ restSeconds: value })}
+                options={[
+                  { value: 0, label: 'Off' },
+                  { value: 60, label: '60s' },
+                  { value: 90, label: '90s' },
+                  { value: 120, label: '2 min' },
+                  { value: 180, label: '3 min' },
+                ]}
+              />
+            </div>
+          </div>
+
+          <div className="pref-list">
+            <label className="pref">
+              <input
+                type="checkbox"
+                checked={trainer.sound}
+                onChange={(e) => setTrainer({ sound: e.target.checked })}
+              />
+              <span>
+                <strong>Sound when rest ends</strong>
+                <span className="hint">
+                  A short tone. Silent unless the rest timer is on.
+                </span>
+              </span>
+            </label>
+
+            <label className="pref">
+              <input
+                type="checkbox"
+                checked={trainer.keepAwake}
+                onChange={(e) => setTrainer({ keepAwake: e.target.checked })}
+              />
+              <span>
+                <strong>Keep the screen awake</strong>
+                <span className="hint">
+                  Only while a session is under way, and only where the browser
+                  supports it. It costs battery.
+                </span>
+              </span>
+            </label>
+
+            <label className="pref">
+              <input
+                type="checkbox"
+                checked={trainer.cooldown}
+                onChange={(e) => setTrainer({ cooldown: e.target.checked })}
+              />
+              <span>
+                <strong>Suggest a cool-down</strong>
+                <span className="hint">
+                  Stretches matched to the muscles the day trained, at the foot
+                  of the Trainer.
+                </span>
+              </span>
+            </label>
           </div>
         </Card>
 
