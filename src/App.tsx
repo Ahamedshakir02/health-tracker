@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import type { ComponentType } from 'react';
 import { useHealth } from './state/HealthProvider';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -13,16 +13,30 @@ import {
   IconToday,
   IconTrainer,
 } from './components/icons';
-import Dashboard from './pages/Dashboard';
-import Body from './pages/Body';
-import Food from './pages/Food';
-import Movement from './pages/Movement';
-import Daily from './pages/Daily';
-import SettingsPage from './pages/Settings';
-import Trainer from './pages/Trainer';
-import Mobility from './pages/Mobility';
 import Login from './pages/Login';
 import Onboarding from './pages/Onboarding';
+
+/**
+ * Sections are loaded when they are first opened.
+ *
+ * Recharts is by a wide margin the largest thing in the bundle, and it is used
+ * by four of the eight sections. Statically importing every page put it in the
+ * first load for everyone — including someone opening the Trainer on a phone
+ * in a gym, who will never see a chart. Splitting here is what makes the lazy
+ * progression panel actually defer anything.
+ *
+ * Login and Onboarding stay eager: they are the first thing an unauthenticated
+ * visitor sees, and a spinner in front of a sign-in form is a worse trade than
+ * the few kilobytes they cost.
+ */
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Body = lazy(() => import('./pages/Body'));
+const Food = lazy(() => import('./pages/Food'));
+const Movement = lazy(() => import('./pages/Movement'));
+const Daily = lazy(() => import('./pages/Daily'));
+const SettingsPage = lazy(() => import('./pages/Settings'));
+const Trainer = lazy(() => import('./pages/Trainer'));
+const Mobility = lazy(() => import('./pages/Mobility'));
 import { applyPageMeta } from './lib/pageMeta';
 import { markReturningVisitor } from './lib/returningVisitor';
 
@@ -300,6 +314,9 @@ export default function App() {
           </div>
         )}
         <ErrorBoundary resetKey={tab ?? 'not-found'}>
+          {/* The same skeleton for a section still downloading as for data
+              still loading — from the reader's side they are the same wait. */}
+          <Suspense fallback={<LoadingPanel />}>
           {sync === 'loading' ? (
             <LoadingPanel />
           ) : tab === null ? (
@@ -321,6 +338,7 @@ export default function App() {
           ) : (
             <SettingsPage />
           )}
+          </Suspense>
         </ErrorBoundary>
       </main>
 

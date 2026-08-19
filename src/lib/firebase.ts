@@ -1,6 +1,12 @@
 import { initializeApp, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
-import { getFirestore, type Firestore } from 'firebase/firestore';
+import {
+  getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  type Firestore,
+} from 'firebase/firestore';
 
 /** Blank, whitespace or a literal "undefined" all mean "not set". */
 function read(value: string | undefined): string | undefined {
@@ -51,7 +57,37 @@ export function auth(): Auth {
   return authInstance;
 }
 
+/**
+ * Firestore with an IndexedDB cache behind it.
+ *
+ * This is the difference between a basement gym working and not. Reads are
+ * served from the cache when there is no signal, and writes queue locally and
+ * flush on reconnect, so ticking off a session underground is not lost. It
+ * also cuts billed reads on the free tier, where the daily quota is the real
+ * ceiling once sign-up is open.
+ *
+ * The multi-tab manager is what keeps two open tabs from fighting over the
+ * lease — without it the second tab fails to acquire the cache and falls back
+ * to memory, silently losing the offline behaviour in exactly the case where
+ * someone has the app open on a laptop and a phone-sized window beside it.
+ *
+ * `initializeFirestore` rather than `getFirestore`, because the cache can only
+ * be chosen at creation. It must therefore be the first Firestore call in the
+ * process, which the lazy singleton below guarantees.
+ */
 export function db(): Firestore {
-  if (!dbInstance) dbInstance = getFirestore(ensureApp());
+  if (!dbInstance) {
+    const instance = ensureApp();
+    try {
+      dbInstance = initializeFirestore(instance, {
+        localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+      });
+    } catch {
+      // No IndexedDB — Safari private browsing, or a locked-down profile.
+      // Losing the cache costs offline support; refusing to start would cost
+      // the whole app, so fall back to a plain in-memory instance.
+      dbInstance = getFirestore(instance);
+    }
+  }
   return dbInstance;
 }
