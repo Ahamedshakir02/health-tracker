@@ -25,6 +25,10 @@ export const PAGE_META: Record<string, PageMeta> = {
     title: 'Trainer',
     description: 'The gym schedule book — pick a day, tick sets off, record what you lifted.',
   },
+  mobility: {
+    title: 'Mobility',
+    description: 'Stretch routines by body area, with a guided hold timer.',
+  },
   body: {
     title: 'Body',
     description: 'Weight, body fat and measurements, with a trend chart against your goal.',

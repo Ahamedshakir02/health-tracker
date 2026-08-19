@@ -44,6 +44,16 @@ export function IconTrainer(props: IconProps) {
   );
 }
 
+/** A figure mid-stretch — reaching, not lifting, so it reads apart from the Trainer. */
+export function IconMobility(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="12" cy="4.5" r="2" />
+      <path d="M12 6.5v6M12 8.5l5-2M12 8.5l-5 2M12 12.5l3.5 7M12 12.5l-3.5 7" />
+    </Svg>
+  );
+}
+
 export function IconBody(props: IconProps) {
   return (
     <Svg {...props}>

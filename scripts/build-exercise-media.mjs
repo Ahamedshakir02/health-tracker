@@ -26,6 +26,7 @@ const run = promisify(execFile);
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT_DIR = join(ROOT, 'public', 'exercise-anim');
 const MANIFEST = join(ROOT, 'src', 'data', 'exerciseMedia.ts');
+const MOBILITY = join(ROOT, 'src', 'data', 'mobility.ts');
 const PLAN = join(ROOT, 'src', 'data', 'trainingPlan.ts');
 
 const DB_JSON = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json';
@@ -262,6 +263,151 @@ const ALIAS = {
   'Calf Raise': 'Standing Calf Raises',
 };
 
+/**
+ * The stretch set, hand-picked from free-exercise-db's 123 stretching entries.
+ *
+ * Sixty-one of them, not all 123: the dataset repeats the same stretch seated,
+ * standing and lying, and it carries a run of "-SMR" foam-roller drills that
+ * are not stretches and need a roller nobody has brought. What is left covers
+ * every area a training day can leave tight, with a couple of options each.
+ *
+ * `hold` and `cue` are written here rather than taken from the dataset. Its own
+ * `instructions` run to four or five sentences — correct, and far too long to
+ * read off a card mid-hold.
+ */
+const STRETCHES = [
+  // -- HIPS -----------------------------------------------------------------
+  { db: 'Ankle On The Knee', area: 'hips', hold: 30, cue: 'Ankle across the far knee, pull the thigh in until the hip opens.' },
+  { db: 'Knee Across The Body', area: 'hips', hold: 30, cue: 'Flat on your back, draw the knee across. Both shoulders stay down.' },
+  { db: 'Lying Glute', area: 'hips', hold: 30, cue: 'Figure four, hands behind the thigh, pull it toward your chest.' },
+  { db: 'Seated Glute', area: 'hips', hold: 30, cue: 'Sit tall, ankle on knee, lean forward from the hips not the back.' },
+  { db: 'Lying Bent Leg Groin', area: 'hips', hold: 45, cue: 'Soles together, knees fall open. Let gravity do it, do not push.' },
+  { db: 'Side Lying Groin Stretch', area: 'hips', hold: 30, cue: 'Bottom leg straight along the floor, ease the inner thigh long.' },
+  { db: 'Kneeling Hip Flexor', area: 'hips', hold: 30, cue: 'Tuck the tailbone under first, then press the hip forward.' },
+  { db: 'Standing Hip Flexors', area: 'hips', hold: 30, cue: 'Square the hips, squeeze the back glute, stand tall.' },
+  { db: 'IT Band and Glute Stretch', area: 'hips', hold: 30, cue: 'Cross the leg over and lean away until the outer hip pulls.' },
+  { db: "World's Greatest Stretch", area: 'hips', hold: 30, cue: 'Deep lunge, elbow inside the foot, then rotate up and open.' },
+
+  // -- HAMSTRINGS -----------------------------------------------------------
+  { db: '90/90 Hamstring', area: 'hamstrings', hold: 30, cue: 'Hip and knee at ninety, straighten the knee slowly until it bites.' },
+  { db: 'Lying Hamstring', area: 'hamstrings', hold: 30, cue: 'Leg up, hands behind the thigh. The other leg stays flat.' },
+  { db: 'Seated Hamstring', area: 'hamstrings', hold: 30, cue: 'Hinge from the hips with a long back. Do not round to reach further.' },
+  { db: 'Standing Toe Touches', area: 'hamstrings', hold: 30, cue: 'Soft knees, hang from the hips, let the head go heavy.' },
+  { db: "Runner's Stretch", area: 'hamstrings', hold: 30, cue: 'Front leg straight, toes up, hinge over it.' },
+  { db: 'Leg-Up Hamstring Stretch', area: 'hamstrings', hold: 30, cue: 'Heel on a bench, leg straight, hinge over it with a flat back.' },
+  { db: 'Seated Hamstring and Calf Stretch', area: 'hamstrings', hold: 30, cue: 'Reach for the toes and pull them back toward you.' },
+
+  // -- QUADS ----------------------------------------------------------------
+  { db: 'All Fours Quad Stretch', area: 'quads', hold: 30, cue: 'Heel to the backside, knee under the hip, ribs down.' },
+  { db: 'Quad Stretch', area: 'quads', hold: 30, cue: 'Knees together, pull the heel in. Hold a wall if you wobble.' },
+  { db: 'Lying Prone Quadriceps', area: 'quads', hold: 30, cue: 'Face down, heel to backside. Keep the hip on the floor.' },
+  { db: 'On Your Side Quad Stretch', area: 'quads', hold: 30, cue: 'Bottom leg tucked for balance, top heel drawn back.' },
+  { db: 'Standing Elevated Quad Stretch', area: 'quads', hold: 30, cue: 'Rear foot on a bench, sink straight down.' },
+
+  // -- CALVES ---------------------------------------------------------------
+  { db: 'Calf Stretch Hands Against Wall', area: 'calves', hold: 30, cue: 'Back leg straight, heel down, hips forward.' },
+  { db: 'Standing Gastrocnemius Calf Stretch', area: 'calves', hold: 30, cue: 'Back knee locked. That is what reaches the upper calf.' },
+  { db: 'Standing Soleus And Achilles Stretch', area: 'calves', hold: 30, cue: 'Same position, back knee bent. Lower calf and Achilles.' },
+  { db: 'Seated Calf Stretch', area: 'calves', hold: 30, cue: 'Towel or band round the ball of the foot, pull it back.' },
+  { db: 'Ankle Circles', area: 'calves', hold: 20, cue: 'Slow and full, both directions. Draw the biggest circle you can.' },
+
+  // -- BACK -----------------------------------------------------------------
+  { db: "Child's Pose", area: 'back', hold: 45, cue: 'Hips to heels, arms long, breathe into the low back.' },
+  { db: 'Cat Stretch', area: 'back', hold: 30, cue: 'Arch and round one vertebra at a time, with the breath.' },
+  { db: 'Hug Knees To Chest', area: 'back', hold: 30, cue: 'Both knees in, rock gently side to side.' },
+  { db: "Dancer's Stretch", area: 'back', hold: 30, cue: 'Seated twist. Rotate from the ribs, not the neck.' },
+  { db: 'Standing Pelvic Tilt', area: 'back', hold: 30, cue: 'Tuck the tailbone, flatten the low back, hold.' },
+  { db: 'Overhead Lat', area: 'back', hold: 30, cue: 'Arm overhead, lean away, feel it down the side of the ribs.' },
+  { db: 'Chair Lower Back Stretch', area: 'back', hold: 30, cue: 'Sit, feet planted, fold forward and let the low back open.' },
+  { db: 'Side-Lying Floor Stretch', area: 'back', hold: 30, cue: 'Top arm reaches long, let the shoulder settle.' },
+  { db: 'Middle Back Stretch', area: 'back', hold: 30, cue: 'Round the upper back and push the hands away.' },
+  { db: 'Upper Back Stretch', area: 'back', hold: 30, cue: 'Clasp the hands, press forward, separate the shoulder blades.' },
+  { db: 'Spinal Stretch', area: 'back', hold: 30, cue: 'Long spine, gentle rotation, hold at the first resistance.' },
+
+  // -- CHEST ----------------------------------------------------------------
+  { db: 'Behind Head Chest Stretch', area: 'chest', hold: 30, cue: 'Hands behind the head, elbows wide, chest up.' },
+  { db: 'Chest And Front Of Shoulder Stretch', area: 'chest', hold: 30, cue: 'Forearm on the frame, step through, turn away.' },
+  { db: 'Elbows Back', area: 'chest', hold: 30, cue: 'Hands clasped behind, lift them and open the collarbones.' },
+  { db: 'Dynamic Chest Stretch', area: 'chest', hold: 30, cue: 'Swing the arms wide and back. Controlled, not thrown.' },
+
+  // -- SHOULDERS ------------------------------------------------------------
+  { db: 'Shoulder Stretch', area: 'shoulders', hold: 30, cue: 'Arm across the body, pull above the elbow, not on the joint.' },
+  { db: 'Seated Front Deltoid', area: 'shoulders', hold: 30, cue: 'Hands behind on the floor, slide the hips forward.' },
+  { db: 'Round The World Shoulder Stretch', area: 'shoulders', hold: 30, cue: 'Big slow arc through the full range. Stop where it pinches.' },
+  { db: 'Shoulder Circles', area: 'shoulders', hold: 30, cue: 'Shrug up, roll back, drop. Ten each way.' },
+  { db: 'Arm Circles', area: 'shoulders', hold: 30, cue: 'Small to large, forward then back.' },
+  { db: 'Upward Stretch', area: 'shoulders', hold: 30, cue: 'Reach overhead, palms up, lengthen through the ribs.' },
+  { db: 'Chair Upper Body Stretch', area: 'shoulders', hold: 30, cue: 'Hands on the back of a chair, drop the chest between the arms.' },
+
+  // -- NECK -----------------------------------------------------------------
+  { db: 'Chin To Chest Stretch', area: 'neck', hold: 30, cue: 'Chin down, hands resting on the head. No pulling.' },
+  { db: 'Side Neck Stretch', area: 'neck', hold: 30, cue: 'Ear to shoulder, opposite shoulder stays down.' },
+
+  // -- ARMS -----------------------------------------------------------------
+  { db: 'Overhead Triceps', area: 'arms', hold: 30, cue: 'Elbow to the ceiling, hand down the spine, ease the elbow back.' },
+  { db: 'Triceps Stretch', area: 'arms', hold: 30, cue: 'Same shape. Ribs stay down, do not arch to get further.' },
+  { db: 'Standing Biceps Stretch', area: 'arms', hold: 30, cue: 'Arm back and straight, thumb down, turn away from it.' },
+  { db: 'Seated Biceps', area: 'arms', hold: 30, cue: 'Hands behind, fingers back, walk the hips forward.' },
+  { db: 'Kneeling Forearm Stretch', area: 'arms', hold: 30, cue: 'Palms down, fingers toward the knees, sit back slowly.' },
+  { db: 'Wrist Circles', area: 'arms', hold: 20, cue: 'Both directions, full range. Worth it after a heavy grip day.' },
+
+  // -- CORE -----------------------------------------------------------------
+  { db: 'Overhead Stretch', area: 'core', hold: 30, cue: 'Reach tall and lengthen from the hip to the fingertips.' },
+  { db: 'Standing Lateral Stretch', area: 'core', hold: 30, cue: 'Bend straight sideways. Do not let the hips drift out.' },
+  { db: 'Torso Rotation', area: 'core', hold: 30, cue: 'Hips face forward, rotate the ribs. Slow both ways.' },
+  { db: 'Lower Back Curl', area: 'core', hold: 30, cue: 'Curl up gently, hold at the top of the breath.' },
+];
+
+/**
+ * Routines, named for when you would reach for one rather than for anatomy.
+ * The order inside a routine is the order to do them in: standing work first,
+ * floor work last, so you are not up and down off the mat.
+ */
+const ROUTINES = [
+  { id: 'post-leg', title: 'After a leg day', db: [
+    'Standing Gastrocnemius Calf Stretch', 'Standing Soleus And Achilles Stretch',
+    'Standing Hip Flexors', 'Quad Stretch', "Runner's Stretch",
+    'Lying Hamstring', 'Lying Glute', 'Lying Bent Leg Groin', "Child's Pose",
+  ] },
+  { id: 'post-push', title: 'After chest, shoulders or triceps', db: [
+    'Elbows Back', 'Behind Head Chest Stretch', 'Chest And Front Of Shoulder Stretch',
+    'Shoulder Stretch', 'Overhead Triceps', 'Seated Front Deltoid',
+  ] },
+  { id: 'post-pull', title: 'After back or biceps', db: [
+    'Overhead Lat', 'Chair Lower Back Stretch', 'Upper Back Stretch',
+    'Standing Biceps Stretch', 'Kneeling Forearm Stretch', "Child's Pose",
+  ] },
+  { id: 'desk', title: 'Desk neck and shoulders', db: [
+    'Chin To Chest Stretch', 'Side Neck Stretch', 'Shoulder Circles',
+    'Elbows Back', 'Chair Upper Body Stretch', 'Torso Rotation',
+  ] },
+  { id: 'lower-back', title: 'Low back relief', db: [
+    'Standing Pelvic Tilt', 'Cat Stretch', 'Hug Knees To Chest',
+    "Dancer's Stretch", 'Lying Glute', 'Lying Hamstring', "Child's Pose",
+  ] },
+  { id: 'morning', title: 'Morning loosen-up', db: [
+    'Arm Circles', 'Shoulder Circles', 'Ankle Circles', 'Cat Stretch',
+    'Standing Lateral Stretch', 'Standing Toe Touches',
+  ] },
+  { id: 'full-body', title: 'Full body reset', db: [
+    'Shoulder Circles', 'Behind Head Chest Stretch', 'Shoulder Stretch',
+    'Overhead Triceps', 'Standing Lateral Stretch', 'Overhead Lat',
+    'Standing Hip Flexors', 'Quad Stretch', 'Standing Toe Touches',
+    'Standing Gastrocnemius Calf Stretch', 'Lying Glute', "Child's Pose",
+  ] },
+];
+
+/** Stable id from a stretch name: "Child's Pose" -> "childs-pose". */
+function stretchId(name) {
+  return name
+    .toLowerCase()
+    // Apostrophes vanish rather than becoming a hyphen: "child-s-pose" reads
+    // like a typo in a URL, and these ids are stored in session records.
+    .replace(/['’]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
 /** Pulls the 201 distinct exercise names out of the generated plan. */
 async function planExerciseNames() {
   const src = await readFile(PLAN, 'utf8');
@@ -337,7 +483,14 @@ async function main() {
   let bytes = 0;
   const clips = new Map();
 
-  await pool(targets, CONCURRENCY, async (dbName) => {
+  /**
+   * Downloads both frames of one dataset entry, re-encodes them and records the
+   * clip. Shared by the schedule exercises and the stretch set — both are the
+   * same two-frame contract, and a second copy of this would be a second place
+   * for the encoding settings to drift.
+   */
+  const buildClip = async (dbName) => {
+    if (clips.has(dbName)) return;
     const entry = byName.get(dbName);
     const frames = (entry.images || []).slice(0, 2);
     if (frames.length < 2) throw new Error(`${dbName} has ${frames.length} frame(s), need 2`);
@@ -362,9 +515,41 @@ async function main() {
     }
     clips.set(dbName, { a: hashes[0], b: hashes[1], source: entry.id });
     process.stdout.write('.');
-  });
+  };
 
+  await pool(targets, CONCURRENCY, buildClip);
   console.log('');
+  // Counted before the stretches join the same map, or the manifest header
+  // reports the stretch frames as schedule clips.
+  const exerciseClips = clips.size;
+
+  // Stretches ride the same pipeline: same dataset, same two frames, same
+  // encoder, same content-hashed filenames under /exercise-anim.
+  const stretchTargets = [...new Set(STRETCHES.map((x) => x.db))];
+  const badStretches = stretchTargets.filter((n) => !byName.has(n));
+  if (badStretches.length) {
+    throw new Error(`Stretches not in dataset:\n  ${badStretches.join('\n  ')}`);
+  }
+  const routed = new Set(ROUTINES.flatMap((r) => r.db));
+  const orphanRoutes = [...routed].filter((n) => !stretchTargets.includes(n));
+  if (orphanRoutes.length) {
+    throw new Error(`Routines reference unlisted stretches:\n  ${orphanRoutes.join('\n  ')}`);
+  }
+  console.log(`${stretchTargets.length} stretches across ${ROUTINES.length} routines`);
+  await pool(stretchTargets, CONCURRENCY, buildClip);
+  console.log('');
+
+  // A handful of dataset entries ship the same photograph twice. They look
+  // like a two-frame loop right up until the card renders and nothing moves,
+  // so they are caught here rather than noticed in the gym. Frames are
+  // content-hashed, which makes the check a string comparison.
+  const still = [...clips.entries()].filter(([, c]) => c.a === c.b).map(([n]) => n);
+  if (still.length) {
+    throw new Error(
+      `${still.length} entr${still.length === 1 ? 'y has' : 'ies have'} two identical frames ` +
+        `and would not animate:\n  ${still.join('\n  ')}`,
+    );
+  }
   await rm(scratch, { recursive: true, force: true });
 
   // Manifest keyed by the book's own exercise name — trainingPlan.ts is
@@ -381,7 +566,7 @@ async function main() {
     MANIFEST,
     `// GENERATED by scripts/build-exercise-media.mjs — do not hand-edit.
 // Frames from free-exercise-db (public domain): https://github.com/yuhonas/free-exercise-db
-// ${names.length} exercises · ${clips.size} distinct clips · files live in /exercise-anim.
+// ${names.length} exercises · ${exerciseClips} distinct clips · files live in /exercise-anim.
 
 /** The two ends of a movement. The Trainer cross-fades a↔b to animate it. */
 export interface ExerciseClip {
@@ -405,9 +590,102 @@ export function clipFor(name: string): ExerciseClip | null {
     'utf8',
   );
 
+  const stretchRows = STRETCHES.map((x) => {
+    const c = clips.get(x.db);
+    return (
+      `  { id: '${stretchId(x.db)}', name: ${JSON.stringify(x.db)}, area: '${x.area}', ` +
+      `holdSeconds: ${x.hold}, cue: ${JSON.stringify(x.cue)}, ` +
+      `a: '${c.a}', b: '${c.b}', source: ${JSON.stringify(c.source)} },`
+    );
+  }).join('\n');
+
+  const holdById = new Map(STRETCHES.map((x) => [stretchId(x.db), x.hold]));
+  const areaById = new Map(STRETCHES.map((x) => [stretchId(x.db), x.area]));
+  const routineRows = ROUTINES.map((r) => {
+    const ids = r.db.map(stretchId);
+    const areas = [...new Set(ids.map((id) => areaById.get(id)))];
+    // Holds plus ten seconds each to move between them, rounded to the minute.
+    const seconds = ids.reduce((n, id) => n + holdById.get(id) + 10, 0);
+    return (
+      `  { id: ${JSON.stringify(r.id)}, title: ${JSON.stringify(r.title)}, ` +
+      `areas: [${areas.map((a) => `'${a}'`).join(', ')}], ` +
+      `minutes: ${Math.max(1, Math.round(seconds / 60))}, ` +
+      `stretchIds: [${ids.map((i) => `'${i}'`).join(', ')}] },`
+    );
+  }).join('\n');
+
+  await writeFile(
+    MOBILITY,
+    `// GENERATED by scripts/build-exercise-media.mjs — do not hand-edit.
+// Frames from free-exercise-db (public domain): https://github.com/yuhonas/free-exercise-db
+// ${STRETCHES.length} stretches · ${ROUTINES.length} routines · frames live in /exercise-anim.
+
+/** The body areas a training day can leave tight. */
+export type MobilityArea =
+  | 'hips'
+  | 'hamstrings'
+  | 'quads'
+  | 'calves'
+  | 'back'
+  | 'chest'
+  | 'shoulders'
+  | 'neck'
+  | 'arms'
+  | 'core';
+
+/** Same two-frame contract as ExerciseClip, plus how long to hold it. */
+export interface Stretch {
+  id: string;
+  name: string;
+  area: MobilityArea;
+  /** Seconds per side. Written by hand — the dataset does not carry one. */
+  holdSeconds: number;
+  /** One line, readable mid-hold. The dataset's own instructions are far longer. */
+  cue: string;
+  a: string;
+  b: string;
+  source: string;
+}
+
+export interface MobilityRoutine {
+  id: string;
+  title: string;
+  areas: MobilityArea[];
+  /** Holds plus ten seconds between each, to the nearest minute. */
+  minutes: number;
+  stretchIds: string[];
+}
+
+export const STRETCHES: Stretch[] = [
+${stretchRows}
+];
+
+export const ROUTINES: MobilityRoutine[] = [
+${routineRows}
+];
+
+const BY_ID = new Map(STRETCHES.map((s) => [s.id, s]));
+
+export function stretchById(id: string): Stretch | null {
+  return BY_ID.get(id) ?? null;
+}
+
+/** The stretches of a routine, in order, skipping any that have gone missing. */
+export function routineStretches(routine: MobilityRoutine): Stretch[] {
+  return routine.stretchIds.map(stretchById).filter((s): s is Stretch => s !== null);
+}
+
+export function stretchesForArea(area: MobilityArea): Stretch[] {
+  return STRETCHES.filter((s) => s.area === area);
+}
+`,
+    'utf8',
+  );
+
   const files = (await readdir(OUT_DIR)).length;
   console.log(`Wrote ${files} frames (${(bytes / 1024 / 1024).toFixed(1)} MB) → public/exercise-anim`);
   console.log(`Wrote manifest → src/data/exerciseMedia.ts`);
+  console.log(`Wrote ${STRETCHES.length} stretches → src/data/mobility.ts`);
 }
 
 main().catch((err) => {

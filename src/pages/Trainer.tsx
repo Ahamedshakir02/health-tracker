@@ -12,6 +12,7 @@ import { prime } from '../lib/beep';
 import { endsAt, restEnabled } from '../lib/rest';
 import { useWakeLock } from '../lib/wakeLock';
 import { movementKey } from '../lib/movementKey';
+import { cooldownFor, toLog } from '../lib/mobility';
 import {
   bestSet,
   describeSets,
@@ -139,6 +140,9 @@ export default function Trainer() {
   );
 
   const scheme = parseScheme(day.reps);
+  // Deterministic: the same training day always suggests the same stretches,
+  // so it can be learned rather than re-read every session.
+  const cooldown = useMemo(() => (prefs.cooldown ? cooldownFor(day) : []), [day, prefs.cooldown]);
   const today = todayISO();
   const key = dayKey(today, schedule.id, day.n);
   const scratch = store[key];
@@ -303,6 +307,13 @@ export default function Trainer() {
     });
   };
 
+  const toggleCooldown = (id: string) => {
+    withDay((d) => {
+      const current = d.cooldown ?? {};
+      return { ...d, cooldown: { ...current, [id]: !current[id] } };
+    });
+  };
+
   const resetDay = () => {
     setStore((prev) => {
       const next = { ...prev };
@@ -321,7 +332,7 @@ export default function Trainer() {
    */
   const finishDay = () => {
     if (!scratch) return;
-    const out = promote(scratch, schedule, day);
+    const out = promote(scratch, schedule, day, cooldown.map(toLog));
     if (!out) return;
     commitSession(out.session, out.workout);
     setStore((prev) => ({ ...prev, [key]: { ...scratch, promotedAs: out.session.id } }));
@@ -646,6 +657,60 @@ export default function Trainer() {
             </section>
           );
         })}
+
+        {cooldown.length > 0 && (
+          <section className="musc cooldown">
+            <header className="musc-hd">
+              <span
+                className="musc-swatch"
+                style={{ background: 'var(--s-sleep)' }}
+                aria-hidden="true"
+              />
+              <h2 className="musc-name">Cool-down</h2>
+              <span className="musc-count">
+                {cooldown.length} stretches for what you just trained
+              </span>
+            </header>
+
+            <div className="ex-grid">
+              {cooldown.map((stretch, i) => {
+                const done = Boolean(scratch?.cooldown?.[stretch.id]);
+                return (
+                  <article
+                    className={`ex-card${done ? ' is-done' : ''}`}
+                    key={stretch.id}
+                    style={{ '--ex-color': 'var(--s-sleep)' } as React.CSSProperties}
+                  >
+                    <ExerciseAnim name={stretch.name} clip={stretch} phase={i} />
+                    <div className="ex-body">
+                      <div className="ex-top">
+                        <h3 className="ex-name">{stretch.name}</h3>
+                        {done && (
+                          <span className="ex-tick" aria-label="Held">
+                            <IconCheck />
+                          </span>
+                        )}
+                      </div>
+                      <p className="ex-cue">{stretch.cue}</p>
+                      <div className="ex-sets">
+                        <span className="ex-scheme">Hold {stretch.holdSeconds}s</span>
+                        <button
+                          type="button"
+                          className="setchip"
+                          aria-pressed={done}
+                          aria-label={`${stretch.name}, held`}
+                          onClick={() => toggleCooldown(stretch.id)}
+                        >
+                          <IconCheck />
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         <p className="hint">
           Transcribed from the Revolution Gym &amp; Fitness schedule book — every exercise in its

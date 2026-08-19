@@ -39,8 +39,14 @@ function watch(el: Element, onChange: (visible: boolean) => void): () => void {
 }
 
 interface Props {
-  /** The book's exercise name, used to look up the clip. */
+  /** The book's exercise name, used to look up the clip and to caption it. */
   name: string;
+  /**
+   * A clip supplied directly, for media that is not in the exercise manifest —
+   * the stretch set, which lives in its own generated file but has the same
+   * two-frame shape. Given one, the name lookup is skipped.
+   */
+  clip?: { a: string; b: string } | null;
   /**
    * Offsets the loop so a grid of cards doesn't pulse in lockstep. Any stable
    * per-card number works; the position in the day is the obvious one.
@@ -48,8 +54,8 @@ interface Props {
   phase?: number;
 }
 
-export default function ExerciseAnim({ name, phase = 0 }: Props) {
-  const clip = clipFor(name);
+export default function ExerciseAnim({ name, clip: given, phase = 0 }: Props) {
+  const clip = given ?? clipFor(name);
   const ref = useRef<HTMLElement>(null);
   const [live, setLive] = useState(false);
 

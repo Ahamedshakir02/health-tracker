@@ -7,6 +7,7 @@ import {
   IconFood,
   IconHabits,
   IconHeart,
+  IconMobility,
   IconMovement,
   IconSettings,
   IconToday,
@@ -19,6 +20,7 @@ import Movement from './pages/Movement';
 import Daily from './pages/Daily';
 import SettingsPage from './pages/Settings';
 import Trainer from './pages/Trainer';
+import Mobility from './pages/Mobility';
 import Login from './pages/Login';
 import Onboarding from './pages/Onboarding';
 import { applyPageMeta } from './lib/pageMeta';
@@ -27,6 +29,7 @@ import { markReturningVisitor } from './lib/returningVisitor';
 const TABS = [
   { id: 'dashboard', label: 'Today', Icon: IconToday },
   { id: 'trainer', label: 'Trainer', Icon: IconTrainer },
+  { id: 'mobility', label: 'Mobility', Icon: IconMobility },
   { id: 'body', label: 'Body', Icon: IconBody },
   { id: 'food', label: 'Food', Icon: IconFood },
   { id: 'movement', label: 'Move', Icon: IconMovement },
@@ -305,6 +308,8 @@ export default function App() {
             <Dashboard onNavigate={go} />
           ) : tab === 'trainer' ? (
             <Trainer />
+          ) : tab === 'mobility' ? (
+            <Mobility />
           ) : tab === 'body' ? (
             <Body />
           ) : tab === 'food' ? (
