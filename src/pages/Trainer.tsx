@@ -4,9 +4,19 @@ import ExerciseAnim from '../components/ExerciseAnim';
 import { IconCheck, IconFlame, IconTrainer } from '../components/icons';
 import { TRAINING_PLAN, type PlanDay } from '../data/trainingPlan';
 import { useHealth } from '../state/HealthProvider';
-import { todayISO } from '../lib/dates';
-import { labels } from '../lib/units';
-import { promote, upsertSession } from '../lib/session';
+import { formatShort, todayISO } from '../lib/dates';
+import { labels, round, toCanonical, toDisplay } from '../lib/units';
+import ProgressionPanel from '../components/ProgressionPanel';
+import { movementKey } from '../lib/movementKey';
+import {
+  bestSet,
+  describeSets,
+  epley1RM,
+  lastPerformance,
+  progression,
+  promote,
+  upsertSession,
+} from '../lib/session';
 import { nextDay, rotationPosition, sessionsLogged, skipTo, startProgramme } from '../lib/programme';
 import {
   clearHints,
@@ -68,6 +78,8 @@ export default function Trainer() {
   const units = data.settings.units;
   const u = labels(units);
   const programme = data.settings.programme;
+  /** kg out of storage, into whatever the user reads in. */
+  const toWeight = useCallback((kg: number) => round(toDisplay('weight', kg, units), 1), [units]);
 
   /**
    * Opened on the day the programme says comes next.
@@ -94,6 +106,8 @@ export default function Trainer() {
   });
   const [hints, setHints] = useState(loadHints);
   const [saved, setSaved] = useState<string | null>(null);
+  /** Movement key of the exercise whose progression chart is open, if any. */
+  const [openChart, setOpenChart] = useState<string | null>(null);
 
   useEffect(() => {
     saveScratch(store);
@@ -455,6 +469,31 @@ export default function Trainer() {
                   const entry = normalise(scratch?.entries[exKey], scheme.sets);
                   const complete = entry.done.every(Boolean);
                   const hint = hints[hintKey(schedule.id, day.n, si, ex.n)];
+
+                  // History is keyed by movement, not by position, so the same
+                  // lift carries its record across schedules.
+                  const mkey = movementKey(section.name, ex.name);
+                  const last = lastPerformance(data.sessions, mkey, today);
+                  const best = bestSet(data.sessions, mkey);
+
+                  // The personal record check runs against what is being typed
+                  // right now rather than what has been saved — the moment it
+                  // is useful is the moment you finish the set, not tonight.
+                  let liveBest = 0;
+                  let liveReps = 0;
+                  entry.done.forEach((isDone, i) => {
+                    if (!isDone) return;
+                    const w = toCanonical('weight', Number(entry.weight[i] || 0), units);
+                    const r = Number(entry.reps[i] || scheme.reps || 0);
+                    liveBest = Math.max(liveBest, epley1RM(w, r));
+                    if (w === 0) liveReps = Math.max(liveReps, r);
+                  });
+                  const isPR = Boolean(
+                    best &&
+                      (liveBest > best.est1RM || (best.bodyweight && liveReps > best.reps)),
+                  );
+                  const chartOpen = openChart === mkey;
+
                   return (
                     <article
                       className={`ex-card${complete ? ' is-done' : ''}`}
@@ -476,10 +515,17 @@ export default function Trainer() {
 
                         <p className="ex-cue">{ex.cue}</p>
 
-                        {hint?.some((w) => w.trim()) && (
+                        {last ? (
                           <p className="ex-last">
-                            On this device: {hint.filter((w) => w.trim()).join(', ')}
+                            Last: {describeSets(last.sets, u.weight, toWeight)} —{' '}
+                            {formatShort(last.date)}
                           </p>
+                        ) : (
+                          hint?.some((w) => w.trim()) && (
+                            <p className="ex-last">
+                              On this device: {hint.filter((w) => w.trim()).join(', ')}
+                            </p>
+                          )
                         )}
 
                         <div className="ex-sets">
@@ -536,6 +582,37 @@ export default function Trainer() {
                             </div>
                           ))}
                         </div>
+
+                        {best && (
+                          <div className="ex-best">
+                            <span className="ex-pb">
+                              {best.bodyweight
+                                ? `Best ${best.reps} reps`
+                                : `Best ${toWeight(best.weightKg)} ${u.weight} × ${best.reps} · est. 1RM ${toWeight(best.est1RM)} ${u.weight}`}
+                            </span>
+                            {isPR && (
+                              <span className="ex-pr" title="Beats your best on record">
+                                PR
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              className="btn btn-sm"
+                              aria-expanded={chartOpen}
+                              onClick={() => setOpenChart(chartOpen ? null : mkey)}
+                            >
+                              {chartOpen ? 'Hide' : 'Progress'}
+                            </button>
+                          </div>
+                        )}
+
+                        {chartOpen && (
+                          <ProgressionPanel
+                            points={progression(data.sessions, mkey)}
+                            unitLabel={u.weight}
+                            convert={toWeight}
+                          />
+                        )}
                       </div>
                     </article>
                   );
@@ -549,7 +626,9 @@ export default function Trainer() {
           Transcribed from the Revolution Gym &amp; Fitness schedule book — every exercise in its
           original section and order. Schedule 11 is not in the source book, so the numbering runs
           1–10, then 12, 13, 14. Weights are stored in {u.weight}; reps left blank are recorded as
-          the {scheme.reps || 'prescribed'} the book prescribes.
+          the {scheme.reps || 'prescribed'} the book prescribes. Records rank by an estimated one-rep
+          max — a formula fitted to a population, not a measurement of you, so treat it as a
+          direction rather than a number.
         </p>
       </div>
     </>

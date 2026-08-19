@@ -178,6 +178,89 @@ export function WeightChart({
   );
 }
 
+/**
+ * One movement over time: the heaviest set you actually did, and an estimate of
+ * what that set implies for a single rep.
+ *
+ * The estimate is Epley — a formula fitted to a population, not a measurement
+ * of you — so it is drawn as the receding dashed line and labelled "est." at
+ * every point of contact. The solid line is the only thing here that is a fact.
+ */
+export function ProgressionChart({
+  data,
+  unitLabel,
+  convert,
+  height = 200,
+}: {
+  data: { date: string; topSetKg: number; est1RM: number }[];
+  unitLabel: string;
+  convert: (kg: number) => number;
+  height?: number;
+}) {
+  const fmt = (v: number) => `${convert(v).toFixed(1)} ${unitLabel}`;
+  const values = data.flatMap((d) => [d.topSetKg, d.est1RM]).filter((v) => v > 0);
+  const max = values.length ? Math.max(...values) : 1;
+
+  return (
+    <>
+      <div style={{ height }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={data} margin={{ top: 8, right: 10, bottom: 0, left: -8 }}>
+            <CartesianGrid stroke="var(--grid)" vertical={false} />
+            <XAxis
+              dataKey="date"
+              tickFormatter={formatShort}
+              stroke={AXIS.stroke}
+              tick={AXIS.tick}
+              minTickGap={28}
+            />
+            <YAxis
+              domain={[0, Math.ceil(max * 1.1)]}
+              tickFormatter={(v: number) => convert(v).toFixed(0)}
+              stroke={AXIS.stroke}
+              tick={AXIS.tick}
+              width={44}
+            />
+            <Tooltip
+              cursor={CURSOR}
+              content={ChartTooltip({
+                rows: [
+                  { key: 'topSetKg', label: 'Top set', color: SERIES.activity, format: fmt },
+                  { key: 'est1RM', label: 'Est. 1RM', color: 'var(--text-muted)', format: fmt },
+                ],
+              })}
+            />
+            <Line
+              type="monotone"
+              dataKey="est1RM"
+              stroke="var(--text-muted)"
+              strokeWidth={1.5}
+              strokeDasharray="5 4"
+              dot={false}
+              isAnimationActive={false}
+            />
+            <Line
+              type="monotone"
+              dataKey="topSetKg"
+              stroke={SERIES.activity}
+              strokeWidth={2.5}
+              dot={{ r: 2.5, fill: SERIES.activity, stroke: 'var(--surface-1)', strokeWidth: 1 }}
+              activeDot={{ r: 5 }}
+              isAnimationActive={false}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+      <Legend
+        items={[
+          { label: `Top set (${unitLabel})`, color: SERIES.activity },
+          { label: 'Estimated 1RM', color: 'var(--text-muted)' },
+        ]}
+      />
+    </>
+  );
+}
+
 export interface DailyBarPoint {
   date: string;
   value: number;

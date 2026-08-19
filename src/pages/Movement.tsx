@@ -1,6 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { useHealth } from '../state/HealthProvider';
 import { Card, Empty, Field, Segmented, StatTile } from '../components/ui';
+import SessionHistory from '../components/SessionHistory';
 import { DailyBars, SERIES } from '../components/charts';
 import { dailySeries, dayLog, sortByDateDesc, uid, workoutsInLastDays } from '../lib/calc';
 import { relativeLabel, todayISO } from '../lib/dates';
@@ -262,6 +263,38 @@ export default function Movement() {
             />
           </Card>
         </div>
+
+        {/* Sessions come from the Trainer and carry the sets themselves. The
+            workout table below records that you trained; this records what
+            you actually did. */}
+        <Card
+          title="Training sessions"
+          note={
+            data.sessions.length
+              ? `${data.sessions.length} logged from the Trainer`
+              : 'Finish a day in the Trainer to log one'
+          }
+        >
+          {data.sessions.length === 0 ? (
+            <Empty emoji="🏋️">
+              Nothing logged yet. Tick your sets in the Trainer and press Finish day.
+            </Empty>
+          ) : (
+            <SessionHistory
+              sessions={data.sessions}
+              unitLabel={u.weight}
+              convert={(kg) => round(toDisplay('weight', kg, units), 1)}
+              onDelete={(s) => {
+                // The paired workout row goes with it, or the dashboard keeps
+                // counting a session that no longer exists.
+                update('sessions', (current) => current.filter((x) => x.id !== s.id));
+                if (s.workoutId) {
+                  update('workouts', (current) => current.filter((w) => w.id !== s.workoutId));
+                }
+              }}
+            />
+          )}
+        </Card>
 
         <Card title="Workout history" note={`${data.workouts.length} sessions`}>
           {data.workouts.length === 0 ? (
