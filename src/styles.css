@@ -1576,6 +1576,19 @@ tbody tr:hover {
   font-variant-numeric: tabular-nums;
 }
 
+/* Active programme — the one schedule that is "yours". */
+.prog-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.prog-note {
+  margin: 0;
+  flex: 1 1 220px;
+}
+
 /* Day tabs */
 .day-tabs {
   display: grid;
@@ -1612,11 +1625,22 @@ tbody tr:hover {
 }
 
 .day-n {
+  display: flex;
+  align-items: center;
+  gap: 5px;
   font-family: var(--mono);
   font-size: 10px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--ink-3);
+}
+
+/* Marks the day the rotation says comes next, when you are looking elsewhere. */
+.day-next {
+  color: var(--accent);
+  font-size: 15px;
+  line-height: 0;
+  letter-spacing: 0;
 }
 
 .day-focus {

@@ -7,6 +7,7 @@ import { useHealth } from '../state/HealthProvider';
 import { todayISO } from '../lib/dates';
 import { labels } from '../lib/units';
 import { promote, upsertSession } from '../lib/session';
+import { nextDay, rotationPosition, sessionsLogged, skipTo, startProgramme } from '../lib/programme';
 import {
   clearHints,
   dayKey,
@@ -63,12 +64,27 @@ function countExercises(day: PlanDay): number {
 }
 
 export default function Trainer() {
-  const { data, update } = useHealth();
+  const { data, update, updateSettings } = useHealth();
   const units = data.settings.units;
   const u = labels(units);
+  const programme = data.settings.programme;
 
-  const [scheduleId, setScheduleId] = useState<number>(TRAINING_PLAN[0]?.id ?? 1);
-  const [dayN, setDayN] = useState<number>(1);
+  /**
+   * Opened on the day the programme says comes next.
+   *
+   * Read once, on mount, and never re-synced. A live update from the other
+   * device landing mid-workout must not yank the picker out from under someone
+   * holding a loaded bar — the pointer is advisory, and where you are right now
+   * is yours.
+   */
+  const [scheduleId, setScheduleId] = useState<number>(() => {
+    const active = programme && TRAINING_PLAN.some((s) => s.id === programme.scheduleId);
+    return active ? programme.scheduleId : (TRAINING_PLAN[0]?.id ?? 1);
+  });
+  const [dayN, setDayN] = useState<number>(() => {
+    const s = TRAINING_PLAN.find((x) => x.id === programme?.scheduleId);
+    return s ? nextDay(s, data.sessions, programme) : (TRAINING_PLAN[0]?.days[0]?.n ?? 1);
+  });
   const [store, setStore] = useState<ScratchStore>(() => {
     // The undated v1 map is converted to weight hints and removed on first
     // load. It can never become history — it has no dates, so dating it would
@@ -188,10 +204,47 @@ export default function Trainer() {
   const pct = tally.total ? Math.round((tally.done / tally.total) * 100) : 0;
   const alreadyLogged = Boolean(scratch?.promotedAs);
 
+  const isActive = programme?.scheduleId === schedule.id;
+  const logged = programme ? sessionsLogged(data.sessions, programme) : 0;
+  /** Where the rotation says you should be, whatever you are currently looking at. */
+  const upNext = useMemo(
+    () => (isActive ? nextDay(schedule, data.sessions, programme) : null),
+    [isActive, schedule, data.sessions, programme],
+  );
+
+  /**
+   * Browsing is free.
+   *
+   * Looking at another schedule must not move the pointer — you should be able
+   * to read the whole book without losing your place in it.
+   */
   const pickSchedule = (id: number) => {
+    const s = TRAINING_PLAN.find((x) => x.id === id);
     setScheduleId(id);
-    setDayN(1);
+    setDayN(s && programme?.scheduleId === id ? nextDay(s, data.sessions, programme) : (s?.days[0]?.n ?? 1));
     setSaved(null);
+  };
+
+  const makeActive = () => {
+    updateSettings({ programme: startProgramme(schedule.id) });
+    setSaved(`${schedule.title} is now your programme.`);
+  };
+
+  /**
+   * Picking a day by hand.
+   *
+   * Within your own programme this is recorded as an explicit skip, so
+   * reloading mid-workout brings you back to the day you were actually doing
+   * rather than the one the rotation would have chosen. It is one settings
+   * write per day picked — rare, unlike ticking a set, which is why that stays
+   * on the device.
+   */
+  const pickDay = (n: number) => {
+    setDayN(n);
+    setSaved(null);
+    if (programme && isActive && n !== upNext) {
+      updateSettings({ programme: skipTo(programme, n) });
+    }
   };
 
   const toggleSet = (exKey: string, index: number) => {
@@ -280,6 +333,35 @@ export default function Trainer() {
           })}
         </nav>
 
+        {/* The active programme. One schedule is "yours"; the rest are a book
+            you can leaf through without losing your place in it. */}
+        <div className="prog-row">
+          {isActive ? (
+            <>
+              <span className="pill good">
+                <IconCheck />
+                Your programme
+              </span>
+              <p className="hint prog-note">
+                {logged
+                  ? `${logged} ${logged === 1 ? 'day' : 'days'} logged · up next is Day ${upNext} (${rotationPosition(schedule, upNext ?? 0)} of ${schedule.days.length}).`
+                  : `Nothing logged yet — start at Day ${upNext}.`}
+              </p>
+            </>
+          ) : (
+            <>
+              <button type="button" className="btn btn-sm" onClick={makeActive}>
+                Make this my programme
+              </button>
+              <p className="hint prog-note">
+                {programme
+                  ? `You are following Schedule ${programme.scheduleId}. Browsing here changes nothing.`
+                  : 'Pick one once and the Trainer opens on the next day in the rotation every time.'}
+              </p>
+            </>
+          )}
+        </div>
+
         {/* Day picker for the chosen schedule. */}
         <nav className="day-tabs" aria-label={`Days in ${schedule.title}`}>
           {schedule.days.map((d) => (
@@ -288,12 +370,16 @@ export default function Trainer() {
               type="button"
               className="day-tab"
               aria-current={d.n === day.n ? 'page' : undefined}
-              onClick={() => {
-                setDayN(d.n);
-                setSaved(null);
-              }}
+              onClick={() => pickDay(d.n)}
             >
-              <span className="day-n">Day {d.n}</span>
+              <span className="day-n">
+                Day {d.n}
+                {d.n === upNext && d.n !== day.n && (
+                  <span className="day-next" aria-label="Up next">
+                    •
+                  </span>
+                )}
+              </span>
               <span className="day-focus">{d.focus}</span>
               <span className="day-swatches" aria-hidden="true">
                 {d.sections.map((s, i) => (
