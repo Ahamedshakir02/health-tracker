@@ -74,7 +74,7 @@ would have failed:
 
 - **Cloud Firestore API** had never been enabled on the project → enabled
 - **No database existed** → created, `(default)`, Native mode, `asia-south1`
-- **Security rules** → `firestore.rules` deployed (owner-only allowlist, server-enforced)
+- **Security rules** → `firestore.rules` deployed (per-account isolation, server-enforced)
 - **Email/Password sign-in** → enabled
 - **Google sign-in** → ⚠️ still not enabled, see *Known gaps*
 
@@ -162,8 +162,10 @@ genuinely buys you is deploy-on-git-push.
   Firebase Auth → Settings → Authorized domains — and preview URLs change per deploy, so
   Google sign-in on previews is a recurring annoyance.
 - One vendor. Nothing else to sign up for, no second bill.
-- The free transfer cap (360 MB/day) is generous for a single-user app — but see the note
-  on illustrations below.
+- The free transfer cap (360 MB/day) was generous for a single-user app. Sign-up is open
+  now, so it — and the 50k reads / 20k writes a day — are worth an actual budget alert:
+  Firestore does not stop serving when a cap is hit, it bills. See also the note on
+  illustrations below.
 
 **Reasons you might move to Vercel**
 
@@ -281,9 +283,14 @@ the repo; `src/data/trainingPlan.ts` is generated and should not be hand-edited.
   The Firebase console's provider dialog hangs on a stuck *support email* dropdown.
   To finish: Authentication → Sign-in method → Add new provider → Google → Enable →
   public-facing name `Vitals` → pick a support email → Save. Email/password works today.
-- **`src/lib/trainer.ts` is dead code** — the old plan generator, still tested, no longer
-  imported. Keep or delete deliberately.
-- **Set tracking is device-local** and does not sync between laptop and phone.
+  This matters more now that sign-up is open — and Google accounts arrive already
+  verified, which is the smoothest path in.
+- **No budget alert.** Open sign-up puts real traffic on the Spark tier. Set one in the
+  Google Cloud console before sharing the link widely. Firebase App Check is the next
+  step if sign-ups get abused.
+- **Finished sessions sync; the in-progress scratch does not.** Ticking sets on the phone
+  and expecting them on the laptop mid-workout will not work, by design — press Finish
+  day and the session appears on both.
 - **Tablet rail width** was designed but only lightly verified.
 - **No CI.** Tests and typecheck run locally only. If you move to Vercel, or add a GitHub
   Action, wire `npm test && npm run build` into it.

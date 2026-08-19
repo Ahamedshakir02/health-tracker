@@ -29,10 +29,11 @@ project: a public, React-free marketing page at `/`, and the private tracker at
    cookieless             ┌───────┴────────┐
    analytics              │                │
    (opt-in)         Firebase Auth     Cloud Firestore
-                    (Google sign-in)  (one doc per section)
+                    (Google or email) (one doc per section,
+                                        cached in IndexedDB)
                           │                │
                           └── firestore.rules ──┘
-                              single-account allowlist,
+                              per-account isolation,
                               enforced server-side
 ```
 
@@ -80,15 +81,17 @@ Three guards keep it from trapping anyone:
 - a same-origin `document.referrer` means the visitor clicked through from
   within the site and asked for this page, so they stay
 - the flag is set only when the app actually *unlocks*, never merely on visiting
-  `/app` — sign-up is invite-only, so a curious visitor would otherwise be
-  redirected past the landing page forever and stranded on a sign-in screen
+  `/app` — a visitor who lands on the sign-in screen and leaves has not started
+  using anything, and would otherwise be redirected past the landing page
+  forever
 
 ---
 
 ## Routing
 
 There is no router library. `App.tsx` reads `window.location.hash`, maps it to
-one of seven tab ids, and renders the matching page component.
+one of eight tab ids, and renders the matching page component. Every section is
+`React.lazy`, so opening the Trainer does not download the charting library.
 
 - `#/trainer` → the Trainer section
 - no hash → Today
@@ -135,25 +138,43 @@ meals doesn't rewrite years of weight history.
 
 ### Two things deliberately kept out of Firestore
 
-- **Trainer set-ticking** lives in `localStorage` (`src/lib/trainerProgress.ts`).
-  It changes many times a minute mid-workout; syncing every tap would be a lot
-  of writes for state that is worthless the next day.
+- **Trainer set-ticking** lives in `localStorage` (`src/lib/trainerProgress.ts`)
+  while a workout is in progress. It changes many times a minute mid-workout;
+  syncing every tap would be a lot of writes for state that is worthless the
+  next day, and would fail outright underground. It is keyed by date, and
+  "Finish day" promotes it once into the synced `sessions` slice
+  (`src/lib/session.ts`). Finished sessions **do** sync; the in-progress
+  scratch does not.
+- **Which day comes next** is derived from `sessions`, not stored
+  (`src/lib/programme.ts`). `settings.programme` records only which schedule is
+  active and when it started. One write instead of two, no counter to fall out
+  of step with the history it describes, and both devices reach the same answer
+  from the same data.
 - **Exercise media** are static files, not database rows — see below.
 
 ---
 
 ## Security model
 
-The allowlist appears in two places, and only one of them is real:
+Anyone can sign up. What they cannot do is read anybody else's data.
 
-- `ALLOWED_EMAILS` in `src/lib/firebase.ts` is **convenience**. It produces a
-  clear error in the UI. Anything in the bundle can be edited by whoever holds
-  the browser, so it is not a boundary.
-- `firestore.rules` is **enforcement**. Firebase applies it server-side on every
-  read and write.
+Storage has always been uid-scoped — `users/{uid}/slices/{sliceId}` — so
+isolation is the shape of the database, not a filter applied over a shared one.
+`firestore.rules` is the **enforcement**: it requires an authenticated request
+whose `uid` matches the path and whose token carries a verified email address,
+and refuses every path outside that tree. Firebase applies it server-side on
+every read and write.
 
-Never move a check out of the rules file on the grounds that the client already
-does it.
+The client-side checks in `App.tsx` and `HealthProvider.tsx` are
+**convenience** — they produce a readable message instead of an opaque
+`permission-denied`. Anything in the bundle can be edited by whoever holds the
+browser, so none of it is a boundary. Never move a check out of the rules file
+on the grounds that the client already does it.
+
+> `email_verified` is a claim baked into the **ID token**, not a field read
+> live. Calling `reload()` on the user object is not enough — the app must call
+> `getIdToken(true)` after verification or the account stays locked out until
+> the token happens to refresh, up to an hour later.
 
 Beyond that: a strict CSP in each HTML head (the tracker's allows the Firebase
 origins; the public pages allow nothing), `frame-ancestors 'none'` as a real
@@ -170,7 +191,7 @@ their outputs are checked in so a clone builds without network access or ffmpeg.
 
 | Script | Produces | Needs |
 |---|---|---|
-| `scripts/build-exercise-media.mjs` | `public/exercise-anim/` (222 frames) and `src/data/exerciseMedia.ts` | ffmpeg, network |
+| `scripts/build-exercise-media.mjs` | `public/exercise-anim/` (330 frames), `src/data/exerciseMedia.ts` and `src/data/mobility.ts` | ffmpeg, network |
 | `scripts/build-icons.mjs` | `favicon.ico`, `apple-touch-icon.png`, `icon-192/512.png` | nothing |
 
 `src/data/trainingPlan.ts` is also generated — parsed from the original
@@ -237,6 +258,8 @@ deploy indefinitely.
 | Colours, spacing, breakpoints | `src/styles.css` (tokens at the top) |
 | The marketing page | `index.html` + `src/landing/landing.css` |
 | Legal copy | `privacy.html`, `terms.html` |
-| An exercise → animation mapping | `ALIAS` in `scripts/build-exercise-media.mjs`, then re-run it |
-| Who can sign in | `firestore.rules` **and** `VITE_ALLOWED_EMAIL` |
+| An exercise → animation mapping | `ALIAS` in `scripts/build-exercise-media.mjs`, then re-run it (`--verify` prints the table first) |
+| The stretch set or a routine | `STRETCHES` / `ROUTINES` in `scripts/build-exercise-media.mjs`, then re-run it |
+| Which stretches follow a training day | `SECTION_AREAS` in `src/lib/mobility.ts` |
+| Who can sign in | `firestore.rules` — nowhere else |
 | Cache or security headers | `firebase.json` |

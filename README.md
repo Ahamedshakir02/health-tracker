@@ -55,7 +55,7 @@ screen and syncs live across every device on the account:
 3. Build → Firestore Database → Create database.
 4. Build → Authentication → Sign-in method → enable **Google** and **Email/Password**.
    Leave **Anonymous** off — this app refuses accounts with no email address.
-5. `cp .env.example .env`, paste the values in, set `VITE_ALLOWED_EMAIL`, restart the
+5. `cp .env.example .env`, paste the values in, restart the
    dev server.
 6. Paste `firestore.rules` into Firestore → Rules and Publish.
 
@@ -64,15 +64,20 @@ pushed up to the empty account rather than being replaced by a blank one.
 
 ## Access control
 
-The app is private to a single address. That is enforced in two places, and only the
-second one counts:
+Anyone can sign up — with Google, or with an email address and password once the
+confirmation link is clicked. Each account gets its own private log under its own uid;
+nobody, including whoever runs the deployment, sees anybody else's. That isolation is
+enforced in two places, and only the second one counts:
 
 | Where | What it does |
 |---|---|
-| `VITE_ALLOWED_EMAIL` (`src/lib/firebase.ts`) | Produces a readable error and signs the wrong account straight back out. Cosmetic — it ships in the bundle and can be edited by anyone holding the browser. |
-| `owners()` in `firestore.rules` | The real boundary. Firebase checks it server-side on every read and write, so a tampered client gets `permission-denied` and nothing else. |
+| Client-side auth checks (`App.tsx`, `HealthProvider.tsx`) | Produce a readable message instead of an opaque `permission-denied`. Cosmetic — they ship in the bundle and can be edited by anyone holding the browser. |
+| `ownsAccount()` in `firestore.rules` | The real boundary. Firebase checks it server-side on every read and write — the request's uid must match the path and its token must carry a verified email — so a tampered client gets `permission-denied` and nothing else. |
 
-**Both must be changed together** when the owner address changes, then
+Storage was always uid-scoped (`users/{uid}/slices/{sliceId}`), so isolation is the shape
+of the database rather than a filter over a shared one.
+
+**Both must be changed together** when the rules change, then
 `firebase deploy --only firestore:rules`.
 
 The rules also restrict writes to the five known slice documents and require each to be
@@ -101,7 +106,8 @@ before anything else.
 | Screen | Contents |
 |---|---|
 | **Today** | Headline tiles, 90-day weight trend, this week's calories, a 7-day table of everything |
-| **Trainer** | The gym schedule book — 13 schedules, 46 days, 360 exercises each with an animated demonstration, set ticking and per-set weight logging |
+| **Trainer** | The gym schedule book — 13 schedules, 46 days, 360 exercises each with an animated demonstration, set-by-set logging, last-time and personal records, and a rest timer |
+| **Mobility** | 7 stretch routines and 61 stretches by body area, with a guided hold timer — plus an automatic cool-down at the foot of every training day |
 | **Body** | Weight, body fat %, waist / chest / hips, BMI, trend chart with a goal line |
 | **Food** | Meals by slot, calories and macros, daily targets, one-click re-log of recent foods |
 | **Move** | Workouts (type, minutes, intensity, distance, burn), daily steps, active-minute charts |
@@ -128,14 +134,31 @@ Pick a schedule, pick a day, and work down it:
 |---|---|
 | **Rep scheme** | Shown per day — `15 x 3` means 15 reps for 3 sets of every exercise that day. The book uses 15×3, 12×3, 12×4, 12×5 and 10×3. |
 | **Set chips** | Tap to tick a set off. They fill with the muscle group's colour; a finished exercise gets a tick and a tinted card. |
-| **Weight blanks** | One field per set — the book's own logging row. Write what you actually lifted. |
+| **Weight and reps** | Two fields per set — the book's own logging row, plus what you actually managed. Blanks record the reps the book prescribes. |
 | **Day meter** | Counts in sets rather than exercises, so a half-finished movement still moves the bar. |
+| **Finish day** | Turns the day's ticks into a saved, synced session. Safe to press twice — it replaces rather than adds. |
+| **Last time** | What you lifted the last time you did this movement, read by movement rather than by position, so it survives the book calling the same lift two different things. |
+| **Records** | Your best set, ranked by an estimated one-rep max (Epley), with a PR badge the moment you beat it. An estimate from a formula, and labelled as one. |
+| **Rest timer** | Starts when a set is ticked. Off-switchable, and it keeps the screen awake while you train. |
+
+### Your programme
+
+Pin one schedule as yours and the Trainer opens on the next day in the rotation every
+time — finish Day 2 and it opens on Day 3. Browsing the other twelve schedules changes
+nothing, so you can read the whole book without losing your place in it.
+
+Which day comes next is worked out from the sessions you have logged rather than stored as
+a counter, so it is the same on the phone and the laptop and cannot drift out of step with
+your history.
 
 Muscle groups are colour coded onto the same series palette the charts use, so chest reads
 orange, back reads blue, and the Trainer looks like the rest of the app.
 
-Ticked sets and weights are kept in `localStorage` on that device — they are gym scratch
-state, not health measurements, so they deliberately do not sync.
+Ticks and typed numbers stay in `localStorage` on that device while you are mid-workout —
+they change many times a minute, and a write per tap would be a lot of traffic for state
+that is worthless tomorrow, in the one place most likely to have no signal. Pressing
+**Finish day** promotes them once into a saved session, and *that* syncs. A day you forget
+to finish is swept up and saved the next time you open the app.
 
 It is general fitness guidance, not medical advice.
 
@@ -183,9 +206,12 @@ src/
   components/   charts.tsx (Recharts wrappers), ui.tsx (tiles, fields, pills),
                 ErrorBoundary.tsx, HealthLink.tsx (export import UI)
   lib/          calc.ts, dates.ts, units.ts, validate.ts, store.ts,
-                firestoreStore.ts, firebase.ts, trainer.ts, healthImport.ts, sample.ts
+                firestoreStore.ts, firebase.ts, healthImport.ts, sample.ts,
+                session.ts, programme.ts, movementKey.ts, mobility.ts,
+                rest.ts, beep.ts, wakeLock.ts
                 *.test.ts alongside each
-  pages/        Dashboard, Trainer, Body, Food, Movement, Daily, Settings, Login
+  pages/        Dashboard, Trainer, Mobility, Body, Food, Movement, Daily,
+                Settings, Login
   state/        HealthProvider.tsx — active store, auth, all mutations
   types.ts      the data model and defaults
 firestore.rules the enforced access rules
