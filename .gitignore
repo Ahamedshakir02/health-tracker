@@ -14,6 +14,11 @@ dist
 .vite
 coverage
 
+# Firebase CLI upload cache — a hash of every file in dist/, rewritten on every
+# deploy and meaningful only on the machine that produced it. dist/ is ignored,
+# so a cache of dist/ has no business being tracked either.
+.firebase/
+
 .DS_Store
 Thumbs.db
 *.log
