@@ -2236,6 +2236,97 @@ tbody tr:hover {
   color: var(--ink-2);
 }
 
+/* ── Home editions ──────────────────────────────────────────────────────────
+   In household or bodyweight mode the card shows a substitute movement. These
+   rules cover the three things a gym card does not have: the line naming what
+   it stands in for, the fuller how-to, and the harder/easier pair that does
+   the job adding plates does in the gym. */
+
+/* Quiet, but present on every card — it is how you know which line of the
+   book you are on, so it sits under the name rather than in a footnote. */
+.ex-replaces {
+  margin: 2px 0 0;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: var(--ink-3);
+}
+
+.ex-how {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.ex-how > summary {
+  cursor: pointer;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-3);
+  /* The marker is kept: it is the only affordance saying this opens. */
+  padding: 2px 0;
+}
+
+.ex-how > p {
+  margin: 6px 0 0;
+}
+
+.ex-how strong {
+  display: block;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* Side by side where there is room, stacked on a phone. Two columns of one
+   sentence each read as a dial with two ends, which is what they are. */
+.ex-dial {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px 14px;
+  margin: 2px 0 0;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--sunken);
+}
+
+.ex-dial dt {
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.ex-dial dd {
+  margin: 2px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+
+/* The equipment switch at the head of the Trainer. */
+.equip-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.equip-label {
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* Pushed to its own line so the switch never wraps mid-control. */
+.equip-note {
+  flex-basis: 100%;
+  margin: 0;
+}
+
 .ex-sets {
   display: flex;
   align-items: center;
