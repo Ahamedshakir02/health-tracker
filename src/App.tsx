@@ -297,6 +297,10 @@ export default function App() {
             key={id}
             type="button"
             className="navitem"
+            // The label is hidden by CSS on a narrow rail and on a phone, which
+            // left eight buttons with no accessible name at all — the icon is
+            // aria-hidden, so there was nothing else to read.
+            aria-label={label}
             aria-current={tab === id ? 'page' : undefined}
             onClick={() => go(id)}
           >

@@ -453,6 +453,9 @@ export default function Trainer() {
                 key={s.id}
                 type="button"
                 className="sched-chip"
+                // Read as text the parts run together — "0115 x 34 days · 29
+                // ex". Spelling it out is the only way this is speakable.
+                aria-label={`${s.title}, ${s.days[0]?.reps ?? `${sets} sets`}, ${s.days.length} days, ${exercises} exercises`}
                 aria-current={s.id === schedule.id ? 'true' : undefined}
                 onClick={() => pickSchedule(s.id)}
               >
@@ -520,6 +523,16 @@ export default function Trainer() {
                 key={d.n}
                 type="button"
                 className={view === 'schedule' ? 'day-card' : 'day-tab'}
+                aria-label={[
+                  `Day ${d.n}`,
+                  d.focus,
+                  `${d.reps} reps by sets`,
+                  `${count} ${count === 1 ? 'exercise' : 'exercises'}`,
+                  d.n === upNext ? 'up next' : null,
+                  doneToday ? 'logged today' : null,
+                ]
+                  .filter(Boolean)
+                  .join(', ')}
                 aria-current={view === 'day' && d.n === day.n ? 'page' : undefined}
                 onClick={() => pickDay(d.n)}
               >
