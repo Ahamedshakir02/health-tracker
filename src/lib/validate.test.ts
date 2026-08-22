@@ -170,6 +170,22 @@ describe('settings', () => {
     expect(settings({ name: 'x'.repeat(5000) }).name).toHaveLength(200);
   });
 
+  it('keeps a known sex and drops anything else', () => {
+    expect(settings({ sex: 'female' }).sex).toBe('female');
+    expect(settings({ sex: 'male' }).sex).toBe('male');
+    expect(settings({ sex: 'yes' }).sex).toBeUndefined();
+  });
+
+  it('only accepts an https avatar', () => {
+    const ok = 'https://lh3.googleusercontent.com/a/photo';
+    expect(settings({ avatarUrl: ok }).avatarUrl).toBe(ok);
+    // The URL goes straight into an <img src>. A javascript: or data: URL
+    // arriving from a tampered export must not reach it.
+    expect(settings({ avatarUrl: 'javascript:alert(1)' }).avatarUrl).toBeUndefined();
+    expect(settings({ avatarUrl: 'data:image/svg+xml,<svg/>' }).avatarUrl).toBeUndefined();
+    expect(settings({ avatarUrl: 'http://example.com/a.png' }).avatarUrl).toBeUndefined();
+  });
+
   it('rejects an impossible birth year', () => {
     expect(settings({ birthYear: 1200 }).birthYear).toBeUndefined();
     expect(settings({ birthYear: 3000 }).birthYear).toBeUndefined();

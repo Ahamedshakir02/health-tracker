@@ -222,8 +222,23 @@ export interface TrainerPrefs {
   equipment: EquipmentMode;
 }
 
+/**
+ * Biological sex, for the equations that need it.
+ *
+ * Only where it changes a number: BMR, and the Navy body-fat estimate. Asked
+ * once, optional, and the estimates say they are estimates when it is absent
+ * rather than quietly assuming one.
+ */
+export type Sex = 'male' | 'female';
+
 export interface Settings {
   name: string;
+  /**
+   * The account's picture, when the provider supplied one. Google gives a
+   * photoURL; email sign-up has none and falls back to initials.
+   */
+  avatarUrl?: string;
+  sex?: Sex;
   heightCm?: number;
   birthYear?: number;
   units: UnitSystem;

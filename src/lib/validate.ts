@@ -16,6 +16,7 @@ import type {
   StretchLog,
   TrainerPrefs,
   EquipmentMode,
+  Sex,
   UnitSystem,
   WeightEntry,
   WorkoutEntry,
@@ -101,6 +102,7 @@ const SLOTS: readonly MealSlot[] = ['breakfast', 'lunch', 'dinner', 'snack'];
 const INTENSITIES: readonly Intensity[] = ['low', 'moderate', 'high'];
 const UNITS: readonly UnitSystem[] = ['metric', 'imperial'];
 const THEMES = ['system', 'light', 'dark'] as const;
+const SEXES: readonly Sex[] = ['male', 'female'];
 
 /** Falls back to a generated id so a record with a missing id is still usable. */
 function idOf(value: unknown, prefix: string, index: number): string {
@@ -393,8 +395,14 @@ export function settings(raw: unknown): Settings {
   };
   const heightCm = num(raw.heightCm, 0, 300);
   const birthYear = int(raw.birthYear, 1900, new Date().getFullYear());
+  const sex = oneOf(raw.sex, SEXES);
+  // Only https. The avatar goes straight into an <img src>, and a javascript:
+  // or data: URL arriving from a tampered export must not get there.
+  const avatarUrl = str(raw.avatarUrl, 512);
   if (heightCm !== undefined) out.heightCm = heightCm;
   if (birthYear !== undefined) out.birthYear = birthYear;
+  if (sex !== undefined) out.sex = sex;
+  if (avatarUrl !== undefined && /^https:\/\//i.test(avatarUrl)) out.avatarUrl = avatarUrl;
   // Anything not listed here is dropped on load, so a new Settings field must be
   // added in both places or it silently fails to persist.
   const onboardedAt = str(raw.onboardedAt, 40);
