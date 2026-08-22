@@ -47,6 +47,7 @@ export default function Login() {
 
   const [mode, setMode] = useState<Mode>('signin');
   const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -78,7 +79,7 @@ export default function Login() {
     }
     if (mode === 'signup') {
       void run(async () => {
-        await signUpEmail(email, password);
+        await signUpEmail(email, password, name);
         setPassword('');
       });
       return;
@@ -162,11 +163,28 @@ export default function Login() {
             )}
 
             <form onSubmit={submit} className="auth-form">
+              {/* Asked here rather than left to onboarding, which can be
+                  skipped. It also goes on the auth record itself, so the
+                  account is not anonymous outside the app's own data. */}
+              {mode === 'signup' && (
+                <Field label="Your name">
+                  <input
+                    type="text"
+                    autoComplete="name"
+                    autoFocus
+                    required
+                    maxLength={60}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                </Field>
+              )}
+
               <Field label="Email">
                 <input
                   type="email"
                   autoComplete="email"
-                  autoFocus
+                  autoFocus={mode !== 'signup'}
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}

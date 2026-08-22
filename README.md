@@ -6,7 +6,15 @@ storage backends: local JSON out of the box, Firebase Firestore when you configu
 
 The site is two applications on one origin: a public marketing page at `/` that ships
 ~4 KB of JavaScript, and the tracker itself at `/app`. See
-**[ARCHITECTURE.md](ARCHITECTURE.md)** for how the pieces fit together.
+**[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** for how the pieces fit together.
+
+## Documentation
+
+| | |
+|---|---|
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | How the pieces fit together |
+| [docs/PROJECT_NOTES.md](docs/PROJECT_NOTES.md) | Decisions, infrastructure and known gaps |
+| [docs/FEATURE_SDLC.md](docs/FEATURE_SDLC.md) | What to build next, and why in that order |
 
 ## Run it
 

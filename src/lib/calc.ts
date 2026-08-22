@@ -3,6 +3,7 @@ import type {
   HealthData,
   ISODate,
   MealEntry,
+  Sex,
   WeightEntry,
   WorkoutEntry,
 } from '../types';
@@ -152,6 +153,39 @@ export function bmiBand(value: number): { label: string; status: 'good' | 'warni
   if (value < 25) return { label: 'Healthy range', status: 'good' };
   if (value < 30) return { label: 'Overweight', status: 'warning' };
   return { label: 'Obese', status: 'serious' };
+}
+
+/**
+ * Resting energy expenditure, kcal/day, by Mifflin-St Jeor.
+ *
+ * Chosen over Harris-Benedict because it is the more accurate of the two on
+ * modern populations, and over anything body-composition based because that
+ * would need a body-fat figure the app does not reliably have.
+ *
+ * Returns null rather than a number whenever an input is missing. Every term
+ * matters here — sex alone is a 166 kcal swing — so a "estimate" built by
+ * quietly assuming the absent ones would be worse than showing nothing, and
+ * indistinguishable from one that was actually calculated.
+ */
+export function bmr(input: {
+  weightKg?: number;
+  heightCm?: number;
+  age?: number;
+  sex?: Sex;
+}): number | null {
+  const { weightKg, heightCm, age, sex } = input;
+  if (!weightKg || !heightCm || !age || !sex) return null;
+  const base = 10 * weightKg + 6.25 * heightCm - 5 * age;
+  return Math.round(base + (sex === 'male' ? 5 : -161));
+}
+
+/** Age in whole years from a birth year, or undefined if there is none. */
+export function ageFrom(birthYear: number | undefined, today = new Date()): number | undefined {
+  if (!birthYear) return undefined;
+  const years = today.getFullYear() - birthYear;
+  // A birth year is all the app asks for, so the answer is only ever accurate
+  // to a year. Anything outside a plausible human range is bad data, not age.
+  return years >= 0 && years < 130 ? years : undefined;
 }
 
 export function uid(prefix: string): string {

@@ -31,12 +31,14 @@ import {
   hasProgress,
   hintKey,
   loadHints,
+  loadPlace,
   loadScratch,
   migrateLegacy,
   newDay,
   normalise,
   parseScheme,
   progressKey,
+  savePlace,
   saveScratch,
   stalePromotable,
   type ScratchDay,
@@ -99,21 +101,46 @@ export default function Trainer() {
   const toWeight = useCallback((kg: number) => round(toDisplay('weight', kg, units), 1), [units]);
 
   /**
-   * Opened on the day the programme says comes next.
+   * Where to open: where you last were, then your programme, then the start.
+   *
+   * The saved place comes first because browsing is free — picking a schedule
+   * deliberately does not claim it — and without somewhere to record the
+   * browse, anyone working through a schedule they had not claimed was sent
+   * back to Schedule 1 on every visit.
    *
    * Read once, on mount, and never re-synced. A live update from the other
    * device landing mid-workout must not yank the picker out from under someone
    * holding a loaded bar — the pointer is advisory, and where you are right now
    * is yours.
    */
-  const [scheduleId, setScheduleId] = useState<number>(() => {
-    const active = programme && TRAINING_PLAN.some((s) => s.id === programme.scheduleId);
-    return active ? programme.scheduleId : (TRAINING_PLAN[0]?.id ?? 1);
+  const [start] = useState(() => {
+    // A stored id is only as good as the plan it was stored against; a schedule
+    // that has since gone must fall through rather than strand the page.
+    const place = loadPlace();
+    const remembered = place && TRAINING_PLAN.find((s) => s.id === place.scheduleId);
+    if (remembered && remembered.days.some((d) => d.n === place.dayN)) {
+      return { scheduleId: remembered.id, dayN: place.dayN };
+    }
+    const active =
+      programme && TRAINING_PLAN.find((s) => s.id === programme.scheduleId);
+    if (active) return { scheduleId: active.id, dayN: nextDay(active, data.sessions, programme) };
+    return { scheduleId: TRAINING_PLAN[0]?.id ?? 1, dayN: TRAINING_PLAN[0]?.days[0]?.n ?? 1 };
   });
-  const [dayN, setDayN] = useState<number>(() => {
-    const s = TRAINING_PLAN.find((x) => x.id === programme?.scheduleId);
-    return s ? nextDay(s, data.sessions, programme) : (TRAINING_PLAN[0]?.days[0]?.n ?? 1);
-  });
+  const [scheduleId, setScheduleId] = useState<number>(start.scheduleId);
+  const [dayN, setDayN] = useState<number>(start.dayN);
+  /**
+   * The book, or one day of it.
+   *
+   * Opening straight into 40-odd exercise cards buries the one question you
+   * actually arrive with — which day am I doing. So the schedule is a preview
+   * first, and the day is something you choose to open.
+   *
+   * The exception is a day already under way: someone who reloads between sets
+   * wants their sets back, not a menu.
+   */
+  const [view, setView] = useState<'schedule' | 'day'>(() =>
+    hasProgress(loadScratch()[dayKey(todayISO(), start.scheduleId, start.dayN)]) ? 'day' : 'schedule',
+  );
   const [store, setStore] = useState<ScratchStore>(() => {
     // The undated v1 map is converted to weight hints and removed on first
     // load. It can never become history — it has no dates, so dating it would
@@ -261,9 +288,19 @@ export default function Trainer() {
    */
   const pickSchedule = (id: number) => {
     const s = TRAINING_PLAN.find((x) => x.id === id);
+    const n =
+      s && programme?.scheduleId === id
+        ? nextDay(s, data.sessions, programme)
+        : (s?.days[0]?.n ?? 1);
     setScheduleId(id);
-    setDayN(s && programme?.scheduleId === id ? nextDay(s, data.sessions, programme) : (s?.days[0]?.n ?? 1));
+    setDayN(n);
     setSaved(null);
+    // Choosing a schedule is choosing what to look at, not what to do — it
+    // stays on the preview rather than dropping into a day you did not pick.
+    setView('schedule');
+    // Remembers where you are looking, which is not the same as claiming it —
+    // the programme pointer is untouched here, as it always was.
+    savePlace({ scheduleId: id, dayN: n });
   };
 
   const makeActive = () => {
@@ -283,6 +320,8 @@ export default function Trainer() {
   const pickDay = (n: number) => {
     setDayN(n);
     setSaved(null);
+    setView('day');
+    savePlace({ scheduleId, dayN: n });
     if (programme && isActive && n !== upNext) {
       updateSettings({ programme: skipTo(programme, n) });
     }
@@ -363,10 +402,22 @@ export default function Trainer() {
           </p>
         </div>
         <div className="row">
-          <span className="pill accent">
-            <IconTrainer />
-            {schedule.title} · Day {day.n}
-          </span>
+          {view === 'day' ? (
+            <button
+              type="button"
+              className="pill accent pill-btn"
+              onClick={() => setView('schedule')}
+            >
+              <IconTrainer />
+              {schedule.title} · Day {day.n}
+              <span className="pill-back">Back to the schedule</span>
+            </button>
+          ) : (
+            <span className="pill accent">
+              <IconTrainer />
+              {schedule.title}
+            </span>
+          )}
         </div>
       </header>
 
@@ -402,6 +453,9 @@ export default function Trainer() {
                 key={s.id}
                 type="button"
                 className="sched-chip"
+                // Read as text the parts run together — "0115 x 34 days · 29
+                // ex". Spelling it out is the only way this is speakable.
+                aria-label={`${s.title}, ${s.days[0]?.reps ?? `${sets} sets`}, ${s.days.length} days, ${exercises} exercises`}
                 aria-current={s.id === schedule.id ? 'true' : undefined}
                 onClick={() => pickSchedule(s.id)}
               >
@@ -444,34 +498,71 @@ export default function Trainer() {
           )}
         </div>
 
-        {/* Day picker for the chosen schedule. */}
-        <nav className="day-tabs" aria-label={`Days in ${schedule.title}`}>
-          {schedule.days.map((d) => (
-            <button
-              key={d.n}
-              type="button"
-              className="day-tab"
-              aria-current={d.n === day.n ? 'page' : undefined}
-              onClick={() => pickDay(d.n)}
-            >
-              <span className="day-n">
-                Day {d.n}
-                {d.n === upNext && d.n !== day.n && (
-                  <span className="day-next" aria-label="Up next">
-                    •
+        {/* Day picker for the chosen schedule.
+
+            In the preview it is the whole page: a card per day, with enough on
+            it to choose by. In a day it shrinks back to a rail, so you can move
+            between days mid-session without going back out. */}
+        <nav
+          className={view === 'schedule' ? 'day-cards' : 'day-tabs'}
+          aria-label={`Days in ${schedule.title}`}
+        >
+          {schedule.days.map((d) => {
+            const count = countExercises(d);
+            const doneToday = Boolean(
+              data.sessions.some(
+                (x) =>
+                  x.kind === 'strength' &&
+                  x.date === today &&
+                  x.scheduleId === schedule.id &&
+                  x.day === d.n,
+              ),
+            );
+            return (
+              <button
+                key={d.n}
+                type="button"
+                className={view === 'schedule' ? 'day-card' : 'day-tab'}
+                aria-label={[
+                  `Day ${d.n}`,
+                  d.focus,
+                  `${d.reps} reps by sets`,
+                  `${count} ${count === 1 ? 'exercise' : 'exercises'}`,
+                  d.n === upNext ? 'up next' : null,
+                  doneToday ? 'logged today' : null,
+                ]
+                  .filter(Boolean)
+                  .join(', ')}
+                aria-current={view === 'day' && d.n === day.n ? 'page' : undefined}
+                onClick={() => pickDay(d.n)}
+              >
+                <span className="day-n">
+                  Day {d.n}
+                  {d.n === upNext && !(view === 'day' && d.n === day.n) && (
+                    <span className="day-next" aria-label="Up next">
+                      •
+                    </span>
+                  )}
+                </span>
+                <span className="day-focus">{d.focus}</span>
+                {view === 'schedule' && (
+                  <span className="day-meta">
+                    {d.reps} · {count} {count === 1 ? 'exercise' : 'exercises'}
+                    {doneToday && ' · logged today'}
                   </span>
                 )}
-              </span>
-              <span className="day-focus">{d.focus}</span>
-              <span className="day-swatches" aria-hidden="true">
-                {d.sections.map((s, i) => (
-                  <span key={i} className="dot" style={{ background: colorFor(s.name) }} />
-                ))}
-              </span>
-            </button>
-          ))}
+                <span className="day-swatches" aria-hidden="true">
+                  {d.sections.map((s, i) => (
+                    <span key={i} className="dot" style={{ background: colorFor(s.name) }} />
+                  ))}
+                </span>
+              </button>
+            );
+          })}
         </nav>
 
+        {view === 'day' && (
+          <>
         <Card
           title={`Day ${day.n} — ${day.focus}`}
           note={`${day.reps} reps × sets · ${tally.exercises} exercises · ${tally.total} sets`}
@@ -789,6 +880,9 @@ export default function Trainer() {
               })}
             </div>
           </section>
+        )}
+
+          </>
         )}
 
         <p className="hint">

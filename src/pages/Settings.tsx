@@ -1,6 +1,6 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { useHealth } from '../state/HealthProvider';
-import { Card, Field, Pill, Segmented } from '../components/ui';
+import { Avatar, Card, Field, Pill, Segmented } from '../components/ui';
 import HealthLink from '../components/HealthLink';
 import { sampleData } from '../lib/sample';
 import { labels, round, toCanonical, toDisplay } from '../lib/units';
@@ -10,6 +10,7 @@ import {
   EQUIPMENT_MODES,
   EQUIPMENT_NOTES,
   type EquipmentMode,
+  type Sex,
   type Habit,
   type TrainerPrefs,
   type UnitSystem,
@@ -128,6 +129,21 @@ export default function SettingsPage() {
 
       <div className="stack">
         <Card title="Profile">
+          {/* Which account this is. The name below is the app's own copy and is
+              yours to change; this is the identity you signed in with, and it
+              is the thing you need when two accounts exist on one machine. */}
+          {user && (
+            <div className="account-row">
+              <Avatar name={settings.name.trim() || user.email || 'You'} url={settings.avatarUrl} size={36} />
+              <div>
+                <strong>{user.email}</strong>
+                <span className="hint">
+                  Signed in with {user.providerData[0]?.providerId === 'google.com' ? 'Google' : 'email and password'}
+                </span>
+              </div>
+            </div>
+          )}
+
           <div className="form-grid">
             <Field label="Name">
               <input
@@ -156,6 +172,20 @@ export default function SettingsPage() {
                         : toCanonical('length', Number(e.target.value), units),
                   })
                 }
+              />
+            </Field>
+            <Field label="Sex" hint="Sharpens the calorie estimate">
+              <Segmented
+                ariaLabel="Sex"
+                value={settings.sex ?? ''}
+                onChange={(value: string) =>
+                  updateSettings({ sex: value === '' ? undefined : (value as Sex) })
+                }
+                options={[
+                  { value: '', label: 'Not set' },
+                  { value: 'male', label: 'Male' },
+                  { value: 'female', label: 'Female' },
+                ]}
               />
             </Field>
             <Field label="Birth year">

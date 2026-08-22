@@ -1,0 +1,45 @@
+name: CI
+
+# The repo had no CI at all, so nothing but a local run stood between a broken
+# commit and master. These are the same four commands used locally, in the same
+# order, so a green tick here means what it looks like it means.
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+# A second push to a branch makes the first run pointless — cancel it rather
+# than queueing behind it.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Matches the floor in package.json engines. 22 is the active LTS and
+          # satisfies >=20.19.
+          node-version: '22'
+          cache: npm
+
+      # ci, not install: it installs exactly the lockfile and fails if
+      # package.json and the lock have drifted, which is the point of running
+      # it here rather than trusting a local install.
+      - run: npm ci
+
+      - run: npm run typecheck
+
+      - run: npm test
+
+      # Runs csp-hash.mjs --check first, so a stale Content-Security-Policy
+      # hash fails the build here instead of silently shipping a policy that
+      # blocks the app's own inline script.
+      - run: npm run build

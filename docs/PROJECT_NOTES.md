@@ -3,7 +3,7 @@
 Working notes for the app: what it is, what changed in the redesign, how it is hosted,
 and how Firebase Hosting compares with Vercel and the other options.
 
-The `README.md` covers day-to-day usage. This file covers decisions and infrastructure.
+The `../README.md` covers day-to-day usage. This file covers decisions and infrastructure.
 
 ---
 
@@ -280,11 +280,23 @@ the repo; `src/data/trainingPlan.ts` is generated and should not be hand-edited.
 ## Known gaps
 
 - **Google sign-in is not enabled.** "Continue with Google" on the live site will error.
-  The Firebase console's provider dialog hangs on a stuck *support email* dropdown.
-  To finish: Authentication → Sign-in method → Add new provider → Google → Enable →
-  public-facing name `Vitals` → pick a support email → Save. Email/password works today.
-  This matters more now that sign-up is open — and Google accounts arrive already
-  verified, which is the smoothest path in.
+  The app side is finished — `signInGoogle` works, and the name and picture Google
+  returns are now read into the profile — so this is purely a console switch.
+
+  In the [Firebase console](https://console.firebase.google.com), on this project:
+
+  1. **Authentication → Sign-in method → Add new provider → Google.**
+  2. Toggle **Enable**.
+  3. Public-facing name: `Vitals`.
+  4. Pick a **support email** from the dropdown. This is the step that has hung
+     before; if it will not populate, reload the console page with the project
+     already open rather than navigating into it, which usually settles it.
+  5. **Save.**
+  6. **Authentication → Settings → Authorized domains** — confirm the production
+     domain is listed. `localhost` is there by default; a custom domain is not.
+
+  Worth doing: sign-up is open, and Google accounts arrive already verified, so they
+  skip the confirmation-link wait entirely — the smoothest path in.
 - **No budget alert.** Open sign-up puts real traffic on the Spark tier. Set one in the
   Google Cloud console before sharing the link widely. Firebase App Check is the next
   step if sign-ups get abused.
@@ -292,5 +304,7 @@ the repo; `src/data/trainingPlan.ts` is generated and should not be hand-edited.
   and expecting them on the laptop mid-workout will not work, by design — press Finish
   day and the session appears on both.
 - **Tablet rail width** was designed but only lightly verified.
-- **No CI.** Tests and typecheck run locally only. If you move to Vercel, or add a GitHub
+- ~~**No CI.**~~ Fixed — `.github/workflows/ci.yml` runs typecheck, tests and build on
+  every push to master and every pull request. The original note follows.
+  Tests and typecheck ran locally only. If you move to Vercel, or add a GitHub
   Action, wire `npm test && npm run build` into it.

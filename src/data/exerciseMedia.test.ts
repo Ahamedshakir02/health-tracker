@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { TRAINING_PLAN } from './trainingPlan';
 import { STRETCHES } from './mobility';
+import { HOME_PLANS } from './homePlans';
 import { clipFor, showsFirstMovementOnly } from './exerciseMedia';
 
 /**
@@ -25,6 +26,21 @@ const pairs = TRAINING_PLAN.flatMap((s) =>
     d.sections.flatMap((sec) => sec.exercises.map((e) => ({ section: sec.name, name: e.name }))),
   ),
 );
+
+/**
+ * The substitute movements the home editions put on the cards.
+ *
+ * Unsectioned, because that is how the manifest keys them: a chair dip is one
+ * movement whatever it stands in for, and the substitution is already
+ * section-aware by the time a name reaches here.
+ */
+const homeNames = [
+  ...new Set(
+    Object.values(HOME_PLANS).flatMap((variant) =>
+      Object.values(variant).map((exercise) => exercise.name),
+    ),
+  ),
+];
 
 describe('exercise media', () => {
   it('has a clip for every exercise in the book', () => {
@@ -93,6 +109,39 @@ describe('the six corrected demonstrations', () => {
   });
 });
 
+describe('the five corrected by the full audit', () => {
+  /**
+   * Found by checking every mapping's dataset entry against the section the
+   * book files it under. All five were caught by the book's own cue text
+   * disagreeing with the exercise the clip showed.
+   */
+  const expected: [string, string, string, string][] = [
+    // Four shoulder presses were mapped to bench presses. "Elbows slightly
+    // forward, full lockout" is not a bench press.
+    ['Dumbell Press', 'SHOULDER', 'Dumbbell_Shoulder_Press', 'was a dumbbell bench press'],
+    ['Dumbell Press (H)', 'SHOULDER', 'Palms-In_Dumbbell_Press', 'was a neutral-grip bench press'],
+    [
+      'Dumbell Press (One by One)',
+      'SHOULDER',
+      'Alternating_Dumbbell_Press',
+      'was a one-arm bench press',
+    ],
+    ['Smith Press', 'SHOULDER', 'Smith_Machine_Overhead', 'was a smith bench press'],
+    // And a triceps extension was showing a biceps curl, because the book's
+    // name for it says "Curl" while its cue says "EZ bar lying extension".
+    ['Z Bar Lying Curl', 'TRICEPS', 'Skullcrusher', 'was a lying barbell curl'],
+  ];
+
+  it.each(expected)('%s under %s shows %s (%s)', (name, section, source) => {
+    expect(clipFor(name, section)?.source).toContain(source);
+  });
+
+  it('no longer shows a chest movement on a shoulder press', () => {
+    const bench = clipFor('Flat Dumbell Press', 'CHEST');
+    expect(clipFor('Dumbell Press', 'SHOULDER')).not.toEqual(bench);
+  });
+});
+
 describe('superset notes', () => {
   it('flags only entries the book actually contains', () => {
     const names = new Set(pairs.map((p) => p.name));
@@ -103,6 +152,20 @@ describe('superset notes', () => {
 
   it('does not flag an ordinary single movement', () => {
     expect(showsFirstMovementOnly('Deadlift')).toBe(false);
+  });
+});
+
+describe('home edition media', () => {
+  it('has a clip for every substitute movement', () => {
+    // Without this the home cards render with no picture at all — clipFor
+    // returns null and ExerciseAnim draws nothing, which looks like a layout
+    // bug rather than a missing mapping.
+    const missing = homeNames.filter((name) => !clipFor(name));
+    expect(missing, `no clip for: ${missing.join(', ')}`).toEqual([]);
+  });
+
+  it('covers both editions', () => {
+    expect(homeNames.length).toBeGreaterThan(100);
   });
 });
 
@@ -122,6 +185,13 @@ describe('no orphan frames', () => {
       const c = clipFor(name, section)!;
       used.add(c.a);
       used.add(c.b);
+    }
+    for (const name of homeNames) {
+      const c = clipFor(name);
+      if (c) {
+        used.add(c.a);
+        used.add(c.b);
+      }
     }
     for (const s of STRETCHES) {
       used.add(s.a);

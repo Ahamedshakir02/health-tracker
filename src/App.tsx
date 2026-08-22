@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import type { ComponentType } from 'react';
 import { useHealth } from './state/HealthProvider';
 import ErrorBoundary from './components/ErrorBoundary';
+import { Avatar, firstName } from './components/ui';
 import {
   IconBody,
   IconFood,
@@ -270,6 +271,10 @@ export default function App() {
     setTab(id);
   };
 
+  // The name they gave, or the address they signed in with — never blank, or
+  // the pill reads as a broken control rather than an account.
+  const accountName = data.settings.name.trim() || user?.email || 'You';
+
   const syncDot =
     sync === 'error' ? 'var(--crit)' : sync === 'ready' ? 'var(--good)' : 'var(--warn)';
   const syncText = sync === 'error' ? 'Save failed' : sync === 'saving' ? 'Saving…' : storeLabel;
@@ -292,6 +297,10 @@ export default function App() {
             key={id}
             type="button"
             className="navitem"
+            // The label is hidden by CSS on a narrow rail and on a phone, which
+            // left eight buttons with no accessible name at all — the icon is
+            // aria-hidden, so there was nothing else to read.
+            aria-label={label}
             aria-current={tab === id ? 'page' : undefined}
             onClick={() => go(id)}
           >
@@ -299,6 +308,18 @@ export default function App() {
             <span className="nav-text">{label}</span>
           </button>
         ))}
+
+        {/* Which account is open. On a shared laptop the sync dot says the
+            data is saving; it does not say whose. */}
+        <button
+          type="button"
+          className="accountpill"
+          onClick={() => go('settings')}
+          aria-label={`Signed in as ${accountName}. Open settings`}
+        >
+          <Avatar name={accountName} url={data.settings.avatarUrl} />
+          <span className="account-name">{firstName(accountName)}</span>
+        </button>
 
         <div className="syncpill">
           <span className="dot" style={{ background: syncDot }} aria-hidden="true" />

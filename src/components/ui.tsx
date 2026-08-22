@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { IconAlert, IconCheck, IconMinus } from './icons';
 
 /**
@@ -269,5 +269,53 @@ export function Legend({ items }: { items: { label: string; color: string }[] })
         </span>
       ))}
     </div>
+  );
+}
+
+/** 'Ahamed Shakir' -> 'Ahamed'. An email address is left whole. */
+export function firstName(name: string): string {
+  const trimmed = name.trim();
+  if (!trimmed || trimmed.includes('@')) return trimmed;
+  return trimmed.split(/\s+/)[0];
+}
+
+/** 'Ahamed Shakir' -> 'AS'. One letter is a fine answer; zero is not. */
+export function initials(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return '?';
+  const letters = (words[0][0] ?? '') + (words.length > 1 ? (words[words.length - 1][0] ?? '') : '');
+  return letters.toUpperCase();
+}
+
+/**
+ * The account's picture, or its initials.
+ *
+ * Email sign-up has no photo and Google's can fail to load — a broken image
+ * icon where a face should be looks like a bug, so `onError` drops back to the
+ * initials rather than leaving it.
+ */
+export function Avatar({ name, url, size = 24 }: { name: string; url?: string; size?: number }) {
+  const [broken, setBroken] = useState(false);
+  const style = { width: size, height: size } as const;
+
+  if (url && !broken) {
+    return (
+      <img
+        className="avatar"
+        src={url}
+        alt=""
+        aria-hidden="true"
+        width={size}
+        height={size}
+        style={style}
+        referrerPolicy="no-referrer"
+        onError={() => setBroken(true)}
+      />
+    );
+  }
+  return (
+    <span className="avatar avatar-initials" style={style} aria-hidden="true">
+      {initials(name)}
+    </span>
   );
 }

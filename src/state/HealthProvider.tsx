@@ -17,6 +17,7 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut as fbSignOut,
+  updateProfile,
   type User,
 } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
@@ -60,7 +61,7 @@ interface HealthContextValue {
   resetData: () => Promise<void>;
   signInGoogle: () => Promise<void>;
   signInEmail: (email: string, password: string) => Promise<void>;
-  signUpEmail: (email: string, password: string) => Promise<void>;
+  signUpEmail: (email: string, password: string, name: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
   /** Erase every document under this account, then delete the account itself. */
@@ -235,6 +236,7 @@ export function HealthProvider({ children }: { children: ReactNode }) {
     return store.subscribe(commit);
   }, [store, commit]);
 
+
   const persist = useCallback(
     <K extends Section>(section: K, value: HealthData[K]) => {
       setSync('saving');
@@ -273,6 +275,29 @@ export function HealthProvider({ children }: { children: ReactNode }) {
     },
     [update],
   );
+
+  /**
+   * Fill in what the account already knows about you.
+   *
+   * Sign-up collects a name and Google hands back a name and a picture, but
+   * none of it is in the settings slice until something puts it there. This
+   * runs after the load has settled rather than inside the sign-in calls,
+   * because those resolve before the store has been read and would be writing
+   * over data they cannot see yet.
+   *
+   * Only ever fills a blank. A name typed in Settings is the user's own answer
+   * and must survive signing in again — the auth profile is a starting point,
+   * not the source of truth.
+   */
+  useEffect(() => {
+    if (!user || sync !== 'ready') return;
+    const current = dataRef.current.settings;
+    const patch: Partial<Settings> = {};
+    const displayName = user.displayName?.trim();
+    if (displayName && !current.name.trim()) patch.name = displayName;
+    if (user.photoURL?.startsWith('https://') && !current.avatarUrl) patch.avatarUrl = user.photoURL;
+    if (Object.keys(patch).length) updateSettings(patch);
+  }, [user, sync, updateSettings]);
 
   const replaceAll = useCallback(
     async (next: HealthData) => {
@@ -319,9 +344,14 @@ export function HealthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const signUpEmail = useCallback(async (email: string, password: string) => {
+  const signUpEmail = useCallback(async (email: string, password: string, name: string) => {
     try {
       const credential = await createUserWithEmailAndPassword(auth(), email, password);
+      // On the auth record as well as in the settings slice. Google accounts
+      // arrive with a displayName; without this, email accounts stay anonymous
+      // everywhere the account itself is shown rather than the app's own data.
+      const displayName = name.trim();
+      if (displayName) await updateProfile(credential.user, { displayName });
       // Firestore will refuse this account until the link is clicked, so send
       // it as part of signing up rather than making it a separate step the
       // user has to discover.
