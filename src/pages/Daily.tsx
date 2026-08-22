@@ -3,7 +3,7 @@ import { useHealth } from '../state/HealthProvider';
 import { Card, Empty, Field, Rating, StatTile, meterPercent } from '../components/ui';
 import { IconCheck, IconFlame } from '../components/icons';
 import { DailyBars, SERIES, SleepArea } from '../components/charts';
-import { dailySeries, dayLog, habitStreak, meanOf } from '../lib/calc';
+import { dailySeries, dayLog, habitStreak, meanOf, upsertDay } from '../lib/calc';
 import { formatShort, lastNDays, relativeLabel, todayISO } from '../lib/dates';
 import { labels, round, toDisplay } from '../lib/units';
 import type { DayLog } from '../types';
@@ -24,20 +24,29 @@ export default function Daily() {
   const activeHabits = data.settings.habits.filter((h) => !h.archived);
   const gridDays = lastNDays(14);
 
+  /**
+   * A patch that does not depend on what is already logged.
+   *
+   * Anything that DOES depend on it — a toggle, a running total — must go
+   * through the function form instead, or it will read this render's copy of
+   * the day and overwrite a write that has not rendered yet. See `upsertDay`.
+   */
   function patchDay(patch: Partial<DayLog>) {
-    update('days', (current) => {
-      const existing = current.find((d) => d.date === date);
-      const next: DayLog = { ...(existing ?? { date, habits: {} }), ...patch, date };
-      return [...current.filter((d) => d.date !== date), next];
-    });
+    update('days', (current) => upsertDay(current, date, () => patch));
   }
 
   function toggleHabit(habitId: string) {
-    patchDay({ habits: { ...log.habits, [habitId]: !log.habits[habitId] } });
+    update('days', (current) =>
+      upsertDay(current, date, (day) => ({
+        habits: { ...day.habits, [habitId]: !day.habits[habitId] },
+      })),
+    );
   }
 
   function addWater(ml: number) {
-    patchDay({ waterMl: Math.max(0, (log.waterMl ?? 0) + ml) });
+    update('days', (current) =>
+      upsertDay(current, date, (day) => ({ waterMl: Math.max(0, (day.waterMl ?? 0) + ml) })),
+    );
   }
 
   const showVolume = (ml: number) => round(toDisplay('volume', ml, units), 0);

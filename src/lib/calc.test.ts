@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ageFrom, bmi, bmiBand, bmr, dailySeries, dayLog, habitStreak, meanOf, rollingMean, sortByDateDesc, sumMacros, uid, weightChange, workoutsInLastDays } from './calc';
+import { ageFrom, bmi, bmiBand, bmr, dailySeries, dayLog, habitStreak, meanOf, rollingMean, sortByDateDesc, sumMacros, uid, upsertDay, weightChange, workoutsInLastDays } from './calc';
 import { DEFAULT_DATA, type DayLog, type HealthData, type MealEntry } from '../types';
 
 const meal = (date: string, over: Partial<MealEntry> = {}): MealEntry => ({
@@ -261,5 +261,49 @@ describe('ageFrom', () => {
     expect(ageFrom(undefined)).toBeUndefined();
     expect(ageFrom(1700, new Date('2026-08-22'))).toBeUndefined();
     expect(ageFrom(2030, new Date('2026-08-22'))).toBeUndefined();
+  });
+});
+
+describe('upsertDay', () => {
+  const DATE = '2026-08-22';
+
+  it('creates the day when there is none', () => {
+    const out = upsertDay([], DATE, () => ({ waterMl: 250 }));
+    expect(out).toEqual([{ date: DATE, habits: {}, waterMl: 250 }]);
+  });
+
+  it('leaves other days alone', () => {
+    const other = { date: '2026-08-21', habits: { h1: true } };
+    const out = upsertDay([other], DATE, () => ({ mood: 4 as const }));
+    expect(out).toContainEqual(other);
+    expect(out).toHaveLength(2);
+  });
+
+  /**
+   * The regression this exists for. Two habit taps in the same tick used to
+   * build both patches from one stale copy of the day, so the second
+   * overwrote the first — and the first habit never reached storage at all.
+   */
+  it('composes writes that land before a re-render', () => {
+    let days = upsertDay([], DATE, (d) => ({
+      habits: { ...d.habits, stretch: !d.habits.stretch },
+    }));
+    days = upsertDay(days, DATE, (d) => ({ habits: { ...d.habits, vitamins: !d.habits.vitamins } }));
+
+    expect(days).toHaveLength(1);
+    expect(days[0].habits).toEqual({ stretch: true, vitamins: true });
+  });
+
+  it('accumulates a running total rather than replacing it', () => {
+    // Three taps of the water button are three glasses, not one.
+    let days = upsertDay([], DATE, (d) => ({ waterMl: (d.waterMl ?? 0) + 250 }));
+    days = upsertDay(days, DATE, (d) => ({ waterMl: (d.waterMl ?? 0) + 250 }));
+    days = upsertDay(days, DATE, (d) => ({ waterMl: (d.waterMl ?? 0) + 250 }));
+    expect(days[0].waterMl).toBe(750);
+  });
+
+  it('never lets a patch move the record to another day', () => {
+    const out = upsertDay([], DATE, () => ({ date: '1999-01-01' }) as Partial<{ date: string }>);
+    expect(out[0].date).toBe(DATE);
   });
 });

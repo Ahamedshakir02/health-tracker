@@ -39,6 +39,30 @@ export function dayLog(days: DayLog[], date: ISODate): DayLog {
   return days.find((d) => d.date === date) ?? { date, habits: {} };
 }
 
+/**
+ * Writes one day's record, building the patch from the day as it stands now.
+ *
+ * The patch is a FUNCTION rather than a value, and that is the whole point.
+ * Computing a patch from a component's rendered copy of the day and merging
+ * that snapshot loses writes: two habit taps in the same tick both start from
+ * the same stale `habits` map, so the second silently overwrites the first —
+ * and the first habit is not merely reverted, it never reaches storage at all.
+ * The same fault made three taps of the water button add one glass.
+ *
+ * Taking a function forces the caller to read the current day, so each write
+ * sees the one before it.
+ */
+export function upsertDay(
+  days: DayLog[],
+  date: ISODate,
+  patch: (day: DayLog) => Partial<DayLog>,
+): DayLog[] {
+  const current = dayLog(days, date);
+  // `date` last so a patch can never move a record onto another day.
+  const next: DayLog = { ...current, ...patch(current), date };
+  return [...days.filter((d) => d.date !== date), next];
+}
+
 /** Newest first. */
 export function sortByDateDesc<T extends { date: ISODate }>(items: T[]): T[] {
   return [...items].sort((a, b) => b.date.localeCompare(a.date));
