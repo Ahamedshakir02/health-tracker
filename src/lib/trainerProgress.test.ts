@@ -4,6 +4,7 @@ import {
   emptyProgress,
   hasProgress,
   loadHints,
+  loadPlace,
   loadScratch,
   migrateLegacy,
   newDay,
@@ -11,6 +12,7 @@ import {
   parseScheme,
   progressKey,
   prune,
+  savePlace,
   saveScratch,
   stalePromotable,
   type ScratchDay,
@@ -116,6 +118,15 @@ describe('hasProgress', () => {
 
   it('counts a cool-down that was held', () => {
     expect(hasProgress(day({ cooldown: { 'stretch/child-s-pose': true } }))).toBe(true);
+  });
+});
+
+describe('hasProgress with nothing stored', () => {
+  it('is false for a day that was never started', () => {
+    // The store is indexed by day key and most days are absent, so this is the
+    // ordinary case rather than an edge one.
+    expect(hasProgress(loadScratch()['2026-08-10:3:2'])).toBe(false);
+    expect(hasProgress(undefined)).toBe(false);
   });
 });
 
@@ -292,5 +303,37 @@ describe('newDay', () => {
 
   it('captures the unit system in force, so a mid-session toggle is survivable', () => {
     expect(newDay('2026-08-10', 3, 2, 'imperial').units).toBe('imperial');
+  });
+});
+
+describe('trainer place', () => {
+  it('round trips where you were', () => {
+    savePlace({ scheduleId: 3, dayN: 2 });
+    expect(loadPlace()).toEqual({ scheduleId: 3, dayN: 2 });
+  });
+
+  it('has no answer before anything is stored', () => {
+    expect(loadPlace()).toBeNull();
+  });
+
+  it('refuses a stored value it cannot use', () => {
+    // Whatever comes back goes straight into a schedule lookup, so a shape it
+    // cannot use has to read as "no place" rather than as a place of NaN.
+    store.set('vitals.trainer.place.v1', 'not json');
+    expect(loadPlace()).toBeNull();
+    store.set('vitals.trainer.place.v1', '{"scheduleId":"3","dayN":2}');
+    expect(loadPlace()).toBeNull();
+    store.set('vitals.trainer.place.v1', '{"dayN":2}');
+    expect(loadPlace()).toBeNull();
+    store.set('vitals.trainer.place.v1', 'null');
+    expect(loadPlace()).toBeNull();
+  });
+
+  it('is separate from the scratch state', () => {
+    // Finishing a day prunes the scratch store; where you were looking is not
+    // progress and must outlive it.
+    savePlace({ scheduleId: 7, dayN: 1 });
+    saveScratch({});
+    expect(loadPlace()).toEqual({ scheduleId: 7, dayN: 1 });
   });
 });

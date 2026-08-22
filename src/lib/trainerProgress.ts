@@ -22,6 +22,8 @@ const KEY = 'vitals.trainer.scratch.v2';
 const LEGACY_KEY = 'vitals.trainer.progress.v1';
 /** Weight hints recovered from v1, so the numbers on screen are not lost. */
 const HINTS_KEY = 'vitals.trainer.lastWeights.v1';
+/** Where the Trainer was last open. Per-device, like everything else here. */
+const PLACE_KEY = 'vitals.trainer.place.v1';
 
 /** Keep a few days so an unfinished session is still promotable tomorrow. */
 const MAX_DAYS = 8;
@@ -114,7 +116,15 @@ export function newDay(
 }
 
 /** Any set ticked at all. Below this there is nothing worth recording. */
-export function hasProgress(scratch: ScratchDay): boolean {
+/**
+ * Accepts undefined because the only way to get a ScratchDay is to index the
+ * store by a day key, and most days are not in it. Requiring a value here just
+ * moves the null check to every call site, and missing one is a crash rather
+ * than a wrong answer — `tsconfig` does not set noUncheckedIndexedAccess, so
+ * the compiler will not catch it.
+ */
+export function hasProgress(scratch: ScratchDay | undefined): boolean {
+  if (!scratch) return false;
   for (const entry of Object.values(scratch.entries)) {
     if (entry.done?.some(Boolean)) return true;
   }
@@ -164,6 +174,50 @@ export function saveScratch(store: ScratchStore): void {
     localStorage.setItem(KEY, JSON.stringify(prune(store)));
   } catch {
     // Quota or private mode. Nothing useful to tell the user mid-set.
+  }
+}
+
+/**
+ * Where the Trainer was last open.
+ *
+ * Deliberately not the programme pointer. One schedule can be *yours* — that
+ * is a claim about what you are training, it syncs, and browsing the rest of
+ * the book must not silently overwrite it. This is the smaller question of
+ * which page you had open, which is per-device and worth nothing to anyone
+ * else, so it sits in localStorage beside the scratch state.
+ *
+ * Without it, opening the Trainer always landed on your programme's schedule
+ * or on Schedule 1, and anyone working through a schedule they had not claimed
+ * had to navigate back to it every single time.
+ */
+export interface TrainerPlace {
+  scheduleId: number;
+  dayN: number;
+}
+
+export function loadPlace(): TrainerPlace | null {
+  try {
+    const raw = localStorage.getItem(PLACE_KEY);
+    if (!raw) return null;
+    const parsed: unknown = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return null;
+    const { scheduleId, dayN } = parsed as Partial<TrainerPlace>;
+    // Validated against the real plan by the caller — a schedule that has since
+    // been removed must not strand the Trainer on an id that resolves to
+    // nothing.
+    if (typeof scheduleId !== 'number' || typeof dayN !== 'number') return null;
+    return { scheduleId, dayN };
+  } catch {
+    return null;
+  }
+}
+
+export function savePlace(place: TrainerPlace): void {
+  try {
+    localStorage.setItem(PLACE_KEY, JSON.stringify(place));
+  } catch {
+    // Quota or private mode. Losing your place is a small cost; failing here
+    // must not stop the page rendering.
   }
 }
 
