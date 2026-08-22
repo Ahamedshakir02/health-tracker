@@ -25,3 +25,7 @@ Thumbs.db
 
 # Local agent config — machine-specific, not part of the project.
 .claude/
+
+# Design canvas scratch — artboard sources plus a ~2 MB generated editor
+# payload. The canvas itself lives at its published URL.
+.design/
