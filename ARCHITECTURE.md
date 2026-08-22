@@ -185,13 +185,14 @@ HTTP header, no source maps in the deployed bundle, and self-hosted fonts so
 
 ## Generated assets
 
-Two build scripts produce files that are committed to the repo. Neither runs
+Three build scripts produce files that are committed to the repo. None runs
 during `npm run build` — they are run by hand when their inputs change, and
 their outputs are checked in so a clone builds without network access or ffmpeg.
 
 | Script | Produces | Needs |
 |---|---|---|
 | `scripts/build-exercise-media.mjs` | `public/exercise-anim/` (330 frames), `src/data/exerciseMedia.ts` and `src/data/mobility.ts` | ffmpeg, network |
+| `scripts/build-home-plans.mjs` | `src/data/homePlans.ts` | the two home-edition `.docx` files |
 | `scripts/build-icons.mjs` | `favicon.ico`, `apple-touch-icon.png`, `icon-192/512.png` | nothing |
 
 `src/data/trainingPlan.ts` is also generated — parsed from the original
@@ -202,6 +203,40 @@ to be touched.
 Everything under `public/exercise-anim/` is content-hash named and served
 `immutable` for a year. Regenerating a clip changes its filename, so a stale
 copy can never be served.
+
+---
+
+## One plan, three sets of movements
+
+The book has two home editions. Each restates it exercise for exercise — the
+same 13 schedules, 46 training days and 360 slots, in the same order at the same
+rep counts — with every gym movement swapped for one you can do with household
+items, or with nothing at all.
+
+So they are **not** extra schedules. `src/data/homePlans.ts` is an overlay keyed
+by movement, and `trainingPlan.ts` stays the single description of the plan's
+structure. `TrainerPrefs.equipment` picks which set of movements the Trainer
+draws, and only the exercise on each card changes.
+
+Two consequences worth knowing before touching it:
+
+- **The key is `movementKey(section, name)`, not the exercise name.** `Barbell
+  Press` is a bench press under CHEST and an overhead press under SHOULDER, and
+  the editions substitute them differently.
+- **Logging stays on the gym movement.** Set records, personal records and the
+  progression chart are keyed to the exercise being replaced, so a week at home
+  lands on the same chart as the gym movement it stands in for rather than
+  splitting your history by whichever room you trained in.
+
+`scripts/build-home-plans.mjs` will not emit anything unless all 360 slots line
+up with `trainingPlan.ts` in order. The `.docx` carries no ids, only position,
+so position is the only thing that can be checked — and a table that had drifted
+one row would put a chair dip where a squat belongs with nothing downstream able
+to tell.
+
+`EQUIPMENT_NOTES` lives in `src/types.ts`, not in the generated file, so that
+naming the three modes does not pull ~19 kB of substitution tables onto every
+page that mentions them.
 
 ---
 
@@ -261,5 +296,7 @@ deploy indefinitely.
 | An exercise → animation mapping | `ALIAS` in `scripts/build-exercise-media.mjs`, then re-run it (`--verify` prints the table first) |
 | The stretch set or a routine | `STRETCHES` / `ROUTINES` in `scripts/build-exercise-media.mjs`, then re-run it |
 | Which stretches follow a training day | `SECTION_AREAS` in `src/lib/mobility.ts` |
+| A home substitution | the home-edition `.docx`, then re-run `scripts/build-home-plans.mjs` |
+| What a training mode is called, or assumes you have | `EQUIPMENT_NOTES` in `src/types.ts` |
 | Who can sign in | `firestore.rules` — nowhere else |
 | Cache or security headers | `firebase.json` |
