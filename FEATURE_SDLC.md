@@ -268,8 +268,8 @@ Value is "how much better is the app for its one user"; effort is solo-dev days.
 | # | Item | Epic | Value | Effort | Do |
 |---|---|---|---|---|---|
 | 1 | Firestore persistent cache | D2 | High | 0.2 d | ✅ **Done** — with the multi-tab manager |
-| 2 | Enable Google sign-in · delete dead trainer.ts | E | Med | 0.2 d | ◐ `trainer.ts` deleted; the provider is still a console click |
-| 3 | GitHub Actions CI | E | High | 0.3 d | Now |
+| 2 | Enable Google sign-in · delete dead trainer.ts | E | Med | 0.2 d | ◐ `trainer.ts` deleted; the app side is finished, the provider is still a console click — steps in `PROJECT_NOTES.md` |
+| 3 | GitHub Actions CI | E | High | 0.3 d | ✅ **Done** — typecheck, tests, build |
 | 4 | Workout history + "last time" + PRs | A | **Highest** | 4–6 d | ✅ **Done** — `sessions` slice, `lib/session.ts` |
 | 5 | Rest timer + wake lock | A | High | 1 d | ✅ **Done** |
 | 6 | Service worker / offline | D1 | High | 1–2 d | Sprint 2 |
@@ -279,7 +279,7 @@ Value is "how much better is the app for its one user"; effort is solo-dev days.
 | 10 | CSV export + printable report | C | Med | 1 d | Sprint 3 |
 | 11 | Barcode → Open Food Facts | B3 | Med-High | 2–3 d | Sprint 3 (after the privacy call) |
 | 12 | Conflict-safe merge writes | D3 | Med | 1 d | Sprint 3 |
-| 13 | Code splitting + a11y pass | E | Med | 1.5 d | ◐ Routes split (main chunk 329 → 180 kB); the Trainer a11y pass is still open |
+| 13 | Code splitting + a11y pass | E | Med | 1.5 d | ✅ **Done** — routes split (329 → 180 kB); Trainer a11y pass done |
 | 14 | Correlations + Navy BF% | C | Med | 1.5 d | Sprint 4 |
 | 15 | Push reminders | D4 | Med | 2 d + plan upgrade | Backlog |
 | 16 | Wearable OAuth (Strava/Withings) | F | Med | 3–5 d each | Backlog |
