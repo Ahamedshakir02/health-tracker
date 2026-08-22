@@ -48,6 +48,7 @@ const OUT_DIR = join(ROOT, 'public', 'exercise-anim');
 const MANIFEST = join(ROOT, 'src', 'data', 'exerciseMedia.ts');
 const MOBILITY = join(ROOT, 'src', 'data', 'mobility.ts');
 const PLAN = join(ROOT, 'src', 'data', 'trainingPlan.ts');
+const HOME_PLANS = join(ROOT, 'src', 'data', 'homePlans.ts');
 
 const DB_JSON = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json';
 const DB_IMG = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/';
@@ -86,11 +87,8 @@ const ALIAS = {
   'Dumbell Press (Inc)': 'Incline Dumbbell Press',
   'Incline Half Dumbell Press': 'Incline Dumbbell Press',
   'Bench Press (Inc) Dumbell Bench Press': 'Incline Dumbbell Press',
-  'Dumbell Press': 'Dumbbell Bench Press',
   'Flat Dumbell Press': 'Dumbbell Bench Press',
   'Flat Bench Dumbell Press': 'Dumbbell Bench Press',
-  'Dumbell Press (H)': 'Dumbbell Bench Press with Neutral Grip',
-  'Dumbell Press (One by One)': 'One Arm Dumbbell Bench Press',
   'Dumbell Press (Dec) Seated': 'Decline Dumbbell Bench Press',
   'Dec Bar Bench Press': 'Decline Barbell Bench Press',
   'Decline Bar Bench Press': 'Decline Barbell Bench Press',
@@ -113,7 +111,6 @@ const ALIAS = {
   'Dumbell Pullover': 'Bent-Arm Dumbbell Pullover',
   'Barbell Pullover': 'Bent-Arm Barbell Pullover',
   'Parallel Bar Stretch': 'Dips - Chest Version',
-  'Smith Press': 'Smith Machine Bench Press',
 
   // ── WINGS / BACK ─────────────────────────────────────────────────────────
   'Back Pullups': 'Pullups',
@@ -167,7 +164,6 @@ const ALIAS = {
   'Z Barbell Curl': 'EZ-Bar Curl',
   'Z Bar Curl': 'EZ-Bar Curl',
   'Z Bar Curl (Close)': 'Close-Grip EZ Bar Curl',
-  'Z Bar Lying Curl': 'Barbell Curls Lying Against An Incline',
   'Barbell Curl Rev (-)': 'Reverse Barbell Curl',
   'Barbell Curl (Rev)': 'Reverse Barbell Curl',
   'Barbell Rev Curl': 'Reverse Barbell Curl',
@@ -208,6 +204,10 @@ const ALIAS = {
   'Spider Biceps Curl': 'Spider Curl',
 
   // ── TRICEPS ──────────────────────────────────────────────────────────────
+  // Was mapped to 'Barbell Curls Lying Against An Incline' — a biceps curl, on
+  // a triceps day, because the book's name says "Curl". Its cue does not:
+  // "EZ bar lying extension — elbows fixed".
+  'Z Bar Lying Curl': 'EZ-Bar Skullcrusher',
   'Skull Crusher': 'EZ-Bar Skullcrusher',
   'Z Bar Lying Press': 'EZ-Bar Skullcrusher',
   'Skull Crusher (Machine)': 'Machine Triceps Extension',
@@ -243,6 +243,15 @@ const ALIAS = {
   'One Arm Dumbell Extension': 'Dumbbell One-Arm Triceps Extension',
 
   // ── SHOULDER ─────────────────────────────────────────────────────────────
+  // These four were filed under CHEST and mapped to bench presses. The book
+  // puts them under SHOULDER and its cues say overhead — "elbows slightly
+  // forward, full lockout", "hammer (neutral) grip press", "alternate arms",
+  // "fixed bar path". A bench press demonstration on a shoulder day is not a
+  // near miss; it is a different lift.
+  'Dumbell Press': 'Dumbbell Shoulder Press',
+  'Dumbell Press (H)': 'Standing Palms-In Dumbbell Press',
+  'Dumbell Press (One by One)': 'Standing Alternating Dumbbell Press',
+  'Smith Press': 'Smith Machine Overhead Shoulder Press',
   'Barbell Press': 'Barbell Shoulder Press',
   // The one genuinely ambiguous name in the book: 'Barbell Press' appears
   // under SHOULDER and again under CHEST, where it is a bench press. The
@@ -272,6 +281,150 @@ const ALIAS = {
   'Lateral Bentover': 'Bent Over Dumbbell Rear Delt Raise With Head On Bench',
   'Dumbell Front Raise': 'Front Dumbbell Raise',
   'Barbell Front Raise': 'Standing Front Barbell Raise Over Head',
+
+  // ── HOME EDITIONS ────────────────────────────────────────────────────────
+  //
+  // The household and bodyweight editions of the book (src/data/homePlans.ts)
+  // substitute every gym movement for one you can do at home, so their names
+  // need clips too or those cards render with no demonstration at all.
+  //
+  // The dataset has no backpacks or kitchen chairs in it, so these map to the
+  // nearest movement it does have: a backpack curl is shaped like a dumbbell
+  // curl, a chair dip like a bench dip, a doorway row like a pull-up. The
+  // demonstration shows the movement pattern, which is the part that is easy to
+  // get wrong; the card's own text says what to hold and what to brace against.
+  'Backpack Push-up': 'Pushups',
+  'Deep Backpack Push-up': 'Pushups',
+  'Deep Push-up': 'Pushups',
+  'Push-up': 'Pushups',
+  'Wide Slow Push-up': 'Push-Up Wide',
+  'Low-Hands Wide Push-up': 'Push-Up Wide',
+  'Low-Hands Deep Push-up': 'Push-Up Wide',
+  'Diamond Push-up': 'Push-Ups - Close Triceps Position',
+  'Knuckle Push-up Hold': 'Pushups',
+  'Fingertip Floor Press': 'Pushups',
+  'Sphinx Push-up': 'Close-Grip Push-Up off of a Dumbbell',
+  'Feet-Up Push-up': 'Push-Ups With Feet Elevated',
+  'Feet-Up Deep Push-up': 'Push-Ups With Feet Elevated',
+  'Wall-Feet Decline Push-up': 'Push-Ups With Feet Elevated',
+  'Wall-Feet Deep Push-up': 'Push-Ups With Feet Elevated',
+  'Hands-Up Push-up': 'Incline Push-Up',
+  'Hands-Up Deep Push-up': 'Incline Push-Up',
+  'Pike Push-up': 'Handstand Push-Ups',
+  'Pike Push-up, Head Behind': 'Handstand Push-Ups',
+  'Kneeling Pike Push-up': 'Handstand Push-Ups',
+  'Rotating Pike Push-up': 'Handstand Push-Ups',
+  'Backpack Floor Press': 'Alternating Floor Press',
+  'Doorway Chest Squeeze': 'Bodyweight Flyes',
+  'Palm-Press Squeeze': 'Bodyweight Flyes',
+  'Palm-Press Crossover': 'Bodyweight Flyes',
+  'Hands-Up Towel Fly': 'Bodyweight Flyes',
+  'Towel Slide Fly': 'Bodyweight Flyes',
+  'Towel Cross-Body Fly': 'Bodyweight Flyes',
+  'Doorway Chest Stretch Hold': 'Chest And Front Of Shoulder Stretch',
+  'Chair Dip Bottom Hold': 'Bench Dips',
+  'Backpack Floor Pullover': 'Straight-Arm Dumbbell Pullover',
+  'Chair Dip': 'Bench Dips',
+  'Chair Triceps Dip': 'Bench Dips',
+  'Two-Chair Dip': 'Dips - Triceps Version',
+  'Floor Dip': 'Bench Dips',
+  'Floor Triceps Dip': 'Bench Dips',
+  'Backpack Floor Extension': 'Lying Dumbbell Tricep Extension',
+  'Backpack Overhead Extension': 'Standing Towel Triceps Extension',
+  'Seated Backpack Overhead Extension': 'Standing Towel Triceps Extension',
+  'Backpack Behind-Head Press': 'Standing Towel Triceps Extension',
+  'Towel Overhead Extension': 'Standing Towel Triceps Extension',
+  'Wall Triceps Extension': 'Standing Towel Triceps Extension',
+  'Kneeling Wall Extension': 'Standing Towel Triceps Extension',
+  'Floor Overhead Reach': 'Standing Towel Triceps Extension',
+  'Backpack Kickback': 'Tricep Dumbbell Kickback',
+  'Self-Resisted Kickback': 'Tricep Dumbbell Kickback',
+  'Self-Resisted Pushdown': 'Body Tricep Press',
+  'Self-Resisted Overhead Extension': 'Standing Towel Triceps Extension',
+  'Doorway Wide Pull': 'Pullups',
+  'Doorway Underhand Pull': 'Chin-Up',
+  'Doorway Lean-Back Pull': 'Pullups',
+  'Under-Table Row': 'Pullups',
+  'Prone Row': 'Bent Over Two-Dumbbell Row',
+  'Prone Wide Row': 'Bent Over Two-Dumbbell Row',
+  'Prone Incline Row': 'Bent Over Two-Dumbbell Row',
+  'Prone One-Arm Row': 'One-Arm Dumbbell Row',
+  'Prone Lat Pulldown': 'Straight-Arm Dumbbell Pullover',
+  'Prone Wide Pulldown': 'Straight-Arm Dumbbell Pullover',
+  'Chest-Supported Chair Row': 'Bent Over Two-Dumbbell Row',
+  'Backpack Bent-Over Row': 'Bent Over Two-Dumbbell Row',
+  'Backpack One-Arm Row': 'One-Arm Dumbbell Row',
+  'Backpack Reverse Fly': 'Reverse Flyes',
+  'Prone T-Raise': 'Lying Rear Delt Raise',
+  'Backpack Shrug': 'Dumbbell Shrug',
+  'Two-Bag Shrug': 'Dumbbell Shrug',
+  'Self-Resisted Shrug': 'Dumbbell Shrug',
+  'Backpack Upright Row': 'Standing Dumbbell Upright Row',
+  'Towel Foot Upright Row': 'Standing Dumbbell Upright Row',
+  'Self-Resisted Upright Row': 'Standing Dumbbell Upright Row',
+  'Backpack Overhead Press': 'Standing Dumbbell Press',
+  'Backpack Front Press': 'Standing Dumbbell Press',
+  'Seated Backpack Press': 'Seated Dumbbell Press',
+  'Backpack Behind-Neck Press': 'Standing Barbell Press Behind Neck',
+  'Seated Two-Bottle Press': 'Seated Dumbbell Press',
+  'Standing Two-Bag Press': 'Standing Dumbbell Press',
+  'Rotating Bag Press': 'Arnold Dumbbell Press',
+  'Backpack Front Raise': 'Side Laterals to Front Raise',
+  'Bottle Front Raise': 'Side Laterals to Front Raise',
+  'Self-Resisted Front Raise': 'Side Laterals to Front Raise',
+  'Bottle Lateral Raise': 'Side Lateral Raise',
+  'One-Arm Bottle Raise': 'Side Lateral Raise',
+  'Wall Lateral Raise': 'Side Lateral Raise',
+  'Bent-Over Bottle Raise': 'Seated Bent-Over Rear Delt Raise',
+  'Backpack Curl': 'Dumbbell Bicep Curl',
+  'Bottle Curl': 'Dumbbell Bicep Curl',
+  'Seated Bottle Curl': 'Seated Dumbbell Curl',
+  'Chair-Back Curl': 'Two-Arm Dumbbell Preacher Curl',
+  'Chest-Supported Curl': 'Dumbbell Prone Incline Curl',
+  'Lean-Back Bottle Curl': 'Lying Supine Dumbbell Curl',
+  'Bottle Concentration Curl': 'Concentration Curls',
+  'Backpack Curl, Angled Grip': 'Incline Inner Biceps Curl',
+  'Towel High Curl': 'High Cable Curls',
+  'Towel Slide Curl': 'Dumbbell Bicep Curl',
+  'Bag Hammer Curl': 'Hammer Curls',
+  'Self-Resisted Hammer Curl': 'Hammer Curls',
+  'Self-Resisted Curl': 'Dumbbell Bicep Curl',
+  'Braced Self-Resisted Curl': 'Concentration Curls',
+  'Lying Self-Resisted Curl': 'Lying Supine Dumbbell Curl',
+  'Prone Self-Resisted Curl': 'Dumbbell Prone Incline Curl',
+  'Seated Self-Resisted Curl': 'Seated Dumbbell Curl',
+  'Self-Resisted Curl-Pull': 'Dumbbell Bicep Curl',
+  'Double-Biceps Squeeze': 'Concentration Curls',
+  'Backpack Reverse Curl': 'Standing Dumbbell Reverse Curl',
+  'Self-Resisted Reverse Curl': 'Standing Dumbbell Reverse Curl',
+  'Bottle Wrist Curl': 'Seated Dumbbell Palms-Up Wrist Curl',
+  'Bottle Reverse Wrist Curl': 'Seated Dumbbell Palms-Down Wrist Curl',
+  'Towel Foot Curl': 'Seated Dumbbell Palms-Up Wrist Curl',
+  'Towel Foot Reverse Curl': 'Seated Dumbbell Palms-Down Wrist Curl',
+  'Bodyweight Squat': 'Bodyweight Squat',
+  'Prisoner Squat': 'Bodyweight Squat',
+  'Tempo Squat': 'Bodyweight Squat',
+  'Backpack Squat': 'Dumbbell Squat',
+  'Backpack Tempo Squat': 'Dumbbell Squat',
+  'Front-Hold Backpack Squat': 'Goblet Squat',
+  'Wall-Supported Backpack Squat': 'Dumbbell Squat',
+  'Bag Goblet Squat': 'Goblet Squat',
+  'Bag Sumo Squat': 'Plie Dumbbell Squat',
+  'Wide Sumo Squat': 'Plie Dumbbell Squat',
+  'Close-Stance Deep Squat': 'Bodyweight Squat',
+  'Deep Squat Hold and Rep': 'Bodyweight Squat',
+  'Wall Sit and Rise': 'Bodyweight Squat',
+  'Kneeling Sissy Squat': 'Weighted Sissy Squat',
+  'Backpack Lunge': 'Dumbbell Lunges',
+  'Reverse Lunge': 'Bodyweight Squat',
+  'Prisoner Reverse Lunge': 'Bodyweight Squat',
+  'Chair Step-Up': 'Step-up with Knee Raise',
+  'Backpack Romanian Deadlift': 'Stiff-Legged Dumbbell Deadlift',
+  'Single-Leg Good Morning': 'Natural Glute Ham Raise',
+  'Single-Leg Hip Bridge': 'Single Leg Glute Bridge',
+  'Single-Leg Calf Raise': 'Calf Raise On A Dumbbell',
+  'Stair Calf Raise': 'Calf Raise On A Dumbbell',
+  'Chair Ankle Extension': 'Calf Raise On A Dumbbell',
 
   // ── FOREARMS ─────────────────────────────────────────────────────────────
   'Wrist Curl': 'Palms-Up Barbell Wrist Curl Over A Bench',
@@ -477,6 +630,21 @@ async function planExercises() {
           const section = sec.name.trim();
           pairs.set(`${section}|${name}`, { section, name });
         }
+
+  // The home editions substitute a different movement into the same slots, and
+  // the Trainer looks their names up in this manifest exactly as it does the
+  // book's. Left out, every home card renders with no demonstration.
+  //
+  // Read as text like the plan above, and for the same reason: importing a .ts
+  // module from a build script means a toolchain, and the shape here is a
+  // handful of quoted names.
+  const home = await readFile(HOME_PLANS, 'utf8');
+  for (const m of home.matchAll(/^    name: "(.+?)",$/gm)) {
+    const name = m[1].trim();
+    // Unsectioned: a home movement is one movement whatever it stands in for,
+    // and the substitutions are already section-aware upstream.
+    if (!pairs.has(name)) pairs.set(name, { section: '', name });
+  }
   return [...pairs.values()];
 }
 
