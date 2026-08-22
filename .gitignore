@@ -22,3 +22,6 @@ coverage
 .DS_Store
 Thumbs.db
 *.log
+
+# Local agent config — machine-specific, not part of the project.
+.claude/
