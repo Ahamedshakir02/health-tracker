@@ -2056,6 +2056,68 @@ tbody tr:hover {
   border-radius: 999px;
 }
 
+/* ── The schedule preview ───────────────────────────────────────────────────
+   The Trainer opens on the book rather than on 40 exercise cards, so the day
+   picker gets room to answer the question you actually arrive with: which day
+   am I doing. Same buttons as .day-tab, larger and with the rep scheme and
+   exercise count on them. */
+
+.day-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 12px;
+}
+
+.day-card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 18px 18px 16px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+  background: var(--card);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: 0.12s;
+}
+
+.day-card:hover {
+  border-color: var(--accent-line);
+  transform: translateY(-1px);
+}
+
+.day-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.day-card .day-focus {
+  font-size: 17px;
+}
+
+.day-meta {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+/* The header pill doubles as the way back out of a day. */
+.pill-btn {
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.pill-back {
+  opacity: 0.75;
+  font-weight: 600;
+}
+
+.pill-back::before {
+  content: '·';
+  margin: 0 6px;
+}
+
 .daybar {
   display: flex;
   flex-direction: column;
