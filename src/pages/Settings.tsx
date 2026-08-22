@@ -8,12 +8,12 @@ import { uid } from '../lib/calc';
 import {
   DEFAULT_TRAINER_PREFS,
   EQUIPMENT_MODES,
+  EQUIPMENT_NOTES,
   type EquipmentMode,
   type Habit,
   type TrainerPrefs,
   type UnitSystem,
 } from '../types';
-import { EQUIPMENT_NOTES } from '../data/homePlans';
 
 export default function SettingsPage() {
   const {

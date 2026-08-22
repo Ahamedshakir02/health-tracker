@@ -16,7 +16,28 @@ export type MealSlot = 'breakfast' | 'lunch' | 'dinner' | 'snack';
 export type EquipmentMode = 'gym' | 'household' | 'bodyweight';
 
 /** The same three, as a value — validation needs to test membership. */
-export const EQUIPMENT_MODES = ['gym', 'household', 'bodyweight'] as const satisfies readonly EquipmentMode[];
+export const EQUIPMENT_MODES = [
+  'gym',
+  'household',
+  'bodyweight',
+] as const satisfies readonly EquipmentMode[];
+
+/**
+ * What each mode calls itself, and what it assumes you have to hand.
+ *
+ * Here rather than in `data/homePlans.ts` so that naming the modes does not
+ * drag the substitution tables in with it. Settings shows these three lines and
+ * nothing else; the tables are ~19 kB gzipped and belong only to the Trainer.
+ */
+export const EQUIPMENT_NOTES: Record<EquipmentMode, { label: string; needs: string }> = {
+  gym: { label: 'Gym', needs: 'The gym floor and its equipment, as the book is written.' },
+  household: {
+    label: 'Household items',
+    needs:
+      'A sturdy chair, a table, a doorway, a wall, a step, a towel, a backpack loaded with books, water bottles or shopping bags.',
+  },
+  bodyweight: { label: 'Bodyweight only', needs: 'Your body, the floor and a wall. Nothing else.' },
+};
 export type Intensity = 'low' | 'moderate' | 'high';
 
 /**

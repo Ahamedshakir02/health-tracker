@@ -3231,13 +3231,6 @@ export const HOME_PLANS: Record<Exclude<EquipmentMode, 'gym'>, HomeVariant> = {
   bodyweight: BODYWEIGHT,
 };
 
-/** What each mode assumes you have to hand. Shown in Settings and the Trainer. */
-export const EQUIPMENT_NOTES: Record<EquipmentMode, { label: string; needs: string }> = {
-  gym: { label: "Gym", needs: "The gym floor and its equipment, as the book is written." },
-  household: { label: "Household items", needs: "A sturdy chair, a table, a doorway, a wall, a step, a towel, a backpack loaded with books, water bottles or shopping bags." },
-  bodyweight: { label: "Bodyweight only", needs: "Your body, the floor and a wall. Nothing else." },
-};
-
 /**
  * The substitute for one gym movement, or null to show the gym movement itself.
  *

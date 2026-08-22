@@ -288,14 +288,9 @@ function align(slots, rows, label) {
 
 // ── emit ───────────────────────────────────────────────────────────────────
 
-const NEEDS = {
-  gym: 'The gym floor and its equipment, as the book is written.',
-  household:
-    'A sturdy chair, a table, a doorway, a wall, a step, a towel, a backpack loaded with books, water bottles or shopping bags.',
-  bodyweight: 'Your body, the floor and a wall. Nothing else.',
-};
-
-const LABELS = { gym: 'Gym', household: 'Household items', bodyweight: 'Bodyweight only' };
+// EQUIPMENT_NOTES is deliberately not emitted here. Naming the modes must not
+// drag these tables into every page that mentions them, so the labels live in
+// src/types.ts and this file stays purely the substitutions.
 
 const ts = (value) => JSON.stringify(value);
 
@@ -367,13 +362,6 @@ ${body}
 export const HOME_PLANS: Record<Exclude<EquipmentMode, 'gym'>, HomeVariant> = {
   household: HOUSEHOLD,
   bodyweight: BODYWEIGHT,
-};
-
-/** What each mode assumes you have to hand. Shown in Settings and the Trainer. */
-export const EQUIPMENT_NOTES: Record<EquipmentMode, { label: string; needs: string }> = {
-  gym: { label: ${ts(LABELS.gym)}, needs: ${ts(NEEDS.gym)} },
-  household: { label: ${ts(LABELS.household)}, needs: ${ts(NEEDS.household)} },
-  bodyweight: { label: ${ts(LABELS.bodyweight)}, needs: ${ts(NEEDS.bodyweight)} },
 };
 
 /**

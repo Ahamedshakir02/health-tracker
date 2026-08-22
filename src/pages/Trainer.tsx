@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Card } from '../components/ui';
+import { Card, Segmented } from '../components/ui';
 import ExerciseAnim from '../components/ExerciseAnim';
+import { homeExerciseFor } from '../data/homePlans';
 import { IconCheck, IconFlame, IconTrainer } from '../components/icons';
 import { TRAINING_PLAN, type PlanDay } from '../data/trainingPlan';
 import { useHealth } from '../state/HealthProvider';
@@ -41,7 +42,14 @@ import {
   type ScratchDay,
   type ScratchStore,
 } from '../lib/trainerProgress';
-import { DEFAULT_TRAINER_PREFS, type WorkoutEntry, type WorkoutSession } from '../types';
+import {
+  DEFAULT_TRAINER_PREFS,
+  EQUIPMENT_MODES,
+  EQUIPMENT_NOTES,
+  type EquipmentMode,
+  type WorkoutEntry,
+  type WorkoutSession,
+} from '../types';
 
 /**
  * The Revolution Gym & Fitness schedule book, rendered as the Trainer section.
@@ -85,6 +93,8 @@ export default function Trainer() {
   const u = labels(units);
   const programme = data.settings.programme;
   const prefs = data.settings.trainer ?? DEFAULT_TRAINER_PREFS;
+  const setTrainer = (patch: Partial<typeof prefs>) =>
+    updateSettings({ trainer: { ...prefs, ...patch } });
   /** kg out of storage, into whatever the user reads in. */
   const toWeight = useCallback((kg: number) => round(toDisplay('weight', kg, units), 1), [units]);
 
@@ -360,6 +370,27 @@ export default function Trainer() {
         </div>
       </header>
 
+      {/* Where you are training changes mid-week more often than the other
+          preferences do — a locked gym, a trip — so it is here as well as in
+          Settings rather than only there. */}
+      <div className="equip-row">
+        <span className="equip-label" id="equip-label">
+          Training
+        </span>
+        <Segmented
+          ariaLabel="Where you are training"
+          value={prefs.equipment}
+          onChange={(value: EquipmentMode) => setTrainer({ equipment: value })}
+          options={EQUIPMENT_MODES.map((mode) => ({
+            value: mode,
+            label: EQUIPMENT_NOTES[mode].label,
+          }))}
+        />
+        {prefs.equipment !== 'gym' && (
+          <p className="hint equip-note">{EQUIPMENT_NOTES[prefs.equipment].needs}</p>
+        )}
+      </div>
+
       <div className="stack">
         {/* Schedule picker. Horizontal rail so all thirteen stay one tap away. */}
         <nav className="sched-rail" aria-label="Schedules">
@@ -510,6 +541,14 @@ export default function Trainer() {
                   // History is keyed by movement, not by position, so the same
                   // lift carries its record across schedules.
                   const mkey = movementKey(section.name, ex.name);
+
+                  // The home editions swap the movement, not the plan. Only
+                  // what is shown on the card changes; the key above, the rep
+                  // scheme and everything logged stay on the gym movement, so a
+                  // week of push-ups lands on the same chart as the bench press
+                  // it stands in for.
+                  const home = homeExerciseFor(prefs.equipment, section.name, ex.name);
+                  const shown = home?.name ?? ex.name;
                   const last = lastPerformance(data.sessions, mkey, today);
                   const best = bestSet(data.sessions, mkey);
 
@@ -537,12 +576,12 @@ export default function Trainer() {
                       key={exKey}
                       style={{ '--ex-color': color } as React.CSSProperties}
                     >
-                      <ExerciseAnim name={ex.name} section={section.name} phase={ex.n} />
+                      <ExerciseAnim name={shown} section={section.name} phase={ex.n} />
 
                       <div className="ex-body">
                         <div className="ex-top">
                           <span className="ex-n">{ex.n}</span>
-                          <h3 className="ex-name">{ex.name}</h3>
+                          <h3 className="ex-name">{shown}</h3>
                           {complete && (
                             <span className="ex-tick" aria-label="Completed">
                               <IconCheck />
@@ -550,12 +589,44 @@ export default function Trainer() {
                           )}
                         </div>
 
-                        <p className="ex-cue">{ex.cue}</p>
+                        {/* Naming the gym movement is not a footnote. It is how
+                            you know which line of the book you are on, and what
+                            the substitute is meant to be training. */}
+                        {home && <p className="ex-replaces">replaces {ex.name}</p>}
+
+                        <p className="ex-cue">{home ? home.move : ex.cue}</p>
+
+                        {home && (
+                          <>
+                            <details className="ex-how">
+                              <summary>How to do it</summary>
+                              <p>
+                                <strong>Set up</strong> {home.setup}
+                              </p>
+                              <p>
+                                <strong>Feel it</strong> {home.feel}
+                              </p>
+                            </details>
+
+                            {/* At home there are no plates to add, so this pair
+                                is the whole progression mechanism. */}
+                            <dl className="ex-dial">
+                              <div>
+                                <dt>Harder</dt>
+                                <dd>{home.harder}</dd>
+                              </div>
+                              <div>
+                                <dt>Easier</dt>
+                                <dd>{home.easier}</dd>
+                              </div>
+                            </dl>
+                          </>
+                        )}
 
                         {/* The book names two movements here; the dataset has a
                             clip for each, not for the pair. Saying so makes an
                             apparent mismatch read as deliberate. */}
-                        {showsFirstMovementOnly(ex.name) && (
+                        {!home && showsFirstMovementOnly(ex.name) && (
                           <p className="ex-note">Demonstration shows the first movement.</p>
                         )}
 
@@ -576,14 +647,14 @@ export default function Trainer() {
                           <span className="ex-scheme">
                             {scheme.reps ? `${scheme.reps} reps` : 'reps'} × {scheme.sets}
                           </span>
-                          <div className="setchips" role="group" aria-label={`${ex.name} sets`}>
+                          <div className="setchips" role="group" aria-label={`${shown} sets`}>
                             {entry.done.map((isDone, i) => (
                               <button
                                 key={i}
                                 type="button"
                                 className="setchip"
                                 aria-pressed={isDone}
-                                aria-label={`${ex.name}, set ${i + 1} of ${scheme.sets}`}
+                                aria-label={`${shown}, set ${i + 1} of ${scheme.sets}`}
                                 onClick={() => toggleSet(exKey, i)}
                               >
                                 {i + 1}
@@ -609,7 +680,7 @@ export default function Trainer() {
                                 inputMode="decimal"
                                 placeholder={u.weight}
                                 value={w}
-                                aria-label={`${ex.name}, weight for set ${i + 1} in ${u.weight}`}
+                                aria-label={`${shown}, weight for set ${i + 1} in ${u.weight}`}
                                 onChange={(e) => setField(exKey, 'weight', i, e.target.value)}
                               />
                               <input
@@ -620,7 +691,7 @@ export default function Trainer() {
                                 inputMode="numeric"
                                 placeholder={scheme.reps ? String(scheme.reps) : 'reps'}
                                 value={entry.reps[i]}
-                                aria-label={`${ex.name}, reps for set ${i + 1}`}
+                                aria-label={`${shown}, reps for set ${i + 1}`}
                                 onChange={(e) => setField(exKey, 'reps', i, e.target.value)}
                               />
                             </div>
