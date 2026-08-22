@@ -4,8 +4,10 @@ import { Card, Empty, Field, Pill, Segmented, StatTile } from '../components/ui'
 import { SERIES, WeightChart } from '../components/charts';
 import { addDays, relativeLabel, todayISO } from '../lib/dates';
 import {
+  ageFrom,
   bmi,
   bmiBand,
+  bmr,
   latestWeight,
   rollingMean,
   sortByDateDesc,
@@ -68,6 +70,14 @@ export default function Body() {
 
   const bmiValue = latest && heightCm ? bmi(latest.weightKg, heightCm) : null;
   const band = bmiValue ? bmiBand(bmiValue) : null;
+  // Null until every term is present — see the note on bmr(). The tile says
+  // which one is missing rather than showing a number built on assumptions.
+  const restingBurn = bmr({
+    weightKg: latest?.weightKg,
+    heightCm,
+    age: ageFrom(data.settings.birthYear),
+    sex: data.settings.sex,
+  });
 
   function submit(event: FormEvent) {
     event.preventDefault();
@@ -140,6 +150,16 @@ export default function Body() {
               ) : (
                 'Add your height in Settings'
               )
+            }
+          />
+          <StatTile
+            label="Resting burn"
+            value={restingBurn ? String(restingBurn) : '—'}
+            unit={restingBurn ? 'kcal/day' : undefined}
+            foot={
+              restingBurn
+                ? 'Mifflin-St Jeor, at complete rest'
+                : 'Needs height, birth year and sex in Settings'
             }
           />
         </div>

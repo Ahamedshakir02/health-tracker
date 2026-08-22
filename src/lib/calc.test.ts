@@ -1,18 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  bmi,
-  bmiBand,
-  dailySeries,
-  dayLog,
-  habitStreak,
-  meanOf,
-  rollingMean,
-  sortByDateDesc,
-  sumMacros,
-  uid,
-  weightChange,
-  workoutsInLastDays,
-} from './calc';
+import { ageFrom, bmi, bmiBand, bmr, dailySeries, dayLog, habitStreak, meanOf, rollingMean, sortByDateDesc, sumMacros, uid, weightChange, workoutsInLastDays } from './calc';
 import { DEFAULT_DATA, type DayLog, type HealthData, type MealEntry } from '../types';
 
 const meal = (date: string, over: Partial<MealEntry> = {}): MealEntry => ({
@@ -242,5 +229,37 @@ describe('uid', () => {
     const ids = new Set(Array.from({ length: 500 }, () => uid('w')));
     expect(ids.size).toBe(500);
     expect([...ids].every((id) => id.startsWith('w_'))).toBe(true);
+  });
+});
+
+describe('bmr', () => {
+  const base = { weightKg: 80, heightCm: 180, age: 30 } as const;
+
+  it('follows Mifflin-St Jeor', () => {
+    // 10*80 + 6.25*180 - 5*30 = 1775, then +5 for male and -161 for female.
+    expect(bmr({ ...base, sex: 'male' })).toBe(1780);
+    expect(bmr({ ...base, sex: 'female' })).toBe(1614);
+  });
+
+  it('returns null rather than guessing at a missing input', () => {
+    // Sex alone is a 166 kcal swing, so an estimate built by assuming the
+    // absent terms would read exactly like one that was calculated.
+    expect(bmr(base)).toBeNull();
+    expect(bmr({ ...base, sex: 'male', weightKg: undefined })).toBeNull();
+    expect(bmr({ ...base, sex: 'male', heightCm: undefined })).toBeNull();
+    expect(bmr({ ...base, sex: 'male', age: undefined })).toBeNull();
+    expect(bmr({})).toBeNull();
+  });
+});
+
+describe('ageFrom', () => {
+  it('counts whole years from the birth year', () => {
+    expect(ageFrom(1994, new Date('2026-08-22'))).toBe(32);
+  });
+
+  it('has no answer without a birth year, or with an impossible one', () => {
+    expect(ageFrom(undefined)).toBeUndefined();
+    expect(ageFrom(1700, new Date('2026-08-22'))).toBeUndefined();
+    expect(ageFrom(2030, new Date('2026-08-22'))).toBeUndefined();
   });
 });
