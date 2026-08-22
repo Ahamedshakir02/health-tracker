@@ -9,9 +9,7 @@
 // than a second copy of the plan.
 
 import { movementKey } from '../lib/movementKey';
-
-/** Which set of movements the Trainer shows. */
-export type EquipmentMode = 'gym' | 'household' | 'bodyweight';
+import type { EquipmentMode } from '../types';
 
 /** One home substitute, as the home edition describes it. */
 export interface HomeExercise {

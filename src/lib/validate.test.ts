@@ -176,3 +176,20 @@ describe('settings', () => {
     expect(settings({ birthYear: 1994 }).birthYear).toBe(1994);
   });
 });
+
+describe('trainer preferences', () => {
+  it('keeps a known equipment mode and falls back on anything else', () => {
+    expect(settings({ trainer: { equipment: 'household' } }).trainer?.equipment).toBe('household');
+    expect(settings({ trainer: { equipment: 'bodyweight' } }).trainer?.equipment).toBe('bodyweight');
+    // An unknown mode would send homeExerciseFor looking up a variant that
+    // does not exist, so it has to land on 'gym' rather than pass through.
+    expect(settings({ trainer: { equipment: 'kettlebells' } }).trainer?.equipment).toBe('gym');
+    expect(settings({ trainer: { equipment: null } }).trainer?.equipment).toBe('gym');
+  });
+
+  it('defaults the equipment mode when the trainer slice is older than it', () => {
+    // Anyone signed in before home mode shipped has a stored slice with no
+    // `equipment` key at all; they must land in the gym, not in a blank mode.
+    expect(settings({ trainer: { restSeconds: 60 } }).trainer?.equipment).toBe('gym');
+  });
+});

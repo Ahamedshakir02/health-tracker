@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { TRAINING_PLAN } from './trainingPlan';
-import { EQUIPMENT_NOTES, HOME_PLANS, homeExerciseFor, type EquipmentMode } from './homePlans';
+import { EQUIPMENT_NOTES, HOME_PLANS, homeExerciseFor } from './homePlans';
 import { movementKey } from '../lib/movementKey';
+import type { EquipmentMode } from '../types';
 
 /**
  * The home editions are an overlay on the gym book, so the thing worth testing

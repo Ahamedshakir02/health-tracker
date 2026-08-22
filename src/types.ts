@@ -4,6 +4,19 @@ export type ISODate = string;
 export type UnitSystem = 'metric' | 'imperial';
 
 export type MealSlot = 'breakfast' | 'lunch' | 'dinner' | 'snack';
+
+/**
+ * Which set of movements the Trainer shows.
+ *
+ * The gym book has two home editions that restate it exercise for exercise —
+ * same schedules, same days, same order, same rep counts, every movement
+ * swapped for one you can do at home. So this selects a presentation of one
+ * plan, not a different plan. The substitutions live in `data/homePlans.ts`.
+ */
+export type EquipmentMode = 'gym' | 'household' | 'bodyweight';
+
+/** The same three, as a value — validation needs to test membership. */
+export const EQUIPMENT_MODES = ['gym', 'household', 'bodyweight'] as const satisfies readonly EquipmentMode[];
 export type Intensity = 'low' | 'moderate' | 'high';
 
 /**
@@ -180,6 +193,12 @@ export interface TrainerPrefs {
   keepAwake: boolean;
   /** Append a matched cool-down to the foot of each training day. */
   cooldown: boolean;
+  /**
+   * Which set of movements the Trainer shows. The schedule, its days, their
+   * order and their rep counts are the same in all three — only the exercise
+   * on each card changes. See `src/data/homePlans.ts`.
+   */
+  equipment: EquipmentMode;
 }
 
 export interface Settings {
@@ -218,6 +237,7 @@ export const DEFAULT_TRAINER_PREFS: TrainerPrefs = {
   sound: true,
   keepAwake: true,
   cooldown: true,
+  equipment: 'gym',
 };
 
 export const DEFAULT_HABITS: Habit[] = [

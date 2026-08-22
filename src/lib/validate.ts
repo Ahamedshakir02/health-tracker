@@ -15,12 +15,13 @@ import type {
   StrengthSession,
   StretchLog,
   TrainerPrefs,
+  EquipmentMode,
   UnitSystem,
   WeightEntry,
   WorkoutEntry,
   WorkoutSession,
 } from '../types';
-import { DEFAULT_DATA, DEFAULT_HABITS, DEFAULT_TRAINER_PREFS } from '../types';
+import { DEFAULT_DATA, DEFAULT_HABITS, DEFAULT_TRAINER_PREFS, EQUIPMENT_MODES } from '../types';
 import { parseISO, todayISO } from './dates';
 
 /**
@@ -364,6 +365,11 @@ function trainerPrefs(raw: unknown): TrainerPrefs | undefined {
     sound: typeof raw.sound === 'boolean' ? raw.sound : base.sound,
     keepAwake: typeof raw.keepAwake === 'boolean' ? raw.keepAwake : base.keepAwake,
     cooldown: typeof raw.cooldown === 'boolean' ? raw.cooldown : base.cooldown,
+    // Only the three known modes. An unrecognised one would send
+    // homeExerciseFor looking up a variant that does not exist.
+    equipment: EQUIPMENT_MODES.includes(raw.equipment as EquipmentMode)
+      ? (raw.equipment as EquipmentMode)
+      : base.equipment,
   };
 }
 

@@ -5,7 +5,15 @@ import HealthLink from '../components/HealthLink';
 import { sampleData } from '../lib/sample';
 import { labels, round, toCanonical, toDisplay } from '../lib/units';
 import { uid } from '../lib/calc';
-import { DEFAULT_TRAINER_PREFS, type Habit, type TrainerPrefs, type UnitSystem } from '../types';
+import {
+  DEFAULT_TRAINER_PREFS,
+  EQUIPMENT_MODES,
+  type EquipmentMode,
+  type Habit,
+  type TrainerPrefs,
+  type UnitSystem,
+} from '../types';
+import { EQUIPMENT_NOTES } from '../data/homePlans';
 
 export default function SettingsPage() {
   const {
@@ -199,6 +207,27 @@ export default function SettingsPage() {
         </Card>
 
         <Card title="In the gym" note="How the Trainer behaves while you are training.">
+          <div className="row" style={{ gap: 24 }}>
+            <div className="field">
+              <span className="label">Where you are training</span>
+              <Segmented
+                ariaLabel="Where you are training"
+                value={trainer.equipment}
+                onChange={(value: EquipmentMode) => setTrainer({ equipment: value })}
+                options={EQUIPMENT_MODES.map((mode) => ({
+                  value: mode,
+                  label: EQUIPMENT_NOTES[mode].label,
+                }))}
+              />
+              <span className="hint">{EQUIPMENT_NOTES[trainer.equipment].needs}</span>
+            </div>
+          </div>
+
+          <p className="hint">
+            The same schedules, days and rep counts either way — only the exercise on each card
+            changes, and it says which gym movement it stands in for.
+          </p>
+
           <div className="row" style={{ gap: 24 }}>
             <div className="field">
               <span className="label">Rest between sets</span>
