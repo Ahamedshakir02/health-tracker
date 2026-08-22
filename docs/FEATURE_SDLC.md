@@ -4,7 +4,7 @@ What to build next in the health tracker, run through a full lifecycle: baseline
 requirements, design fit, prioritisation, test strategy, release plan, and maintenance.
 
 Written against the repo as of commit `358ac3e` (18 Aug 2026). No code changes were made
-to produce this document. Companion to `README.md` (what it does), `ARCHITECTURE.md` (how
+to produce this document. Companion to `../README.md` (what it does), `ARCHITECTURE.md` (how
 it fits together) and `PROJECT_NOTES.md` (why).
 
 > **Status, 19 Aug 2026.** Items **1, 4, 5, 13 and 17** have since shipped, along with
@@ -381,7 +381,7 @@ the only record of what is actually live.
 
 - **Weekly:** nothing. That is the point of a static SPA.
 - **Monthly:** `npm run audit`; check Firestore usage against the free-tier quota; export a backup.
-- **Per feature:** update `README.md` (what), `ARCHITECTURE.md` (how) and `PROJECT_NOTES.md` (why).
+- **Per feature:** update `../README.md` (what), `ARCHITECTURE.md` (how) and `PROJECT_NOTES.md` (why).
   This repo's documentation is unusually good and it is worth the discipline to keep it that way.
 - **Watch:** `meals` slice size — shard by year before 1 MB; the `sessions` slice next.
 - **Dependencies:** Vite and Firebase majors are the two that will actually break; both are pinned

@@ -3,7 +3,7 @@
 Working notes for the app: what it is, what changed in the redesign, how it is hosted,
 and how Firebase Hosting compares with Vercel and the other options.
 
-The `README.md` covers day-to-day usage. This file covers decisions and infrastructure.
+The `../README.md` covers day-to-day usage. This file covers decisions and infrastructure.
 
 ---
 

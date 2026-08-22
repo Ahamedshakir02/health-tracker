@@ -1,6 +1,6 @@
 # Architecture
 
-How Vitals is put together and why. `README.md` covers what it does;
+How Vitals is put together and why. `../README.md` covers what it does;
 `PROJECT_NOTES.md` records specific decisions and their reasoning. This file is
 the map between them — read it first if you are new to the codebase.
 
@@ -106,6 +106,32 @@ it from there.
 `src/lib/pageMeta.ts` writes `document.title` and the meta description on every
 route change. This is for humans with fifteen tabs open, not for crawlers —
 `/app` is `noindex` and no search engine ever sees those descriptions.
+
+---
+
+## Why the page HTML sits in the project root
+
+Five `.html` files clutter the root, and they have to. Vite emits each entry to
+`dist/` at the path it had relative to the project root, and Firebase serves
+`dist/` with `cleanUrls`, so **a file's location in the repo IS its public URL**:
+
+| File | Serves as |
+|---|---|
+| `index.html` | `/` — also the dev server's root document |
+| `app.html` | `/app` (via the rewrite; `/app.html` directly in dev) |
+| `privacy.html` | `/privacy` |
+| `terms.html` | `/terms` |
+| `404.html` | Firebase's custom 404, which it only honours at the public root |
+
+Tidying these into a `pages/` folder would move `/privacy` to `/pages/privacy`
+and silently break an externally linked legal page, and would stop Firebase
+finding the 404 document at all. A build step could flatten them back, but that
+buys a tidier listing at the price of the deployed URL no longer being readable
+from the repo. They stay put.
+
+Everything that is NOT a served page has moved out: prose lives in `docs/`, and
+`scripts/og-card.html` — the source for the OG image, never built — sits with
+the other tooling.
 
 ---
 
