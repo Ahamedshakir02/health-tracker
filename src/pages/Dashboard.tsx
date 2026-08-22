@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useHealth } from '../state/HealthProvider';
-import { Card, Empty, StatTile } from '../components/ui';
+import { Card, Empty, firstName, StatTile } from '../components/ui';
 import {
   IconArrowDown,
   IconArrowUp,
@@ -74,7 +74,7 @@ export default function Dashboard({ onNavigate }: { onNavigate: (id: 'body' | 'f
     <>
       <header className="page-head">
         <div>
-          <h1 className="page-title">{name ? `Hello, ${name}` : 'Today'}</h1>
+          <h1 className="page-title">{name ? `Hello, ${firstName(name)}` : 'Today'}</h1>
           <p className="page-sub">{formatLong(today)}</p>
         </div>
         <div className="row">

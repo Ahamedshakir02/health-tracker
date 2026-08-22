@@ -5,7 +5,7 @@ import { IconCheck, IconHeart } from '../components/icons';
 import { uid } from '../lib/calc';
 import { todayISO } from '../lib/dates';
 import { labels, round, toCanonical, toDisplay } from '../lib/units';
-import type { Goals, UnitSystem } from '../types';
+import type { Goals, Sex, UnitSystem } from '../types';
 
 /**
  * First-run questions, shown once after the first sign-in.
@@ -35,6 +35,7 @@ export default function Onboarding() {
   const [units, setUnits] = useState<UnitSystem>(data.settings.units);
   const [height, setHeight] = useState<NumStr>('');
   const [birthYear, setBirthYear] = useState<NumStr>('');
+  const [sex, setSex] = useState<Sex | undefined>(data.settings.sex);
   const [weight, setWeight] = useState<NumStr>('');
   const [goalWeight, setGoalWeight] = useState<NumStr>('');
 
@@ -77,6 +78,7 @@ export default function Onboarding() {
       units,
       heightCm,
       birthYear: num(birthYear),
+      sex,
       goals,
       onboardedAt: new Date().toISOString(),
     });
@@ -186,6 +188,21 @@ export default function Onboarding() {
                   value={birthYear}
                   onChange={(e) => setBirthYear(e.target.value)}
                   placeholder="Optional"
+                />
+              </Field>
+              <Field
+                label="Sex"
+                hint="Only used for the resting-calorie estimate, which is 166 kcal different either way."
+              >
+                <Segmented
+                  ariaLabel="Sex"
+                  value={sex ?? ''}
+                  onChange={(value: string) => setSex(value === '' ? undefined : (value as Sex))}
+                  options={[
+                    { value: '', label: 'Prefer not to say' },
+                    { value: 'male', label: 'Male' },
+                    { value: 'female', label: 'Female' },
+                  ]}
                 />
               </Field>
               <Field

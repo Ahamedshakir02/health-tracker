@@ -379,8 +379,82 @@ a {
   font-variant-numeric: tabular-nums;
 }
 
-.syncpill {
+/* ── The account ────────────────────────────────────────────────────────────
+   Who is signed in. The sync dot says the data is saving; on a shared machine
+   it does not say whose. */
+
+.avatar {
+  flex: none;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--sunken);
+}
+
+.avatar-initials {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Sized from the box so one rule covers the 24px rail and the 36px card. */
+  font-size: 0.42em;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--ink-2);
+  background: var(--accent-soft);
+  user-select: none;
+}
+
+/* The rail's account button. Sits directly above the sync pill, and pushing
+   it down is what keeps both anchored to the bottom of the sidebar. */
+.accountpill {
   margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  min-width: 0;
+}
+
+.accountpill:hover {
+  background: var(--sunken);
+  color: var(--ink);
+}
+
+.account-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The identity block at the head of the Settings profile card. */
+.account-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.account-row strong {
+  display: block;
+  font-size: 13px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.account-row .hint {
+  display: block;
+  margin: 1px 0 0;
+}
+
+.syncpill {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -2543,12 +2617,14 @@ tbody tr:hover {
     display: none;
   }
 
-  .syncpill {
+  .syncpill,
+  .accountpill {
     justify-content: center;
     padding: 9px;
   }
 
-  .syncpill .sync-text {
+  .syncpill .sync-text,
+  .accountpill .account-name {
     display: none;
   }
 }
