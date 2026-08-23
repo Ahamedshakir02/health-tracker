@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useHealth } from '../state/HealthProvider';
-import { Card, Empty, firstName, StatTile } from '../components/ui';
+import { Card, Empty, firstName, Ring, StatTile } from '../components/ui';
 import {
   IconArrowDown,
   IconArrowUp,
@@ -23,7 +23,7 @@ import {
   weightChange,
   workoutsInLastDays,
 } from '../lib/calc';
-import { addDays, formatLong, formatWeekday, todayISO } from '../lib/dates';
+import { addDays, formatLong, formatWeekday, lastNDays, parseISO, todayISO } from '../lib/dates';
 import { labels, round, toDisplay } from '../lib/units';
 
 export default function Dashboard({ onNavigate }: { onNavigate: (id: 'body' | 'food' | 'movement' | 'daily') => void }) {
@@ -67,6 +67,34 @@ export default function Dashboard({ onNavigate }: { onNavigate: (id: 'body' | 'f
   const hasAnything =
     data.weights.length || data.meals.length || data.workouts.length || data.days.length;
 
+  // The week strip. Seven days ending today, each carrying a dot that says
+  // what kind of day it was: a training day, a day that got logged, or a day
+  // with nothing in it. It reads as a row rather than as seven controls
+  // because there is no per-day view to send anyone to — the strip is there to
+  // show the shape of the week, not to navigate it.
+  const workoutDates = useMemo(
+    () => new Set(data.workouts.map((w) => w.date)),
+    [data.workouts],
+  );
+  const weekStrip = useMemo(
+    () =>
+      lastNDays(7, today).map((date) => {
+        const d = series.find((row) => row.date === date);
+        const logged = Boolean(
+          d && (d.calories || d.weightKg != null || d.activeMinutes || d.sleepHours != null),
+        );
+        return {
+          date,
+          weekday: formatWeekday(date).slice(0, 3),
+          dayOfMonth: parseISO(date).getDate(),
+          trained: workoutDates.has(date),
+          logged,
+          isToday: date === today,
+        };
+      }),
+    [series, today, workoutDates],
+  );
+
   const showWeight = (kg: number) => toDisplay('weight', kg, units).toFixed(1);
   const showVolume = (ml: number) => round(toDisplay('volume', ml, units), 0);
 
@@ -107,6 +135,58 @@ export default function Dashboard({ onNavigate }: { onNavigate: (id: 'body' | 'f
       )}
 
       <div className="stack">
+        <ol className="weekstrip" aria-label="This week">
+          {weekStrip.map((d) => (
+            <li
+              key={d.date}
+              className={`weekday${d.isToday ? ' is-today' : ''}`}
+              aria-current={d.isToday ? 'date' : undefined}
+            >
+              <span className="weekday-name">{d.weekday}</span>
+              <span className="weekday-num">{d.dayOfMonth}</span>
+              <span
+                className={`weekday-dot${d.trained ? ' trained' : d.logged ? ' logged' : ''}`}
+                aria-hidden="true"
+              />
+              <span className="sr-only">
+                {d.trained ? 'trained' : d.logged ? 'logged' : 'nothing logged'}
+              </span>
+            </li>
+          ))}
+        </ol>
+
+        {/* The three questions worth answering before anything else: have you
+            eaten enough, have you trained enough, did you sleep. */}
+        <div className="rings">
+          <Ring
+            label="Calories"
+            color={SERIES.food}
+            value={todayMacros.calories ? String(Math.round(todayMacros.calories)) : '—'}
+            progress={goals.calories ? todayMacros.calories / goals.calories : null}
+            title={`${Math.round(todayMacros.calories)} of ${goals.calories} kcal today`}
+          />
+          <Ring
+            label="Training"
+            color={SERIES.activity}
+            value={String(weekWorkouts.length)}
+            progress={goals.workoutsPerWeek ? weekWorkouts.length / goals.workoutsPerWeek : null}
+            title={`${weekWorkouts.length} of ${goals.workoutsPerWeek} sessions this week`}
+          />
+          <Ring
+            label="Sleep"
+            color={SERIES.sleep}
+            value={log.sleepHours != null ? log.sleepHours.toFixed(1) : '—'}
+            progress={
+              log.sleepHours != null && goals.sleepHours ? log.sleepHours / goals.sleepHours : null
+            }
+            title={
+              log.sleepHours != null
+                ? `${log.sleepHours.toFixed(1)} of ${goals.sleepHours} hours`
+                : 'Not logged'
+            }
+          />
+        </div>
+
         <div className="grid grid-stats">
           <StatTile
             label="Weight"
