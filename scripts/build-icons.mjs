@@ -22,8 +22,8 @@ import { fileURLToPath } from 'node:url';
 
 const OUT = join(dirname(fileURLToPath(import.meta.url)), '..', 'public');
 
-const ACCENT = [0x2a, 0x78, 0xd6]; // --accent, light theme
-const WHITE = [0xff, 0xff, 0xff];
+const PLATE = [0x1e, 0x4d, 0x2b]; // --hero, the forest plate the mark sits on
+const MARK = [0xf4, 0xa5, 0x2a]; // --accent, the saffron heart struck on it
 
 /** 4× supersampling in each axis: plenty for flat shapes, and cheap. */
 const SS = 4;
@@ -90,7 +90,7 @@ function renderIcon(size, { radius = 0.234, inset = 0.17 } = {}) {
       // as the alpha so the rounded corners stay smooth.
       const mix = heart / alpha;
       for (let c = 0; c < 3; c++) {
-        px[i + c] = Math.round(ACCENT[c] * (1 - mix) + WHITE[c] * mix);
+        px[i + c] = Math.round(PLATE[c] * (1 - mix) + MARK[c] * mix);
       }
       px[i + 3] = Math.round(alpha * 255);
     }
