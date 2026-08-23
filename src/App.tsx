@@ -351,7 +351,7 @@ export default function App() {
           onClick={() => go('settings')}
           aria-label={`Signed in as ${accountName}. Open settings`}
         >
-          <Avatar name={accountName} url={data.settings.avatarUrl} />
+          <Avatar name={accountName} url={data.settings.avatarUrl} size={30} />
           <span className="account-name">{firstName(accountName)}</span>
         </button>
 

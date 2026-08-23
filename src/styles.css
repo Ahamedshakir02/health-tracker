@@ -82,6 +82,7 @@
   /* The dark green plate behind the brand mark, the day hero and the avatar —
      the one place the forest colour is a surface rather than ink. */
   --hero: #1e4d2b;
+  --hero-2: #15331f;
   --hero-ink: #fefcf6;
   --hero-sub: #cfe0bc;
   --hero-line: rgba(255, 255, 255, 0.22);
@@ -200,6 +201,7 @@
     --art-chip-fg: #edf3ea;
 
     --hero: #0f3b34;
+    --hero-2: #06211e;
     --hero-ink: #edf3ea;
     --hero-sub: #cfe0bc;
     --hero-line: rgba(237, 243, 234, 0.16);
@@ -273,6 +275,7 @@
   --art-chip-fg: #edf3ea;
 
   --hero: #0f3b34;
+  --hero-2: #06211e;
   --hero-ink: #edf3ea;
   --hero-sub: #cfe0bc;
   --hero-line: rgba(237, 243, 234, 0.16);
@@ -2461,7 +2464,7 @@ tbody tr:hover {
   margin: -20px -20px 16px;
   padding: 20px;
   overflow: hidden;
-  background: linear-gradient(155deg, var(--hero), var(--brand-fill));
+  background: linear-gradient(155deg, var(--hero), var(--hero-2));
   color: var(--hero-ink);
 }
 
