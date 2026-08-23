@@ -1,70 +1,109 @@
 /* ===========================================================================
    Vitals — design tokens
-   Implements the "Vitals Design System" redesign. The design's token names
-   (--page, --ink, --s-weight and friends) are primary; the older names
-   (--surface-N, --text-N, --series-N) are kept as aliases because charts.tsx
-   and a few inline styles resolve them by name at runtime.
+   Implements the "Vitals" gym-theme redesign: a cream-and-forest daylight
+   palette and a teal-black gym palette, both driven by one saffron action
+   colour. The design's token names (--page, --ink, --brand, --s-weight and
+   friends) are primary; the older names (--surface-N, --text-N, --series-N)
+   are kept as aliases because charts.tsx and a few inline styles resolve them
+   by name at runtime.
+
+   Three type roles, not two: --font-display carries headings, --font-text the
+   prose, and --font-num every figure in the app. Numbers are monospaced and
+   tabular on purpose — a column of weights that shifts width as the digits
+   change is unreadable at arm's length, which is where this app gets read.
    =========================================================================== */
 
 :root {
   color-scheme: light;
 
-  --page: #f4f3f0;
-  --card: #fcfcfb;
-  --raised: #ffffff;
-  --sunken: #efede8;
+  --page: #fbf8f1;
+  --card: #ffffff;
+  --raised: #fefcf6;
+  --sunken: #f1f6e9;
 
-  --ink: #1c1b19;
-  --ink-2: #57544e;
-  --ink-3: #8a857c;
-  --ink-inv: #fcfcfb;
+  --ink: #2b2a24;
+  --ink-2: #4a4840;
+  --ink-3: #6e6b60;
+  --ink-4: #908c7e;
+  --ink-inv: #fefcf6;
 
-  --line: rgba(20, 18, 14, 0.09);
-  --line-2: rgba(20, 18, 14, 0.16);
-  --hair: rgba(20, 18, 14, 0.06);
+  --line: #e2decf;
+  --line-2: #c9c5b6;
+  --hair: rgba(43, 42, 36, 0.06);
 
-  --accent: #2a78d6;
-  --accent-ink: #ffffff;
-  --accent-soft: rgba(42, 120, 214, 0.1);
-  --accent-line: rgba(42, 120, 214, 0.28);
+  /* Forest green identifies the product; saffron is the only thing that asks
+     to be pressed. Keeping them in separate roles is what stops the interface
+     turning into a wall of competing colour. */
+  --brand: #1e4d2b;
+  --brand-fill: #1e4d2b;
+  --brand-ink: #15331f;
+  --brand-soft: #e6efd9;
 
-  --s-weight: #2a78d6;
-  --s-energy: #eb6834;
-  --s-activity: #1baf7a;
-  --s-sleep: #c98a00;
-  --s-weight-soft: rgba(42, 120, 214, 0.12);
-  --s-energy-soft: rgba(235, 104, 52, 0.13);
-  --s-activity-soft: rgba(27, 175, 122, 0.13);
-  --s-sleep-soft: rgba(201, 138, 0, 0.14);
+  --accent: #f4a52a;
+  --accent-press: #dd8413;
+  --accent-soft: #fcebcb;
+  --on-accent: #15331f;
+  --accent-line: rgba(244, 165, 42, 0.42);
 
-  --good: #0a8f0a;
-  --good-soft: rgba(10, 143, 10, 0.12);
-  --warn: #b7791f;
-  --warn-soft: rgba(183, 121, 31, 0.14);
-  --serious: #c6592f;
-  --serious-soft: rgba(198, 89, 47, 0.13);
-  --crit: #c62f2f;
-  --crit-soft: rgba(198, 47, 47, 0.12);
+  --pos: #2e6b3e;
+  --neg: #a33523;
+  --neg-soft: #f8ded6;
 
-  --grid: rgba(20, 18, 14, 0.07);
-  --grid-2: rgba(20, 18, 14, 0.14);
-  --axis: #8a857c;
+  --s-weight: #1e4d2b;
+  --s-energy: #dd8413;
+  --s-activity: #15786b;
+  --s-sleep: #2a5f8f;
+  --s-weight-soft: rgba(30, 77, 43, 0.12);
+  --s-energy-soft: rgba(221, 132, 19, 0.14);
+  --s-activity-soft: rgba(21, 120, 107, 0.13);
+  --s-sleep-soft: rgba(42, 95, 143, 0.13);
 
-  --sh-1: 0 1px 2px rgba(20, 18, 14, 0.05), 0 1px 1px rgba(20, 18, 14, 0.03);
-  --sh-2: 0 2px 4px rgba(20, 18, 14, 0.05), 0 8px 24px -8px rgba(20, 18, 14, 0.14);
+  --good: #2e6b3e;
+  --good-soft: rgba(46, 107, 62, 0.12);
+  --warn: #dd8413;
+  --warn-soft: rgba(221, 132, 19, 0.14);
+  --serious: #c05f2a;
+  --serious-soft: rgba(192, 95, 42, 0.13);
+  --crit: #a33523;
+  --crit-soft: #f8ded6;
 
-  --r-sm: 8px;
-  --r-md: 12px;
-  --r-lg: 18px;
+  --grid: rgba(43, 42, 36, 0.07);
+  --grid-2: rgba(43, 42, 36, 0.14);
+  --axis: #6e6b60;
+
+  /* The duotone pair the demonstration photographs are treated with, so a
+     public-domain photo set reads as one deliberate collection. */
+  --duo-dark: #15331f;
+  --duo-light: #e6efd9;
+  --art-bg: #ffffff;
+  --art-chip: rgba(21, 51, 31, 0.72);
+  --art-chip-fg: #fefcf6;
+
+  /* The dark green plate behind the brand mark, the day hero and the avatar —
+     the one place the forest colour is a surface rather than ink. */
+  --hero: #1e4d2b;
+  --hero-ink: #fefcf6;
+  --hero-sub: #cfe0bc;
+  --hero-line: rgba(255, 255, 255, 0.22);
+  --hero-veil: rgba(255, 255, 255, 0.1);
+
+  --sh-1: 0 1px 2px rgba(31, 77, 43, 0.06), 0 1px 3px rgba(31, 77, 43, 0.05);
+  --sh-2: 0 4px 12px rgba(31, 77, 43, 0.08), 0 2px 4px rgba(31, 77, 43, 0.05);
+  --sh-3: 0 12px 28px rgba(31, 77, 43, 0.12), 0 4px 8px rgba(31, 77, 43, 0.06);
+
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
   --r-pill: 999px;
 
-  --font:
-    'Hanken Grotesk Variable', 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, 'Segoe UI',
-    sans-serif;
-  --serif: 'Newsreader Variable', 'Newsreader', Georgia, 'Times New Roman', serif;
-  --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-display: 'Baloo Chettan 2', ui-rounded, system-ui, sans-serif;
+  --font-text: 'Noto Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-num: 'Noto Sans Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* --- aliases kept for existing component/chart code --------------------- */
+  --font: var(--font-text);
+  --serif: var(--font-display);
+  --mono: var(--font-num);
   --surface-0: var(--page);
   --surface-1: var(--card);
   --surface-2: var(--sunken);
@@ -74,8 +113,9 @@
   --text-primary: var(--ink);
   --text-secondary: var(--ink-2);
   --text-muted: var(--ink-3);
-  --text-on-accent: var(--accent-ink);
-  --accent-hover: #256abf;
+  --text-on-accent: var(--on-accent);
+  --accent-hover: var(--accent-press);
+  --accent-ink: var(--on-accent);
   --series-1: var(--s-weight);
   --series-2: var(--s-energy);
   --series-3: var(--s-activity);
@@ -87,114 +127,168 @@
   --radius-lg: var(--r-lg);
   --shadow-sm: var(--sh-1);
   --shadow: var(--sh-2);
+  --shadow-lg: var(--sh-3);
 
   color: var(--ink);
 }
 
+/* The gym theme. Teal-black surfaces so a bright phone at six in the morning
+   does not blind anyone, and the same saffron action colour, which survives
+   the swap because it was picked to sit on both grounds. Declared twice — once
+   for the system preference, once for an explicit choice — because a media
+   query and an attribute selector cannot share one rule. Keep them in step. */
 @media (prefers-color-scheme: dark) {
   :root:where(:not([data-theme='light'])) {
     color-scheme: dark;
 
-    --page: #101010;
-    --card: #1a1a19;
-    --raised: #211f1d;
-    --sunken: #0b0b0a;
+    --page: #061f1c;
+    --card: #0b2c28;
+    --raised: #103b34;
+    --sunken: #041514;
 
-    --ink: #f2efe9;
-    --ink-2: #a6a199;
-    --ink-3: #6d6860;
-    --ink-inv: #151413;
+    --ink: #edf3ea;
+    --ink-2: #bdd3c9;
+    --ink-3: #8aa79d;
+    --ink-4: #638077;
+    --ink-inv: #061f1c;
 
-    --line: rgba(255, 252, 245, 0.1);
-    --line-2: rgba(255, 252, 245, 0.18);
-    --hair: rgba(255, 252, 245, 0.055);
+    --line: #16443c;
+    --line-2: #22574d;
+    --hair: rgba(237, 243, 234, 0.07);
 
-    --accent: #5b9be6;
-    --accent-ink: #0b1420;
-    --accent-soft: rgba(91, 155, 230, 0.16);
-    --accent-line: rgba(91, 155, 230, 0.4);
-    --accent-hover: #7bb0ec;
+    --brand: #6fb6ab;
+    --brand-fill: #15786b;
+    --brand-ink: #cfe0bc;
+    --brand-soft: #103b34;
 
-    --s-weight: #6aa4ec;
-    --s-energy: #f4885c;
-    --s-activity: #38c996;
-    --s-sleep: #f0b93f;
-    --s-weight-soft: rgba(106, 164, 236, 0.18);
-    --s-energy-soft: rgba(244, 136, 92, 0.18);
-    --s-activity-soft: rgba(56, 201, 150, 0.16);
-    --s-sleep-soft: rgba(240, 185, 63, 0.16);
+    --accent: #f4a52a;
+    --accent-press: #fbba4d;
+    --accent-soft: #123028;
+    --on-accent: #08332f;
+    --accent-line: rgba(244, 165, 42, 0.5);
 
-    --good: #3ecb52;
-    --good-soft: rgba(62, 203, 82, 0.16);
-    --warn: #f0b93f;
-    --warn-soft: rgba(240, 185, 63, 0.15);
-    --serious: #f19b78;
-    --serious-soft: rgba(241, 155, 120, 0.16);
-    --crit: #ef6a6a;
-    --crit-soft: rgba(239, 106, 106, 0.15);
+    --pos: #94b97f;
+    --neg: #e08b72;
+    --neg-soft: #3a1c15;
 
-    --grid: rgba(255, 252, 245, 0.07);
-    --grid-2: rgba(255, 252, 245, 0.14);
-    --axis: #6d6860;
+    --s-weight: #cfe0bc;
+    --s-energy: #f4a52a;
+    --s-activity: #6fb6ab;
+    --s-sleep: #7fa6c6;
+    --s-weight-soft: rgba(207, 224, 188, 0.18);
+    --s-energy-soft: rgba(244, 165, 42, 0.18);
+    --s-activity-soft: rgba(111, 182, 171, 0.18);
+    --s-sleep-soft: rgba(127, 166, 198, 0.18);
+
+    --good: #94b97f;
+    --good-soft: rgba(148, 185, 127, 0.16);
+    --warn: #f4a52a;
+    --warn-soft: rgba(244, 165, 42, 0.16);
+    --serious: #e0a172;
+    --serious-soft: rgba(224, 161, 114, 0.16);
+    --crit: #e08b72;
+    --crit-soft: #3a1c15;
+
+    --grid: rgba(237, 243, 234, 0.07);
+    --grid-2: rgba(237, 243, 234, 0.14);
+    --axis: #8aa79d;
+
+    --duo-dark: #041514;
+    --duo-light: #6fb6ab;
+    --art-bg: #0a2320;
+    --art-chip: rgba(237, 243, 234, 0.14);
+    --art-chip-fg: #edf3ea;
+
+    --hero: #0f3b34;
+    --hero-ink: #edf3ea;
+    --hero-sub: #cfe0bc;
+    --hero-line: rgba(237, 243, 234, 0.16);
+    --hero-veil: rgba(237, 243, 234, 0.07);
 
     --sh-1: 0 1px 2px rgba(0, 0, 0, 0.4);
-    --sh-2: 0 2px 6px rgba(0, 0, 0, 0.5), 0 16px 40px -12px rgba(0, 0, 0, 0.6);
+    --sh-2: 0 6px 16px rgba(0, 0, 0, 0.45);
+    --sh-3: 0 14px 32px rgba(0, 0, 0, 0.55);
   }
 }
 
 :root[data-theme='dark'] {
   color-scheme: dark;
 
-  --page: #101010;
-  --card: #1a1a19;
-  --raised: #211f1d;
-  --sunken: #0b0b0a;
+  --page: #061f1c;
+  --card: #0b2c28;
+  --raised: #103b34;
+  --sunken: #041514;
 
-  --ink: #f2efe9;
-  --ink-2: #a6a199;
-  --ink-3: #6d6860;
-  --ink-inv: #151413;
+  --ink: #edf3ea;
+  --ink-2: #bdd3c9;
+  --ink-3: #8aa79d;
+  --ink-4: #638077;
+  --ink-inv: #061f1c;
 
-  --line: rgba(255, 252, 245, 0.1);
-  --line-2: rgba(255, 252, 245, 0.18);
-  --hair: rgba(255, 252, 245, 0.055);
+  --line: #16443c;
+  --line-2: #22574d;
+  --hair: rgba(237, 243, 234, 0.07);
 
-  --accent: #5b9be6;
-  --accent-ink: #0b1420;
-  --accent-soft: rgba(91, 155, 230, 0.16);
-  --accent-line: rgba(91, 155, 230, 0.4);
-  --accent-hover: #7bb0ec;
+  --brand: #6fb6ab;
+  --brand-fill: #15786b;
+  --brand-ink: #cfe0bc;
+  --brand-soft: #103b34;
 
-  --s-weight: #6aa4ec;
-  --s-energy: #f4885c;
-  --s-activity: #38c996;
-  --s-sleep: #f0b93f;
-  --s-weight-soft: rgba(106, 164, 236, 0.18);
-  --s-energy-soft: rgba(244, 136, 92, 0.18);
-  --s-activity-soft: rgba(56, 201, 150, 0.16);
-  --s-sleep-soft: rgba(240, 185, 63, 0.16);
+  --accent: #f4a52a;
+  --accent-press: #fbba4d;
+  --accent-soft: #123028;
+  --on-accent: #08332f;
+  --accent-line: rgba(244, 165, 42, 0.5);
 
-  --good: #3ecb52;
-  --good-soft: rgba(62, 203, 82, 0.16);
-  --warn: #f0b93f;
-  --warn-soft: rgba(240, 185, 63, 0.15);
-  --serious: #f19b78;
-  --serious-soft: rgba(241, 155, 120, 0.16);
-  --crit: #ef6a6a;
-  --crit-soft: rgba(239, 106, 106, 0.15);
+  --pos: #94b97f;
+  --neg: #e08b72;
+  --neg-soft: #3a1c15;
 
-  --grid: rgba(255, 252, 245, 0.07);
-  --grid-2: rgba(255, 252, 245, 0.14);
-  --axis: #6d6860;
+  --s-weight: #cfe0bc;
+  --s-energy: #f4a52a;
+  --s-activity: #6fb6ab;
+  --s-sleep: #7fa6c6;
+  --s-weight-soft: rgba(207, 224, 188, 0.18);
+  --s-energy-soft: rgba(244, 165, 42, 0.18);
+  --s-activity-soft: rgba(111, 182, 171, 0.18);
+  --s-sleep-soft: rgba(127, 166, 198, 0.18);
+
+  --good: #94b97f;
+  --good-soft: rgba(148, 185, 127, 0.16);
+  --warn: #f4a52a;
+  --warn-soft: rgba(244, 165, 42, 0.16);
+  --serious: #e0a172;
+  --serious-soft: rgba(224, 161, 114, 0.16);
+  --crit: #e08b72;
+  --crit-soft: #3a1c15;
+
+  --grid: rgba(237, 243, 234, 0.07);
+  --grid-2: rgba(237, 243, 234, 0.14);
+  --axis: #8aa79d;
+
+  --duo-dark: #041514;
+  --duo-light: #6fb6ab;
+  --art-bg: #0a2320;
+  --art-chip: rgba(237, 243, 234, 0.14);
+  --art-chip-fg: #edf3ea;
+
+  --hero: #0f3b34;
+  --hero-ink: #edf3ea;
+  --hero-sub: #cfe0bc;
+  --hero-line: rgba(237, 243, 234, 0.16);
+  --hero-veil: rgba(237, 243, 234, 0.07);
 
   --sh-1: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --sh-2: 0 2px 6px rgba(0, 0, 0, 0.5), 0 16px 40px -12px rgba(0, 0, 0, 0.6);
+  --sh-2: 0 6px 16px rgba(0, 0, 0, 0.45);
+  --sh-3: 0 14px 32px rgba(0, 0, 0, 0.55);
 }
 
 /* --- base ----------------------------------------------------------------- */
 
 * {
   box-sizing: border-box;
+  /* No grey flash under a set chip that gets hit with a chalky thumb. */
+  -webkit-tap-highlight-color: transparent;
 }
 
 html {
@@ -211,9 +305,9 @@ body {
   margin: 0;
   background: var(--page);
   color: var(--ink);
-  font-family: var(--font);
+  font-family: var(--font-text);
   font-size: 15px;
-  line-height: 1.5;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -225,6 +319,31 @@ h4,
 p,
 figure {
   margin: 0;
+}
+
+/* Headings carry the display face; the tight tracking is what keeps Baloo's
+   round forms from reading as a children's book at 26px and up. */
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.12;
+  text-wrap: balance;
+}
+
+/* Prose sets ragged rather than orphaned. */
+p {
+  text-wrap: pretty;
+}
+
+/* Figures are tabular everywhere rather than per-component: a weight, a rep
+   count and a macro total all sit in columns somewhere in this app, and a
+   column that reflows as its digits change is the thing that makes a log hard
+   to read at arm's length. Inherited from the root so nothing has to opt in. */
+body {
+  font-variant-numeric: tabular-nums;
 }
 
 a {
@@ -493,11 +612,11 @@ a {
 }
 
 .page-title {
-  font-family: var(--serif);
-  font-weight: 500;
-  font-size: 30px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 28px;
   letter-spacing: -0.01em;
-  line-height: 1.05;
+  line-height: 1.14;
   color: var(--ink);
 }
 
@@ -1500,9 +1619,9 @@ tbody tr:hover {
 }
 
 .auth-title {
-  font-family: var(--serif);
-  font-size: 28px;
-  font-weight: 500;
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 700;
   letter-spacing: -0.015em;
   line-height: 1.1;
   color: var(--ink);
@@ -2258,8 +2377,8 @@ tbody tr:hover {
 
 .notfound-title {
   margin: 0;
-  font-family: var(--serif);
-  font-weight: 500;
+  font-family: var(--font-display);
+  font-weight: 700;
   font-size: clamp(21px, 4vw, 28px);
 }
 
