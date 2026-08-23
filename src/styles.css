@@ -372,7 +372,10 @@ a {
 
 .app {
   display: grid;
-  grid-template-columns: 248px 1fr;
+  /* An icon rail, not a nav drawer. Eight sections with a word under each read
+     fine at 96px, and the width it gives back goes to the content column —
+     which is the only part of this app anybody is here to read. */
+  grid-template-columns: 96px 1fr;
   min-height: 100dvh;
   background: var(--page);
   color: var(--ink);
@@ -381,8 +384,9 @@ a {
 .sidebar {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 20px 14px;
+  align-items: center;
+  gap: 4px;
+  padding: 20px 0;
   border-right: 1px solid var(--line);
   background: var(--card);
   position: sticky;
@@ -395,15 +399,17 @@ a {
   display: flex;
   align-items: center;
   gap: 11px;
-  padding: 6px 8px 18px;
+  padding: 0 0 14px;
 }
 
+/* The mark is the one round green plate in the chrome, with the heart struck
+   in saffron: the product's two colours in a single 40px badge. */
 .brand-mark {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  background: var(--accent);
-  color: var(--accent-ink);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-pill);
+  background: var(--hero);
+  color: var(--accent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -411,8 +417,15 @@ a {
 }
 
 .brand-mark .ic {
-  width: 19px;
-  height: 19px;
+  width: 20px;
+  height: 20px;
+  stroke-width: 2;
+}
+
+/* On the rail the wordmark is redundant — the badge is the wordmark. It comes
+   back on the auth screens, which have no rail to carry it. */
+.sidebar .brand-text {
+  display: none;
 }
 
 .brand-text {
@@ -439,26 +452,30 @@ a {
 
 .navitem {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 10px 11px;
-  border-radius: 10px;
-  color: var(--ink-2);
+  justify-content: center;
+  gap: 5px;
+  width: 76px;
+  min-height: 56px;
+  padding: 6px 4px;
+  border-radius: var(--r-md);
+  color: var(--ink-3);
   font-family: inherit;
-  font-weight: 600;
-  font-size: 14px;
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.01em;
   cursor: pointer;
   text-decoration: none;
   position: relative;
   background: none;
   border: 0;
-  text-align: left;
-  width: 100%;
+  text-align: center;
 }
 
 .navitem .ic {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
 }
 
 .navitem:hover {
@@ -467,19 +484,9 @@ a {
 }
 
 .navitem[aria-current='page'] {
-  background: var(--accent-soft);
-  color: var(--accent);
-}
-
-.navitem[aria-current='page']::before {
-  content: '';
-  position: absolute;
-  left: -14px;
-  top: 9px;
-  bottom: 9px;
-  width: 3px;
-  border-radius: 0 3px 3px 0;
-  background: var(--accent);
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-weight: 600;
 }
 
 .navitem:focus-visible {
@@ -514,22 +521,50 @@ a {
   align-items: center;
   justify-content: center;
   /* Sized from the box so one rule covers the 24px rail and the 36px card. */
-  font-size: 0.42em;
-  font-weight: 700;
+  font-size: 0.4em;
+  font-family: var(--font-num);
+  font-weight: 600;
   letter-spacing: 0.02em;
-  color: var(--ink-2);
-  background: var(--accent-soft);
+  color: var(--accent);
+  background: var(--hero);
   user-select: none;
+}
+
+/* Theme swap. It groups with the account button at the foot of the rail —
+   both are "about this session" rather than "about your log", and pushing the
+   pair down is what keeps the eight sections reading as one list. */
+.themetoggle {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.themetoggle:hover {
+  border-color: var(--line-2);
+  color: var(--ink);
+}
+
+.themetoggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* The rail's account button. Sits directly above the sync pill, and pushing
    it down is what keeps both anchored to the bottom of the sidebar. */
 .accountpill {
-  margin-top: auto;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  padding: 7px 10px;
+  padding: 7px;
   border: 0;
   border-radius: 999px;
   background: transparent;
@@ -551,6 +586,17 @@ a {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* No room for a name beside a 28px avatar, and the avatar already answers
+   "whose log is this". The button keeps its aria-label either way. */
+.sidebar .account-name,
+.sidebar .sync-text {
+  display: none;
+}
+
+.sidebar .syncpill {
+  padding: 9px;
 }
 
 /* The identity block at the head of the Settings profile card. */
@@ -598,17 +644,39 @@ a {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  padding: 22px 30px 40px;
+  /* One measure for every section. Past ~860px a table of five readings stops
+     being a table and becomes a search, so the column stops there and the rest
+     of the window stays margin. */
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 18px 20px 110px;
 }
 
-/* Page header — the design's topbar/greet/date treatment. */
+/* Page header — overline over title, actions on the right.
+   The subtitle is written after the heading in every page's markup, because
+   that is the order it should be read in by anything that ignores CSS. Here it
+   is lifted above as a mono overline, which is what gives each section a label
+   without spending a second line of display type on it. */
 .page-head {
+  position: sticky;
+  top: 0;
+  z-index: 5;
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
   flex-wrap: wrap;
-  padding: 0 0 18px;
+  margin: -18px -20px 14px;
+  padding: 14px 20px 12px;
+  background: var(--page);
+  border-bottom: 1px solid var(--line);
+}
+
+.page-head > div:first-child {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .page-title {
@@ -621,9 +689,14 @@ a {
 }
 
 .page-sub {
-  font-size: 13px;
+  order: -1;
+  margin: 0 0 1px;
+  font-family: var(--font-num);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: var(--ink-3);
-  margin-top: 3px;
 }
 
 /* mobile tab bar */
@@ -632,7 +705,8 @@ a {
   align-items: stretch;
   justify-content: space-around;
   padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
-  background: var(--card);
+  background: color-mix(in srgb, var(--card) 92%, transparent);
+  backdrop-filter: blur(10px);
   border-top: 1px solid var(--line);
   position: fixed;
   left: 0;
@@ -665,7 +739,7 @@ a {
 }
 
 .tabitem[aria-current='page'] {
-  color: var(--accent);
+  color: var(--brand);
 }
 
 /* --- card ----------------------------------------------------------------- */
@@ -2765,48 +2839,16 @@ tbody tr:hover {
 
 /* --- responsive ----------------------------------------------------------- */
 
-/* Tablet: the sidebar collapses to an icon rail. */
+/* Tablet: the same rail, one size down, so the content column keeps its
+   measure on an 834px iPad in portrait. */
 @media (max-width: 1080px) and (min-width: 861px) {
   .app {
-    grid-template-columns: 72px 1fr;
-  }
-
-  .sidebar {
-    padding: 20px 10px;
+    grid-template-columns: 84px 1fr;
   }
 
   .navitem {
-    justify-content: center;
-    padding: 11px;
-  }
-
-  .navitem .nav-text,
-  .navitem .badge {
-    display: none;
-  }
-
-  .navitem[aria-current='page']::before {
-    left: -10px;
-  }
-
-  .brand {
-    justify-content: center;
-    padding: 6px 0 18px;
-  }
-
-  .brand-text {
-    display: none;
-  }
-
-  .syncpill,
-  .accountpill {
-    justify-content: center;
-    padding: 9px;
-  }
-
-  .syncpill .sync-text,
-  .accountpill .account-name {
-    display: none;
+    width: 68px;
+    min-height: 52px;
   }
 }
 
@@ -2830,6 +2872,13 @@ tbody tr:hover {
 
   .main {
     padding: 16px 16px calc(88px + env(safe-area-inset-bottom));
+  }
+
+  /* The header bleeds to the screen edge, so its negative margin has to match
+     whatever padding .main is carrying at this width. */
+  .page-head {
+    margin: -16px -16px 12px;
+    padding: 12px 16px 10px;
   }
 
   .page-title {

@@ -9,6 +9,7 @@ import {
   IconHabits,
   IconHeart,
   IconMobility,
+  IconMoon,
   IconMovement,
   IconSettings,
   IconToday,
@@ -202,9 +203,26 @@ function NotFoundPanel({ onHome }: { onHome: () => void }) {
   );
 }
 
+/** The order the rail's theme button steps through, and what to call each. */
+const THEMES = [
+  { id: 'system', label: 'matching your device' },
+  { id: 'light', label: 'daylight' },
+  { id: 'dark', label: 'the gym theme' },
+] as const;
+
 export default function App() {
-  const { data, sync, error, storeLabel, authReady, user, emailVerified, firebaseAvailable, offlineMode } =
-    useHealth();
+  const {
+    data,
+    sync,
+    error,
+    storeLabel,
+    authReady,
+    user,
+    emailVerified,
+    firebaseAvailable,
+    offlineMode,
+    updateSettings,
+  } = useHealth();
   const [tab, setTab] = useState<TabId | null>(currentTab);
 
   useEffect(() => {
@@ -275,6 +293,12 @@ export default function App() {
   // the pill reads as a broken control rather than an account.
   const accountName = data.settings.name.trim() || user?.email || 'You';
 
+  // Daylight to gym theme without a trip to Settings — the swap is the one
+  // preference that gets changed mid-session, because the room changes. The
+  // three-way picker in Settings still writes the same field.
+  const themeIdx = THEMES.findIndex((t) => t.id === data.settings.theme);
+  const nextTheme = THEMES[(themeIdx + 1) % THEMES.length];
+
   const syncDot =
     sync === 'error' ? 'var(--crit)' : sync === 'ready' ? 'var(--good)' : 'var(--warn)';
   const syncText = sync === 'error' ? 'Save failed' : sync === 'saving' ? 'Saving…' : storeLabel;
@@ -308,6 +332,16 @@ export default function App() {
             <span className="nav-text">{label}</span>
           </button>
         ))}
+
+        <button
+          type="button"
+          className="themetoggle"
+          onClick={() => updateSettings({ theme: nextTheme.id })}
+          aria-label={`Theme: switch to ${nextTheme.label}`}
+          title={`Switch to ${nextTheme.label}`}
+        >
+          <IconMoon />
+        </button>
 
         {/* Which account is open. On a shared laptop the sync dot says the
             data is saving; it does not say whose. */}
