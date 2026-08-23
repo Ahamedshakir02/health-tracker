@@ -572,6 +572,14 @@ export default function Trainer() {
             </button>
           }
         >
+          {/* The plate the design puts at the head of a day: the day's number
+              set large enough to be read from the rack, and what the day is
+              for underneath it. */}
+          <div className="dayhero" aria-hidden="true">
+            <span className="dayhero-n">{day.n}</span>
+            <span className="dayhero-focus">{day.focus}</span>
+          </div>
+
           <div className="daybar">
             <div
               className="meter-track"
@@ -748,7 +756,12 @@ export default function Trainer() {
                                 aria-label={`${shown}, set ${i + 1} of ${scheme.sets}`}
                                 onClick={() => toggleSet(exKey, i)}
                               >
-                                {i + 1}
+                                <span className="setchip-reps" aria-hidden="true">
+                                  {scheme.reps || '—'}
+                                </span>
+                                <span className="setchip-n" aria-hidden="true">
+                                  Set {i + 1}
+                                </span>
                               </button>
                             ))}
                           </div>
@@ -866,7 +879,7 @@ export default function Trainer() {
                         <span className="ex-scheme">Hold {stretch.holdSeconds}s</span>
                         <button
                           type="button"
-                          className="setchip"
+                          className="setchip setchip-hold"
                           aria-pressed={done}
                           aria-label={`${stretch.name}, held`}
                           onClick={() => toggleCooldown(stretch.id)}

@@ -2449,6 +2449,52 @@ tbody tr:hover {
   margin: 0 6px;
 }
 
+/* The day plate. The one full-bleed dark surface in the app, and the only
+   place the number gets to be this large — from a rack, at arm's length, "Day
+   4" is the whole question. The stripes are there to keep a flat green
+   rectangle from reading as a loading state. */
+.dayhero {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin: -20px -20px 16px;
+  padding: 20px;
+  overflow: hidden;
+  background: linear-gradient(155deg, var(--hero), var(--brand-fill));
+  color: var(--hero-ink);
+}
+
+.dayhero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    122deg,
+    var(--hero-veil) 0 3px,
+    transparent 3px 11px
+  );
+}
+
+.dayhero-n {
+  position: relative;
+  font-family: var(--font-display);
+  font-size: 46px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.dayhero-focus {
+  position: relative;
+  font-family: var(--font-num);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--hero-sub);
+}
+
 .daybar {
   display: flex;
   flex-direction: column;
@@ -2604,14 +2650,30 @@ tbody tr:hover {
    start and the finish of the movement. The source frames are 3:2 with the
    lifter centred and dead space either side, so the box crops rather than fits.
    Sits on --sunken in both themes; the photos carry their own background. */
+/* The demonstration photographs are public-domain plates from a dozen sources,
+   shot decades apart under a dozen different lights. Pushing all of them
+   through one treatment is what makes them read as a single deliberate set
+   rather than as a scrapbook: greyscale on the plate, then one tint laid over
+   it that keeps the photograph luminosity and takes its hue from the theme.
+   The tint swaps with the room, so the photos do too. */
 .ex-fig {
   position: relative;
   margin: 0;
   aspect-ratio: 4 / 3;
   max-height: 200px;
-  background: var(--sunken);
+  background: var(--art-bg);
   border-bottom: 1px solid var(--line);
   overflow: hidden;
+  isolation: isolate;
+}
+
+.ex-fig::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--duo-light);
+  mix-blend-mode: color;
+  pointer-events: none;
 }
 
 .ex-frame {
@@ -2622,6 +2684,10 @@ tbody tr:hover {
   height: 100%;
   object-fit: cover;
   object-position: center;
+  /* Greyscale here, hue from the overlay below. The blend deliberately
+     stays off the images themselves: two frames stacked for the rep
+     animation would blend into each other rather than with the plate. */
+  filter: grayscale(1) contrast(1.05);
 }
 
 /* Only the finish frame animates — the start frame sits under it at full
@@ -2794,11 +2860,13 @@ tbody tr:hover {
   margin: 0;
 }
 
+/* Scheme over chips, not beside them: at 52px the chip row wants the whole
+   width of the card, and the prescription is a caption for it. */
 .ex-sets {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 7px;
   margin-top: 2px;
 }
 
@@ -2811,37 +2879,71 @@ tbody tr:hover {
   white-space: nowrap;
 }
 
+/* The chips take the full width of the card and split it evenly. A set is
+   banked mid-exercise with one thumb, by someone not looking closely at the
+   phone, so the row is sized to be hit rather than to be tidy. */
 .setchips {
   display: flex;
   gap: 6px;
-  margin-left: auto;
+  width: 100%;
 }
 
 .setchip {
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
+  flex: 1;
+  min-width: 0;
+  min-height: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: 4px;
+  border-radius: 12px;
   border: 1px solid var(--line-2);
-  background: var(--raised);
-  color: var(--ink-3);
-  font-family: var(--mono);
-  font-size: 12px;
-  font-weight: 500;
+  background: var(--card);
+  color: var(--ink);
+  font-family: var(--font-num);
   cursor: pointer;
   transition: 0.1s;
-  font-variant-numeric: tabular-nums;
+}
+
+/* The prescribed reps, which is what gets read at a glance between sets. */
+.setchip-reps {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.setchip-n {
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-3);
 }
 
 .setchip:hover {
-  border-color: var(--ex-color, var(--accent));
-  color: var(--ink);
+  border-color: var(--ex-color, var(--brand));
 }
 
+/* Banked. Filled in the muscle group's own colour, so a card half done reads
+   as half done from the length of the fill rather than from the numbers. */
 .setchip[aria-pressed='true'] {
-  background: var(--ex-color, var(--accent));
+  background: var(--ex-color, var(--brand-fill));
   border-color: transparent;
-  color: #fff;
-  font-weight: 700;
+  color: var(--ink-inv);
+}
+
+.setchip[aria-pressed='true'] .setchip-n {
+  color: color-mix(in srgb, var(--ink-inv) 72%, transparent);
+}
+
+/* The cooldown holds bank one thing, not a set of them — a square rather than
+   a row that stretches across the card. */
+.setchip-hold {
+  flex: 0 0 auto;
+  width: 52px;
+  margin-left: auto;
 }
 
 .setchip:focus-visible {
