@@ -5,6 +5,7 @@ import { IconArrowDown, IconArrowUp, IconCheck, IconPlus } from '../components/i
 import { DailyBars, SERIES, WeightChart } from '../components/charts';
 import { TRAINING_PLAN } from '../data/trainingPlan';
 import {
+  addWater,
   byDate,
   dailySeries,
   dayLog,
@@ -18,7 +19,6 @@ import {
 import { addDays, formatLong, formatWeekday, lastNDays, parseISO, todayISO } from '../lib/dates';
 import { nextDay } from '../lib/programme';
 import { labels, round, toDisplay } from '../lib/units';
-import type { DayLog } from '../types';
 
 /** One glass. The same size the Check-in page counts in. */
 const GLASS_ML = 250;
@@ -124,16 +124,7 @@ export default function Dashboard({ onNavigate }: { onNavigate: (id: Section) =>
 
   // A glass of water is the one thing worth logging without leaving the page:
   // it happens eight times a day and needs no other field.
-  const addGlass = () =>
-    update('days', (current) => {
-      const existing = current.find((d) => d.date === today);
-      const next: DayLog = {
-        ...(existing ?? { date: today, habits: {} }),
-        waterMl: (existing?.waterMl ?? 0) + GLASS_ML,
-        date: today,
-      };
-      return [...current.filter((d) => d.date !== today), next];
-    });
+  const addGlass = () => update('days', (days) => addWater(days, today, GLASS_ML));
 
   const rows: LedgerRow[] = [
     {
