@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import type { ComponentType } from 'react';
 import { useHealth } from './state/HealthProvider';
 import ErrorBoundary from './components/ErrorBoundary';
+import QuickLog from './components/QuickLog';
 import { Avatar, firstName } from './components/ui';
 import {
   IconBody,
@@ -63,6 +64,13 @@ const TABS = [
 const ROUTES = [...TABS.map((t) => t.id), 'mobility', 'movement', 'settings'] as const;
 
 type TabId = (typeof ROUTES)[number];
+
+/**
+ * Where the phone's quick-log button is offered. Not on the two pages that run
+ * a timer along the bottom of the screen — it would sit on top of the rest
+ * countdown — and not on Settings, where nothing is being logged.
+ */
+const QUICK_LOG_ON: readonly TabId[] = ['dashboard', 'food', 'body', 'daily', 'movement'];
 
 /** Which bar slot lights up for a section that has no slot of its own. */
 const BAR_SLOT: Partial<Record<TabId, TabId>> = { mobility: 'trainer', movement: 'trainer' };
@@ -410,6 +418,8 @@ export default function App() {
           </Suspense>
         </ErrorBoundary>
       </main>
+
+      {tab && QUICK_LOG_ON.includes(tab) && sync !== 'loading' && <QuickLog onNavigate={go} />}
 
       {/* Phone navigation: the same five slots as the rail. Settings has no
           slot here — on a phone it is behind the avatar on Today. */}

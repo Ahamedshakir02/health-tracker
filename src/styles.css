@@ -745,6 +745,169 @@ a {
   color: var(--brand);
 }
 
+/* --- phone quick log ------------------------------------------------------ */
+
+/* Phone only: on a wide screen every section is one click away on the rail and
+   the pages have room for their own forms. */
+.fab {
+  display: none;
+  position: fixed;
+  right: 16px;
+  bottom: calc(84px + env(safe-area-inset-bottom));
+  z-index: 29;
+  width: 58px;
+  height: 58px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 20px;
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: var(--sh-3);
+  cursor: pointer;
+}
+
+.fab .ic {
+  width: 26px;
+  height: 26px;
+  stroke-width: 2.2;
+}
+
+.fab:active {
+  background: var(--accent-press);
+}
+
+.fab:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+/* The dialog fills the viewport so a press anywhere outside the sheet lands on
+   it; the sheet itself is the child pinned to the bottom edge. */
+.sheet {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+}
+
+.sheet[open] {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.sheet::backdrop {
+  background: color-mix(in srgb, var(--sunken) 76%, transparent);
+}
+
+.sheet-body {
+  width: min(100%, 520px);
+  max-height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 18px calc(18px + env(safe-area-inset-bottom));
+  border: 1px solid var(--line-2);
+  border-bottom: 0;
+  border-radius: 26px 26px 0 0;
+  background: var(--card);
+  animation: sheet-up 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+.sheet-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sheet-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 1.1;
+}
+
+.sheet-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.sheet-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-height: 72px;
+  padding: 14px;
+  border: 0;
+  border-radius: var(--r-lg);
+  background: var(--sunken);
+  color: var(--ink);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sheet-tile strong,
+.sheet-row-text strong {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.sheet-tile span,
+.sheet-row-text span {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.sheet-tile:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.sheet-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px 10px 14px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-lg);
+}
+
+.sheet-row-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.sheet-row .btn {
+  min-width: 68px;
+  min-height: 46px;
+  font-family: var(--font-num);
+}
+
+.sheet-train {
+  min-height: 54px;
+  font-size: 15px;
+}
+
 /* --- card ----------------------------------------------------------------- */
 
 .card {
@@ -3423,6 +3586,10 @@ tbody tr:hover {
   }
 
   .tabbar {
+    display: flex;
+  }
+
+  .fab {
     display: flex;
   }
 
