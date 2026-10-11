@@ -267,6 +267,30 @@ export function Segmented<T extends string | number>({
   );
 }
 
+const TRAIN_VIEWS = [
+  { id: 'trainer', label: 'Programme' },
+  { id: 'mobility', label: 'Mobility' },
+  { id: 'movement', label: 'History' },
+] as const;
+
+/**
+ * The three views that share the Train slot in the bar.
+ *
+ * Links rather than buttons: each view is its own address, so the back button
+ * steps between them and a bookmark to Mobility still lands on Mobility.
+ */
+export function TrainSwitch({ current }: { current: (typeof TRAIN_VIEWS)[number]['id'] }) {
+  return (
+    <nav className="segmented trainswitch" aria-label="Train views">
+      {TRAIN_VIEWS.map((v) => (
+        <a key={v.id} href={`#/${v.id}`} aria-current={v.id === current ? 'page' : undefined}>
+          {v.label}
+        </a>
+      ))}
+    </nav>
+  );
+}
+
 export function Rating({
   value,
   onChange,

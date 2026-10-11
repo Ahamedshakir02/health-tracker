@@ -1,6 +1,6 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { useHealth } from '../state/HealthProvider';
-import { Card, Empty, Field, Segmented, StatTile } from '../components/ui';
+import { Card, Empty, Field, Segmented, StatTile, TrainSwitch } from '../components/ui';
 import SessionHistory from '../components/SessionHistory';
 import { DailyBars, SERIES } from '../components/charts';
 import { dailySeries, dayLog, sortByDateDesc, uid, workoutsInLastDays } from '../lib/calc';
@@ -111,6 +111,8 @@ export default function Movement() {
         </div>
         <Segmented options={RANGES} value={range} onChange={setRange} ariaLabel="Chart range" />
       </header>
+
+      <TrainSwitch current="movement" />
 
       <div className="stack">
         <div className="grid grid-stats">

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useHealth } from '../state/HealthProvider';
-import { Card, Empty, firstName, Ring, StatTile } from '../components/ui';
+import { Avatar, Card, Empty, firstName, Ring, StatTile } from '../components/ui';
 import {
   IconArrowDown,
   IconArrowUp,
@@ -26,11 +26,16 @@ import {
 import { addDays, formatLong, formatWeekday, lastNDays, parseISO, todayISO } from '../lib/dates';
 import { labels, round, toDisplay } from '../lib/units';
 
-export default function Dashboard({ onNavigate }: { onNavigate: (id: 'body' | 'food' | 'movement' | 'daily') => void }) {
-  const { data } = useHealth();
+export default function Dashboard({
+  onNavigate,
+}: {
+  onNavigate: (id: 'body' | 'food' | 'movement' | 'daily' | 'settings') => void;
+}) {
+  const { data, user } = useHealth();
   const { units, goals, name, heightCm } = data.settings;
   const u = labels(units);
   const today = todayISO();
+  const accountName = name.trim() || user?.email || 'You';
 
   const series = useMemo(() => dailySeries(data, 30), [data]);
   const last7 = series.slice(-7);
@@ -121,6 +126,16 @@ export default function Dashboard({ onNavigate }: { onNavigate: (id: 'body' | 'f
               {label}
             </button>
           ))}
+          {/* The rail carries the account button on a wide screen. A phone has
+              no rail, so this is the way into Settings there. */}
+          <button
+            type="button"
+            className="accountpill mobile-only"
+            onClick={() => onNavigate('settings')}
+            aria-label={`Signed in as ${accountName}. Open settings`}
+          >
+            <Avatar name={accountName} url={data.settings.avatarUrl} size={30} />
+          </button>
         </div>
       </header>
 

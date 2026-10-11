@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Card, Segmented } from '../components/ui';
+import { Card, Segmented, TrainSwitch } from '../components/ui';
 import ExerciseAnim from '../components/ExerciseAnim';
 import { homeExerciseFor } from '../data/homePlans';
 import { IconCheck, IconFlame, IconTrainer } from '../components/icons';
@@ -420,6 +420,8 @@ export default function Trainer() {
           )}
         </div>
       </header>
+
+      <TrainSwitch current="trainer" />
 
       {/* Where you are training changes mid-week more often than the other
           preferences do — a locked gym, a trip — so it is here as well as in

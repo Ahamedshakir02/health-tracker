@@ -8,10 +8,7 @@ import {
   IconFood,
   IconHabits,
   IconHeart,
-  IconMobility,
   IconMoon,
-  IconMovement,
-  IconSettings,
   IconToday,
   IconTrainer,
 } from './components/icons';
@@ -42,18 +39,33 @@ const Mobility = lazy(() => import('./pages/Mobility'));
 import { applyPageMeta } from './lib/pageMeta';
 import { markReturningVisitor } from './lib/returningVisitor';
 
+/**
+ * The five places the rail and the phone bar send you.
+ *
+ * Eight slots did not fit a phone: the labels had to shrink twice to stay on
+ * one line. Five do, at a size a thumb can hit. The three sections that lost
+ * their slot are still addresses — see ROUTES — they just hang off something
+ * that kept one.
+ */
 const TABS = [
   { id: 'dashboard', label: 'Today', Icon: IconToday },
-  { id: 'trainer', label: 'Trainer', Icon: IconTrainer },
-  { id: 'mobility', label: 'Mobility', Icon: IconMobility },
-  { id: 'body', label: 'Body', Icon: IconBody },
+  { id: 'trainer', label: 'Train', Icon: IconTrainer },
   { id: 'food', label: 'Food', Icon: IconFood },
-  { id: 'movement', label: 'Move', Icon: IconMovement },
-  { id: 'daily', label: 'Habits', Icon: IconHabits },
-  { id: 'settings', label: 'Settings', Icon: IconSettings },
+  { id: 'body', label: 'Body', Icon: IconBody },
+  { id: 'daily', label: 'Check-in', Icon: IconHabits },
 ] as const satisfies readonly { id: string; label: string; Icon: ComponentType }[];
 
-type TabId = (typeof TABS)[number]['id'];
+/**
+ * Every section with an address. Mobility and the workout history are views of
+ * Train, reached from the switch at the top of each; Settings is behind the
+ * account button. Old bookmarks to any of them keep working.
+ */
+const ROUTES = [...TABS.map((t) => t.id), 'mobility', 'movement', 'settings'] as const;
+
+type TabId = (typeof ROUTES)[number];
+
+/** Which bar slot lights up for a section that has no slot of its own. */
+const BAR_SLOT: Partial<Record<TabId, TabId>> = { mobility: 'trainer', movement: 'trainer' };
 
 /**
  * The section named by the hash, or null if the hash names nothing.
@@ -66,7 +78,7 @@ type TabId = (typeof TABS)[number]['id'];
 function currentTab(): TabId | null {
   const hash = window.location.hash.replace(/^#\/?/, '');
   if (!hash) return 'dashboard';
-  return TABS.find((t) => t.id === hash)?.id ?? null;
+  return ROUTES.find((id) => id === hash) ?? null;
 }
 
 /**
@@ -299,6 +311,8 @@ export default function App() {
   const themeIdx = THEMES.findIndex((t) => t.id === data.settings.theme);
   const nextTheme = THEMES[(themeIdx + 1) % THEMES.length];
 
+  const barTab = tab ? (BAR_SLOT[tab] ?? tab) : null;
+
   const syncDot =
     sync === 'error' ? 'var(--crit)' : sync === 'ready' ? 'var(--good)' : 'var(--warn)';
   const syncText = sync === 'error' ? 'Save failed' : sync === 'saving' ? 'Saving…' : storeLabel;
@@ -322,10 +336,10 @@ export default function App() {
             type="button"
             className="navitem"
             // The label is hidden by CSS on a narrow rail and on a phone, which
-            // left eight buttons with no accessible name at all — the icon is
+            // left the buttons with no accessible name at all — the icon is
             // aria-hidden, so there was nothing else to read.
             aria-label={label}
-            aria-current={tab === id ? 'page' : undefined}
+            aria-current={barTab === id ? 'page' : undefined}
             onClick={() => go(id)}
           >
             <Icon />
@@ -397,15 +411,15 @@ export default function App() {
         </ErrorBoundary>
       </main>
 
-      {/* Phone navigation. The design mocks a five-slot bar, but every section
-          has to stay reachable on a phone, so all seven ride the bar here. */}
+      {/* Phone navigation: the same five slots as the rail. Settings has no
+          slot here — on a phone it is behind the avatar on Today. */}
       <nav className="tabbar" aria-label="Sections">
         {TABS.map(({ id, label, Icon }) => (
           <button
             key={id}
             type="button"
             className="tabitem"
-            aria-current={tab === id ? 'page' : undefined}
+            aria-current={barTab === id ? 'page' : undefined}
             onClick={() => go(id)}
           >
             <Icon />
