@@ -142,60 +142,6 @@ export function StatTile({
   );
 }
 
-/**
- * One of the design's score rings — a value against its target, read at a
- * glance from across a room.
- *
- * Three of these sit at the head of Today because the first question anyone
- * opens this app with is "am I on for the day", and three arcs answer it
- * before any of the tiles below have been read. The number in the middle is
- * the reading itself, not the percentage: a ring that says 72 and is
- * three-quarters full tells you both things at once.
- *
- * `progress` is a 0–1 fraction and is clamped for drawing, so a day at 140% of
- * target closes the ring rather than winding a second turn around it.
- */
-export function Ring({
-  label,
-  value,
-  color,
-  progress,
-  title,
-}: {
-  label: string;
-  value: string;
-  color: string;
-  progress: number | null;
-  title?: string;
-}) {
-  const pct = meterPercent(progress) ?? 0;
-  // r=36 on a 96 viewBox, so the arc clears the 9px stroke on both sides.
-  const circumference = 2 * Math.PI * 36;
-  return (
-    <div className="ring" title={title}>
-      <div className="ring-dial">
-        <svg viewBox="0 0 96 96" aria-hidden="true">
-          <circle cx="48" cy="48" r="36" className="ring-track" />
-          <circle
-            cx="48"
-            cy="48"
-            r="36"
-            className="ring-arc"
-            stroke={color}
-            strokeDasharray={circumference}
-            strokeDashoffset={circumference * (1 - pct / 100)}
-          />
-        </svg>
-        <span className="ring-value">{value}</span>
-      </div>
-      <span className="ring-label">{label}</span>
-      <span className="sr-only">
-        {progress == null ? 'no target set' : `${pct}% of target`}
-      </span>
-    </div>
-  );
-}
-
 export function Empty({ emoji, children }: { emoji: string; children: ReactNode }) {
   return (
     <div className="empty">

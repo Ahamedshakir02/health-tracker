@@ -1,17 +1,9 @@
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { useHealth } from '../state/HealthProvider';
-import { Avatar, Card, Empty, firstName, Ring, StatTile } from '../components/ui';
-import {
-  IconArrowDown,
-  IconArrowUp,
-  IconDroplet,
-  IconFlame,
-  IconHabits,
-  IconMoon,
-  IconScale,
-  IconTrainer,
-} from '../components/icons';
+import { Avatar, Card, Empty, firstName, meterPercent } from '../components/ui';
+import { IconArrowDown, IconArrowUp, IconCheck, IconPlus } from '../components/icons';
 import { DailyBars, SERIES, WeightChart } from '../components/charts';
+import { TRAINING_PLAN } from '../data/trainingPlan';
 import {
   byDate,
   dailySeries,
@@ -24,15 +16,34 @@ import {
   workoutsInLastDays,
 } from '../lib/calc';
 import { addDays, formatLong, formatWeekday, lastNDays, parseISO, todayISO } from '../lib/dates';
+import { nextDay } from '../lib/programme';
 import { labels, round, toDisplay } from '../lib/units';
+import type { DayLog } from '../types';
 
-export default function Dashboard({
-  onNavigate,
-}: {
-  onNavigate: (id: 'body' | 'food' | 'movement' | 'daily' | 'settings') => void;
-}) {
-  const { data, user } = useHealth();
-  const { units, goals, name, heightCm } = data.settings;
+/** One glass. The same size the Check-in page counts in. */
+const GLASS_ML = 250;
+
+type Section = 'trainer' | 'body' | 'food' | 'movement' | 'daily' | 'settings';
+
+/**
+ * One line of the day: what it is, where it stands against its target, and the
+ * single action that moves it. `progress` is null when there is no target to
+ * measure against, which draws an empty track rather than a misleading full one.
+ */
+interface LedgerRow {
+  id: string;
+  label: string;
+  value: ReactNode;
+  unit?: string;
+  progress: number | null;
+  color: string;
+  action: string;
+  onAction: () => void;
+}
+
+export default function Dashboard({ onNavigate }: { onNavigate: (id: Section) => void }) {
+  const { data, user, update } = useHealth();
+  const { units, goals, name, heightCm, programme } = data.settings;
   const u = labels(units);
   const today = todayISO();
   const accountName = name.trim() || user?.email || 'You';
@@ -47,6 +58,7 @@ export default function Dashboard({
   const weekWorkouts = workoutsInLastDays(data.workouts, 7);
   const activeHabits = data.settings.habits.filter((h) => !h.archived);
   const habitsDone = activeHabits.filter((h) => log.habits[h.id]).length;
+  const stepsToday = series[series.length - 1]?.steps ?? null;
 
   const weightPoints = useMemo(() => {
     const since = addDays(today, -89);
@@ -68,7 +80,6 @@ export default function Dashboard({
     last7.filter((d) => d.calories > 0),
     (d) => d.calories,
   );
-  const avgSleep = meanOf(last7, (d) => d.sleepHours);
   const hasAnything =
     data.weights.length || data.meals.length || data.workouts.length || data.days.length;
 
@@ -100,8 +111,103 @@ export default function Dashboard({
     [series, today, workoutDates],
   );
 
+  // What the Trainer would open on. Derived the same way it derives it, so the
+  // plate here and the page behind its button can never disagree.
+  const schedule = programme && TRAINING_PLAN.find((s) => s.id === programme.scheduleId);
+  const upNext = schedule
+    ? schedule.days.find((d) => d.n === nextDay(schedule, data.sessions, programme))
+    : undefined;
+  const trainedToday = workoutDates.has(today);
+
   const showWeight = (kg: number) => toDisplay('weight', kg, units).toFixed(1);
   const showVolume = (ml: number) => round(toDisplay('volume', ml, units), 0);
+
+  // A glass of water is the one thing worth logging without leaving the page:
+  // it happens eight times a day and needs no other field.
+  const addGlass = () =>
+    update('days', (current) => {
+      const existing = current.find((d) => d.date === today);
+      const next: DayLog = {
+        ...(existing ?? { date: today, habits: {} }),
+        waterMl: (existing?.waterMl ?? 0) + GLASS_ML,
+        date: today,
+      };
+      return [...current.filter((d) => d.date !== today), next];
+    });
+
+  const rows: LedgerRow[] = [
+    {
+      id: 'calories',
+      label: 'Calories',
+      value: Math.round(todayMacros.calories).toLocaleString(),
+      unit: `/ ${goals.calories.toLocaleString()} kcal`,
+      progress: goals.calories ? todayMacros.calories / goals.calories : null,
+      color: SERIES.food,
+      action: 'Add a meal',
+      onAction: () => onNavigate('food'),
+    },
+    {
+      id: 'protein',
+      label: 'Protein',
+      value: Math.round(todayMacros.proteinG),
+      unit: `/ ${goals.proteinG} g`,
+      progress: goals.proteinG ? todayMacros.proteinG / goals.proteinG : null,
+      color: SERIES.food,
+      action: 'Add a meal',
+      onAction: () => onNavigate('food'),
+    },
+    {
+      id: 'water',
+      label: 'Water',
+      value: showVolume(log.waterMl ?? 0).toLocaleString(),
+      unit: `/ ${showVolume(goals.waterMl).toLocaleString()} ${u.volume}`,
+      progress: goals.waterMl ? (log.waterMl ?? 0) / goals.waterMl : null,
+      color: SERIES.sleep,
+      action: `Add a glass (${showVolume(GLASS_ML)} ${u.volume})`,
+      onAction: addGlass,
+    },
+    {
+      id: 'sleep',
+      label: 'Sleep',
+      value: log.sleepHours != null ? log.sleepHours.toFixed(1) : '—',
+      unit: `/ ${goals.sleepHours} h`,
+      progress:
+        log.sleepHours != null && goals.sleepHours ? log.sleepHours / goals.sleepHours : null,
+      color: SERIES.sleep,
+      action: "Log last night's sleep",
+      onAction: () => onNavigate('daily'),
+    },
+    {
+      id: 'steps',
+      label: 'Steps',
+      value: stepsToday != null ? stepsToday.toLocaleString() : '—',
+      unit: `/ ${goals.steps.toLocaleString()}`,
+      progress: stepsToday != null && goals.steps ? stepsToday / goals.steps : null,
+      color: SERIES.activity,
+      action: "Enter today's steps",
+      onAction: () => onNavigate('movement'),
+    },
+    {
+      id: 'habits',
+      label: 'Habits',
+      value: habitsDone,
+      unit: `/ ${activeHabits.length}`,
+      progress: activeHabits.length ? habitsDone / activeHabits.length : null,
+      color: SERIES.activity,
+      action: 'Tick off habits',
+      onAction: () => onNavigate('daily'),
+    },
+    {
+      id: 'weight',
+      label: 'Weight',
+      value: latest ? showWeight(latest.weightKg) : '—',
+      unit: latest ? u.weight : undefined,
+      progress: null,
+      color: SERIES.weight,
+      action: 'Log a weight reading',
+      onAction: () => onNavigate('body'),
+    },
+  ];
 
   return (
     <>
@@ -110,33 +216,16 @@ export default function Dashboard({
           <h1 className="page-title">{name ? `Hello, ${firstName(name)}` : 'Today'}</h1>
           <p className="page-sub">{formatLong(today)}</p>
         </div>
-        <div className="row">
-          {(
-            [
-              ['food', 'Food'],
-              ['movement', 'Workout'],
-              ['body', 'Weight'],
-              ['daily', 'Check-in'],
-            ] as const
-          ).map(([id, label]) => (
-            <button key={id} type="button" className="quickadd" onClick={() => onNavigate(id)}>
-              <span className="plus" aria-hidden="true">
-                +
-              </span>
-              {label}
-            </button>
-          ))}
-          {/* The rail carries the account button on a wide screen. A phone has
-              no rail, so this is the way into Settings there. */}
-          <button
-            type="button"
-            className="accountpill mobile-only"
-            onClick={() => onNavigate('settings')}
-            aria-label={`Signed in as ${accountName}. Open settings`}
-          >
-            <Avatar name={accountName} url={data.settings.avatarUrl} size={30} />
-          </button>
-        </div>
+        {/* The rail carries the account button on a wide screen. A phone has
+            no rail, so this is the way into Settings there. */}
+        <button
+          type="button"
+          className="accountpill mobile-only"
+          onClick={() => onNavigate('settings')}
+          aria-label={`Signed in as ${accountName}. Open settings`}
+        >
+          <Avatar name={accountName} url={data.settings.avatarUrl} size={30} />
+        </button>
       </header>
 
       {!hasAnything && (
@@ -170,104 +259,83 @@ export default function Dashboard({
           ))}
         </ol>
 
-        {/* The three questions worth answering before anything else: have you
-            eaten enough, have you trained enough, did you sleep. */}
-        <div className="rings">
-          <Ring
-            label="Calories"
-            color={SERIES.food}
-            value={todayMacros.calories ? String(Math.round(todayMacros.calories)) : '—'}
-            progress={goals.calories ? todayMacros.calories / goals.calories : null}
-            title={`${Math.round(todayMacros.calories)} of ${goals.calories} kcal today`}
-          />
-          <Ring
-            label="Training"
-            color={SERIES.activity}
-            value={String(weekWorkouts.length)}
-            progress={goals.workoutsPerWeek ? weekWorkouts.length / goals.workoutsPerWeek : null}
-            title={`${weekWorkouts.length} of ${goals.workoutsPerWeek} sessions this week`}
-          />
-          <Ring
-            label="Sleep"
-            color={SERIES.sleep}
-            value={log.sleepHours != null ? log.sleepHours.toFixed(1) : '—'}
-            progress={
-              log.sleepHours != null && goals.sleepHours ? log.sleepHours / goals.sleepHours : null
-            }
-            title={
-              log.sleepHours != null
-                ? `${log.sleepHours.toFixed(1)} of ${goals.sleepHours} hours`
-                : 'Not logged'
-            }
-          />
-        </div>
-
-        <div className="grid grid-stats">
-          <StatTile
-            label="Weight"
-            color={SERIES.weight}
-            icon={<IconScale />}
-            value={latest ? showWeight(latest.weightKg) : '—'}
-            unit={latest ? u.weight : undefined}
-            foot={
-              week ? (
+        {/* The first thing Today answers is "what am I doing in the gym", so
+            the plate comes before any number. One button, and it is the only
+            saffron on the page. */}
+        <section className="nextup" aria-label="Training">
+          <div className="nextup-text">
+            <p className="nextup-over">
+              {trainedToday ? (
                 <>
-                  <span className={`stat-delta ${week.delta > 0 ? 'up' : 'down'}`}>
-                    {week.delta > 0 ? <IconArrowUp /> : <IconArrowDown />}
-                    {showWeight(Math.abs(week.delta))} {u.weight}
-                  </span>{' '}
-                  in 7 days
+                  <IconCheck /> Trained today
                 </>
+              ) : schedule && upNext ? (
+                `Up next · ${schedule.title} · ${upNext.reps}`
               ) : (
-                'Log twice to see a trend'
-              )
-            }
-          />
-          <StatTile
-            label="Calories today"
-            color={SERIES.food}
-            icon={<IconFlame />}
-            overIsBad
-            value={String(Math.round(todayMacros.calories))}
-            unit={`/ ${goals.calories}`}
-            progress={goals.calories ? todayMacros.calories / goals.calories : null}
-            foot={`${Math.round(todayMacros.proteinG)} g protein of ${goals.proteinG} g`}
-          />
-          <StatTile
-            label="Workouts this week"
-            color={SERIES.activity}
-            icon={<IconTrainer />}
-            value={String(weekWorkouts.length)}
-            unit={`/ ${goals.workoutsPerWeek}`}
-            progress={goals.workoutsPerWeek ? weekWorkouts.length / goals.workoutsPerWeek : null}
-            foot={`${weekWorkouts.reduce((s, w) => s + (w.minutes || 0), 0)} active minutes`}
-          />
-          <StatTile
-            label="Sleep last night"
-            color={SERIES.sleep}
-            icon={<IconMoon />}
-            value={log.sleepHours != null ? log.sleepHours.toFixed(1) : '—'}
-            unit={log.sleepHours != null ? 'h' : undefined}
-            progress={log.sleepHours != null ? log.sleepHours / goals.sleepHours : null}
-            foot={avgSleep != null ? `${avgSleep.toFixed(1)} h avg this week` : 'Not logged'}
-          />
-          <StatTile
-            label="Water today"
-            color={SERIES.weight}
-            icon={<IconDroplet />}
-            value={String(showVolume(log.waterMl ?? 0))}
-            unit={`/ ${showVolume(goals.waterMl)} ${u.volume}`}
-            progress={goals.waterMl ? (log.waterMl ?? 0) / goals.waterMl : null}
-          />
-          <StatTile
-            label="Habits today"
-            color={SERIES.activity}
-            icon={<IconHabits />}
-            value={String(habitsDone)}
-            unit={`/ ${activeHabits.length}`}
-            progress={activeHabits.length ? habitsDone / activeHabits.length : null}
-          />
-        </div>
+                `${TRAINING_PLAN.length} schedules in the book`
+              )}
+            </p>
+            <h2 className="nextup-title">
+              {schedule && upNext ? `Day ${upNext.n} — ${upNext.focus}` : 'Pick a schedule'}
+            </h2>
+            <p className="nextup-sub">
+              {schedule
+                ? `${weekWorkouts.length} of ${goals.workoutsPerWeek} sessions done this week`
+                : 'Make one yours and Today lines up the next day for you.'}
+            </p>
+          </div>
+          <button type="button" className="btn btn-primary" onClick={() => onNavigate('trainer')}>
+            {!schedule ? 'Open Train' : trainedToday ? 'Open the next day' : 'Start session'}
+          </button>
+        </section>
+
+        {/* Everything else about the day as one list: a name, where it stands,
+            and a single button that moves it. */}
+        <section className="card ledger" aria-label="The day so far">
+          {rows.map((row) => {
+            const pct = meterPercent(row.progress);
+            return (
+              <div className="ledger-row" key={row.id}>
+                <span className="ledger-name">{row.label}</span>
+                <span className="ledger-val">
+                  {row.value}
+                  {row.unit && <small> {row.unit}</small>}
+                </span>
+                {row.id === 'weight' ? (
+                  <span className="ledger-note">
+                    {week ? (
+                      <>
+                        <span className={`stat-delta ${week.delta > 0 ? 'up' : 'down'}`}>
+                          {week.delta > 0 ? <IconArrowUp /> : <IconArrowDown />}
+                          {showWeight(Math.abs(week.delta))} {u.weight}
+                        </span>{' '}
+                        in 7 days
+                      </>
+                    ) : (
+                      'Log twice to see a trend'
+                    )}
+                  </span>
+                ) : (
+                  <span className="meter-track" aria-hidden="true">
+                    <span
+                      className="meter-fill"
+                      style={{ width: `${pct ?? 0}%`, background: row.color }}
+                    />
+                  </span>
+                )}
+                <button
+                  type="button"
+                  className="ledger-add"
+                  onClick={row.onAction}
+                  aria-label={row.action}
+                  title={row.action}
+                >
+                  <IconPlus />
+                </button>
+              </div>
+            );
+          })}
+        </section>
 
         <div className="grid grid-2">
           <Card title="Weight trend" note="Last 90 days">
