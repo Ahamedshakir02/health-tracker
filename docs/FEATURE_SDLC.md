@@ -21,7 +21,7 @@ it fits together) and `PROJECT_NOTES.md` (why).
 |---|---|
 | Stack | React 18 · TS · Vite 8 · Recharts · Firebase Auth + Firestore · plain CSS |
 | Shape | Pure static SPA on Firebase Hosting (Spark/free). No server, no API layer, no CI |
-| Screens | Today · Trainer · Body · Food · Move · Habits · Settings (+ Login, Onboarding) |
+| Screens | Today · Train (Programme, Mobility, History) · Food · Body · Check-in · Settings behind the account button (+ Login, Onboarding) |
 | Data | 5 slices — `settings`, `weights`, `meals`, `workouts`, `days` — one Firestore doc each |
 | Trainer | 13 schedules · 46 days · 360 exercises · 111 animation clips |
 | Tests | 111 vitest specs, pure logic only (`calc`, `dates`, `units`, `validate`, `store`, `healthImport`, `trainer`) |

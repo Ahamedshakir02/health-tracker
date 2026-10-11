@@ -19,7 +19,7 @@ const SITE = 'Vitals';
 export const PAGE_META: Record<string, PageMeta> = {
   dashboard: {
     title: 'Today',
-    description: 'Your headline numbers, weight trend and everything logged this week.',
+    description: 'Your next training day, the day so far, and everything logged this week.',
   },
   trainer: {
     title: 'Train',
