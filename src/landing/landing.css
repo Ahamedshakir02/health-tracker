@@ -10,34 +10,46 @@
 :root {
   color-scheme: light;
 
-  --page: #f4f3f0;
-  --card: #fcfcfb;
-  --sunken: #efede8;
+  --page: #fbf8f1;
+  --card: #ffffff;
+  --sunken: #f1f6e9;
 
-  --ink: #1c1b19;
-  --ink-2: #57544e;
-  --ink-3: #8a857c;
+  --ink: #2b2a24;
+  --ink-2: #4a4840;
+  --ink-3: #6e6b60;
 
-  --line: rgba(20, 18, 14, 0.09);
-  --line-2: rgba(20, 18, 14, 0.16);
+  --line: #e2decf;
+  --line-2: #c9c5b6;
 
-  --accent: #2a78d6;
-  --accent-ink: #ffffff;
-  --accent-hover: #256abf;
-  --accent-soft: rgba(42, 120, 214, 0.1);
+  --brand: #1e4d2b;
+  --brand-soft: #e6efd9;
 
-  --sh-1: 0 1px 2px rgba(20, 18, 14, 0.05), 0 1px 1px rgba(20, 18, 14, 0.03);
-  --sh-2: 0 2px 4px rgba(20, 18, 14, 0.05), 0 8px 24px -8px rgba(20, 18, 14, 0.14);
+  --accent: #dd8413;
+  --accent-ink: #15331f;
+  --accent-hover: #c26f0a;
+  --accent-soft: #fcebcb;
 
-  --r-sm: 8px;
-  --r-md: 12px;
-  --r-lg: 18px;
+  /* The dark green plate the mark and the hero sit on. */
+  --hero: #1e4d2b;
+  --hero-ink: #fefcf6;
+  --hero-sub: #cfe0bc;
+  --hero-veil: rgba(255, 255, 255, 0.1);
+
+  --sh-1: 0 1px 2px rgba(31, 77, 43, 0.06), 0 1px 3px rgba(31, 77, 43, 0.05);
+  --sh-2: 0 12px 28px rgba(31, 77, 43, 0.12), 0 4px 8px rgba(31, 77, 43, 0.06);
+
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
   --r-pill: 999px;
 
-  --font:
-    'Hanken Grotesk Variable', 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system,
-    'Segoe UI', sans-serif;
-  --serif: 'Newsreader Variable', 'Newsreader', Georgia, 'Times New Roman', serif;
+  --font-display: 'Baloo Chettan 2', ui-rounded, system-ui, sans-serif;
+  --font-text: 'Noto Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-num: 'Noto Sans Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --font: var(--font-text);
+  --serif: var(--font-display);
+  --mono: var(--font-num);
 
   /* Gutter and max width, so every section lines up on one rhythm. */
   --pad: 24px;
@@ -48,24 +60,32 @@
   :root {
     color-scheme: dark;
 
-    --page: #101010;
-    --card: #1a1a19;
-    --sunken: #0b0b0a;
+    --page: #061f1c;
+    --card: #0b2c28;
+    --sunken: #041514;
 
-    --ink: #f2efe9;
-    --ink-2: #a6a199;
-    --ink-3: #6d6860;
+    --ink: #edf3ea;
+    --ink-2: #bdd3c9;
+    --ink-3: #8aa79d;
 
-    --line: rgba(255, 252, 245, 0.1);
-    --line-2: rgba(255, 252, 245, 0.18);
+    --line: #16443c;
+    --line-2: #22574d;
 
-    --accent: #5b9be6;
-    --accent-ink: #0b1420;
-    --accent-hover: #7bb0ec;
-    --accent-soft: rgba(91, 155, 230, 0.16);
+    --brand: #6fb6ab;
+    --brand-soft: #103b34;
+
+    --accent: #f4a52a;
+    --accent-ink: #08332f;
+    --accent-hover: #fbba4d;
+    --accent-soft: #123028;
+
+    --hero: #0f3b34;
+    --hero-ink: #edf3ea;
+    --hero-sub: #cfe0bc;
+    --hero-veil: rgba(237, 243, 234, 0.07);
 
     --sh-1: 0 1px 2px rgba(0, 0, 0, 0.4);
-    --sh-2: 0 2px 6px rgba(0, 0, 0, 0.5), 0 16px 40px -12px rgba(0, 0, 0, 0.6);
+    --sh-2: 0 18px 44px rgba(0, 0, 0, 0.55);
   }
 }
 
@@ -79,9 +99,10 @@ body.lp {
   margin: 0;
   background: var(--page);
   color: var(--ink);
-  font-family: var(--font);
+  font-family: var(--font-text);
   font-size: 16px;
   line-height: 1.6;
+  font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
   /* The sticky bar is fixed over the page on phones; keep the footer clear. */
   padding-bottom: env(safe-area-inset-bottom);
@@ -135,14 +156,15 @@ a {
   color: inherit;
 }
 
+/* Matches the app rail badge: one round green plate, saffron heart. */
 .lp-mark {
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  background: var(--accent);
-  color: var(--accent-ink);
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-pill);
+  background: var(--hero);
+  color: var(--accent);
 }
 
 .lp-mark svg {
@@ -157,7 +179,7 @@ a {
 }
 
 .lp-brand-name {
-  font-weight: 650;
+  font-weight: 600;
   font-size: 17px;
 }
 
@@ -243,23 +265,33 @@ a {
   text-align: center;
 }
 
+/* The eyebrow is set in the number face for the same reason the app's
+   overlines are: it is a label, not a sentence, and the mono width is what
+   stops it reading as a stunted first line of the headline. */
 .lp-eyebrow {
-  margin: 0 0 12px;
-  font-size: 11.5px;
-  font-weight: 600;
-  letter-spacing: 0.18em;
+  display: inline-block;
+  margin: 0 0 14px;
+  padding: 7px 13px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-pill);
+  background: var(--card);
+  font-family: var(--font-num);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--ink-3);
+  color: var(--brand);
 }
 
 .lp-h1 {
   margin: 0 auto 16px;
-  max-width: 15ch;
-  font-family: var(--serif);
-  font-weight: 500;
-  font-size: clamp(38px, 7vw, 68px);
-  line-height: 1.05;
+  max-width: 17ch;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(38px, 6.4vw, 66px);
+  line-height: 1.03;
   letter-spacing: -0.02em;
+  text-wrap: balance;
 }
 
 .lp-lede {
@@ -322,11 +354,12 @@ a {
 
 .lp-h2 {
   margin: 0 0 10px;
-  font-family: var(--serif);
-  font-weight: 500;
-  font-size: clamp(27px, 4vw, 40px);
-  line-height: 1.15;
-  letter-spacing: -0.015em;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(27px, 3.6vw, 42px);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
 }
 
 .lp-sub {
@@ -358,7 +391,7 @@ a {
 .lp-card h3 {
   margin: 0 0 8px;
   font-size: 17px;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .lp-card p {
@@ -473,7 +506,7 @@ a {
 
 .lp-foot-brand {
   margin: 0;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .lp-foot-nav {
@@ -499,8 +532,8 @@ a {
 
 .lp-prose h1 {
   margin: 0 0 8px;
-  font-family: var(--serif);
-  font-weight: 500;
+  font-family: var(--font-display);
+  font-weight: 700;
   font-size: clamp(32px, 5vw, 46px);
   line-height: 1.1;
   letter-spacing: -0.015em;
@@ -509,13 +542,13 @@ a {
 .lp-prose h2 {
   margin: 40px 0 10px;
   font-size: 20px;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .lp-prose h3 {
   margin: 24px 0 6px;
   font-size: 16.5px;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .lp-prose p,
@@ -563,7 +596,8 @@ a {
 
 .lp-oops-code {
   margin: 0;
-  font-family: var(--serif);
+  font-family: var(--font-num);
+  font-weight: 500;
   font-size: clamp(64px, 14vw, 120px);
   line-height: 1;
   color: var(--ink-3);

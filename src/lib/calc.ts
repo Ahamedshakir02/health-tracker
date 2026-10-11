@@ -39,6 +39,22 @@ export function dayLog(days: DayLog[], date: ISODate): DayLog {
   return days.find((d) => d.date === date) ?? { date, habits: {} };
 }
 
+/**
+ * The day rows with `ml` more water on `date`, never below zero.
+ *
+ * Water is the one reading that gets logged from three places — Today, the
+ * check-in, and the phone's quick-log sheet — so the "find the row, or start
+ * one" step lives here rather than being written out three times.
+ */
+export function addWater(days: DayLog[], date: ISODate, ml: number): DayLog[] {
+  const existing = days.find((d) => d.date === date);
+  const next: DayLog = {
+    ...(existing ?? { date, habits: {} }),
+    waterMl: Math.max(0, (existing?.waterMl ?? 0) + ml),
+  };
+  return [...days.filter((d) => d.date !== date), next];
+}
+
 /** Newest first. */
 export function sortByDateDesc<T extends { date: ISODate }>(items: T[]): T[] {
   return [...items].sort((a, b) => b.date.localeCompare(a.date));

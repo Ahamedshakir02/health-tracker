@@ -8,8 +8,13 @@
  */
 
 // Same self-hosted families as the app, so `font-src 'self'` holds here too.
-import '@fontsource-variable/hanken-grotesk';
-import '@fontsource-variable/newsreader';
+// The landing page sets no body copy in the number face, so it skips it.
+import '@fontsource/baloo-chettan-2/latin-700.css';
+import '@fontsource/noto-sans/latin-400.css';
+import '@fontsource/noto-sans/latin-500.css';
+import '@fontsource/noto-sans/latin-600.css';
+import '@fontsource/noto-sans-mono/latin-400.css';
+import '@fontsource/noto-sans-mono/latin-500.css';
 
 import './landing.css';
 import { initAnalytics } from './analytics';

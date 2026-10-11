@@ -22,7 +22,7 @@ export const PAGE_META: Record<string, PageMeta> = {
     description: 'Your headline numbers, weight trend and everything logged this week.',
   },
   trainer: {
-    title: 'Trainer',
+    title: 'Train',
     description: 'The gym schedule book — pick a day, tick sets off, record what you lifted.',
   },
   mobility: {
@@ -38,11 +38,11 @@ export const PAGE_META: Record<string, PageMeta> = {
     description: 'Meals by slot with calories and macros against your daily targets.',
   },
   movement: {
-    title: 'Move',
+    title: 'Training history',
     description: 'Workouts, steps and active minutes.',
   },
   daily: {
-    title: 'Habits',
+    title: 'Check-in',
     description: 'Sleep, water, mood and the small daily things.',
   },
   settings: {

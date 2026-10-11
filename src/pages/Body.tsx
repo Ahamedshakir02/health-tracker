@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { useHealth } from '../state/HealthProvider';
 import { Card, Empty, Field, Pill, Segmented, StatTile } from '../components/ui';
-import { SERIES, WeightChart } from '../components/charts';
+import { WeightChart } from '../components/charts';
 import { addDays, relativeLabel, todayISO } from '../lib/dates';
 import {
   ageFrom,
@@ -122,15 +122,46 @@ export default function Body() {
       </header>
 
       <div className="stack">
+        {/* The reading and the line it sits on, as one thing. A number on its
+            own tile says where you are; next to its own history it says which
+            way you are going, which is the reason anyone weighs in. */}
+        <section className="card bodyhero" aria-label="Weight">
+          <div className="bodyhero-top">
+            <p className="bodyhero-figure">
+              <strong>{latest ? showWeight(latest.weightKg) : '—'}</strong>
+              {latest && ` ${u.weight}`}
+            </p>
+            <p className="bodyhero-note">
+              {latest ? (
+                <>
+                  <strong>{deltaLabel(week)}</strong>
+                  {week && ' in 7 days'}
+                  <br />
+                  {goals.weightKg
+                    ? `${showWeight(Math.abs(latest.weightKg - goals.weightKg))} ${u.weight} to your goal of ${showWeight(goals.weightKg)}`
+                    : `Logged ${relativeLabel(latest.date)}`}
+                </>
+              ) : (
+                'No readings yet'
+              )}
+            </p>
+          </div>
+          {chartData.length >= 2 ? (
+            <WeightChart
+              data={chartData}
+              unitLabel={u.weight}
+              convert={(kg) => toDisplay('weight', kg, units)}
+              goal={goals.weightKg}
+            />
+          ) : (
+            <Empty emoji="📈">Log at least two readings to see a trend.</Empty>
+          )}
+          <p className="hint">
+            Scale weight bounces with hydration — read the trend line, not the dots.
+          </p>
+        </section>
+
         <div className="grid grid-stats">
-          <StatTile
-            label="Current weight"
-            color={SERIES.weight}
-            value={latest ? showWeight(latest.weightKg) : '—'}
-            unit={latest ? u.weight : undefined}
-            foot={latest ? `Logged ${relativeLabel(latest.date)}` : 'No readings yet'}
-          />
-          <StatTile label="Last 7 days" value={deltaLabel(week)} foot="First to latest reading" />
           <StatTile label="Last 30 days" value={deltaLabel(month)} foot="First to latest reading" />
           <StatTile
             label="Body fat"
@@ -163,22 +194,6 @@ export default function Body() {
             }
           />
         </div>
-
-        <Card
-          title="Weight trend"
-          note="Scale weight bounces with hydration — read the trend line, not the dots."
-        >
-          {chartData.length >= 2 ? (
-            <WeightChart
-              data={chartData}
-              unitLabel={u.weight}
-              convert={(kg) => toDisplay('weight', kg, units)}
-              goal={goals.weightKg}
-            />
-          ) : (
-            <Empty emoji="📈">Log at least two readings to see a trend.</Empty>
-          )}
-        </Card>
 
         <Card title="Log a reading" note="Re-entering a date replaces that day's reading.">
           <form onSubmit={submit}>

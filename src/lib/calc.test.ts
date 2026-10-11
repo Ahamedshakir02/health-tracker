@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ageFrom, bmi, bmiBand, bmr, dailySeries, dayLog, habitStreak, meanOf, rollingMean, sortByDateDesc, sumMacros, uid, weightChange, workoutsInLastDays } from './calc';
+import { addWater, ageFrom, bmi, bmiBand, bmr, dailySeries, dayLog, habitStreak, meanOf, rollingMean, sortByDateDesc, sumMacros, uid, weightChange, workoutsInLastDays } from './calc';
 import { DEFAULT_DATA, type DayLog, type HealthData, type MealEntry } from '../types';
 
 const meal = (date: string, over: Partial<MealEntry> = {}): MealEntry => ({
@@ -23,6 +23,34 @@ describe('sumMacros', () => {
     const totals = sumMacros([meal('2026-01-01'), meal('2026-01-01', { calories: 100 })]);
     expect(totals.calories).toBe(600);
     expect(totals.proteinG).toBe(60);
+  });
+});
+
+describe('addWater', () => {
+  it('starts a row for a day that has none', () => {
+    expect(addWater([], '2026-01-01', 250)).toEqual([
+      { date: '2026-01-01', habits: {}, waterMl: 250 },
+    ]);
+  });
+
+  it('adds to the day it is given and leaves the others alone', () => {
+    const days: DayLog[] = [
+      { date: '2026-01-01', habits: { h1: true }, waterMl: 500, sleepHours: 7 },
+      { date: '2026-01-02', habits: {}, waterMl: 100 },
+    ];
+    const next = addWater(days, '2026-01-01', 250);
+    expect(next.find((d) => d.date === '2026-01-01')).toEqual({
+      date: '2026-01-01',
+      habits: { h1: true },
+      waterMl: 750,
+      sleepHours: 7,
+    });
+    expect(next.find((d) => d.date === '2026-01-02')?.waterMl).toBe(100);
+    expect(next).toHaveLength(2);
+  });
+
+  it('stops at zero when a glass is taken back off an empty day', () => {
+    expect(addWater([], '2026-01-01', -250)[0]?.waterMl).toBe(0);
   });
 });
 

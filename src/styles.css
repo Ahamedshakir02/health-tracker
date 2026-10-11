@@ -1,70 +1,110 @@
 /* ===========================================================================
    Vitals — design tokens
-   Implements the "Vitals Design System" redesign. The design's token names
-   (--page, --ink, --s-weight and friends) are primary; the older names
-   (--surface-N, --text-N, --series-N) are kept as aliases because charts.tsx
-   and a few inline styles resolve them by name at runtime.
+   Implements the "Vitals" gym-theme redesign: a cream-and-forest daylight
+   palette and a teal-black gym palette, both driven by one saffron action
+   colour. The design's token names (--page, --ink, --brand, --s-weight and
+   friends) are primary; the older names (--surface-N, --text-N, --series-N)
+   are kept as aliases because charts.tsx and a few inline styles resolve them
+   by name at runtime.
+
+   Three type roles, not two: --font-display carries headings, --font-text the
+   prose, and --font-num every figure in the app. Numbers are monospaced and
+   tabular on purpose — a column of weights that shifts width as the digits
+   change is unreadable at arm's length, which is where this app gets read.
    =========================================================================== */
 
 :root {
   color-scheme: light;
 
-  --page: #f4f3f0;
-  --card: #fcfcfb;
-  --raised: #ffffff;
-  --sunken: #efede8;
+  --page: #fbf8f1;
+  --card: #ffffff;
+  --raised: #fefcf6;
+  --sunken: #f1f6e9;
 
-  --ink: #1c1b19;
-  --ink-2: #57544e;
-  --ink-3: #8a857c;
-  --ink-inv: #fcfcfb;
+  --ink: #2b2a24;
+  --ink-2: #4a4840;
+  --ink-3: #6e6b60;
+  --ink-4: #908c7e;
+  --ink-inv: #fefcf6;
 
-  --line: rgba(20, 18, 14, 0.09);
-  --line-2: rgba(20, 18, 14, 0.16);
-  --hair: rgba(20, 18, 14, 0.06);
+  --line: #e2decf;
+  --line-2: #c9c5b6;
+  --hair: rgba(43, 42, 36, 0.06);
 
-  --accent: #2a78d6;
-  --accent-ink: #ffffff;
-  --accent-soft: rgba(42, 120, 214, 0.1);
-  --accent-line: rgba(42, 120, 214, 0.28);
+  /* Forest green identifies the product; saffron is the only thing that asks
+     to be pressed. Keeping them in separate roles is what stops the interface
+     turning into a wall of competing colour. */
+  --brand: #1e4d2b;
+  --brand-fill: #1e4d2b;
+  --brand-ink: #15331f;
+  --brand-soft: #e6efd9;
 
-  --s-weight: #2a78d6;
-  --s-energy: #eb6834;
-  --s-activity: #1baf7a;
-  --s-sleep: #c98a00;
-  --s-weight-soft: rgba(42, 120, 214, 0.12);
-  --s-energy-soft: rgba(235, 104, 52, 0.13);
-  --s-activity-soft: rgba(27, 175, 122, 0.13);
-  --s-sleep-soft: rgba(201, 138, 0, 0.14);
+  --accent: #f4a52a;
+  --accent-press: #dd8413;
+  --accent-soft: #fcebcb;
+  --on-accent: #15331f;
+  --accent-line: rgba(244, 165, 42, 0.42);
 
-  --good: #0a8f0a;
-  --good-soft: rgba(10, 143, 10, 0.12);
-  --warn: #b7791f;
-  --warn-soft: rgba(183, 121, 31, 0.14);
-  --serious: #c6592f;
-  --serious-soft: rgba(198, 89, 47, 0.13);
-  --crit: #c62f2f;
-  --crit-soft: rgba(198, 47, 47, 0.12);
+  --pos: #2e6b3e;
+  --neg: #a33523;
+  --neg-soft: #f8ded6;
 
-  --grid: rgba(20, 18, 14, 0.07);
-  --grid-2: rgba(20, 18, 14, 0.14);
-  --axis: #8a857c;
+  --s-weight: #1e4d2b;
+  --s-energy: #dd8413;
+  --s-activity: #15786b;
+  --s-sleep: #2a5f8f;
+  --s-weight-soft: rgba(30, 77, 43, 0.12);
+  --s-energy-soft: rgba(221, 132, 19, 0.14);
+  --s-activity-soft: rgba(21, 120, 107, 0.13);
+  --s-sleep-soft: rgba(42, 95, 143, 0.13);
 
-  --sh-1: 0 1px 2px rgba(20, 18, 14, 0.05), 0 1px 1px rgba(20, 18, 14, 0.03);
-  --sh-2: 0 2px 4px rgba(20, 18, 14, 0.05), 0 8px 24px -8px rgba(20, 18, 14, 0.14);
+  --good: #2e6b3e;
+  --good-soft: rgba(46, 107, 62, 0.12);
+  --warn: #dd8413;
+  --warn-soft: rgba(221, 132, 19, 0.14);
+  --serious: #c05f2a;
+  --serious-soft: rgba(192, 95, 42, 0.13);
+  --crit: #a33523;
+  --crit-soft: #f8ded6;
 
-  --r-sm: 8px;
-  --r-md: 12px;
-  --r-lg: 18px;
+  --grid: rgba(43, 42, 36, 0.07);
+  --grid-2: rgba(43, 42, 36, 0.14);
+  --axis: #6e6b60;
+
+  /* The duotone pair the demonstration photographs are treated with, so a
+     public-domain photo set reads as one deliberate collection. */
+  --duo-dark: #15331f;
+  --duo-light: #e6efd9;
+  --art-bg: #ffffff;
+  --art-chip: rgba(21, 51, 31, 0.72);
+  --art-chip-fg: #fefcf6;
+
+  /* The dark green plate behind the brand mark, the day hero and the avatar —
+     the one place the forest colour is a surface rather than ink. */
+  --hero: #1e4d2b;
+  --hero-2: #15331f;
+  --hero-ink: #fefcf6;
+  --hero-sub: #cfe0bc;
+  --hero-line: rgba(255, 255, 255, 0.22);
+  --hero-veil: rgba(255, 255, 255, 0.1);
+
+  --sh-1: 0 1px 2px rgba(31, 77, 43, 0.06), 0 1px 3px rgba(31, 77, 43, 0.05);
+  --sh-2: 0 4px 12px rgba(31, 77, 43, 0.08), 0 2px 4px rgba(31, 77, 43, 0.05);
+  --sh-3: 0 12px 28px rgba(31, 77, 43, 0.12), 0 4px 8px rgba(31, 77, 43, 0.06);
+
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
   --r-pill: 999px;
 
-  --font:
-    'Hanken Grotesk Variable', 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, 'Segoe UI',
-    sans-serif;
-  --serif: 'Newsreader Variable', 'Newsreader', Georgia, 'Times New Roman', serif;
-  --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-display: 'Baloo Chettan 2', ui-rounded, system-ui, sans-serif;
+  --font-text: 'Noto Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-num: 'Noto Sans Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* --- aliases kept for existing component/chart code --------------------- */
+  --font: var(--font-text);
+  --serif: var(--font-display);
+  --mono: var(--font-num);
   --surface-0: var(--page);
   --surface-1: var(--card);
   --surface-2: var(--sunken);
@@ -74,8 +114,9 @@
   --text-primary: var(--ink);
   --text-secondary: var(--ink-2);
   --text-muted: var(--ink-3);
-  --text-on-accent: var(--accent-ink);
-  --accent-hover: #256abf;
+  --text-on-accent: var(--on-accent);
+  --accent-hover: var(--accent-press);
+  --accent-ink: var(--on-accent);
   --series-1: var(--s-weight);
   --series-2: var(--s-energy);
   --series-3: var(--s-activity);
@@ -87,114 +128,170 @@
   --radius-lg: var(--r-lg);
   --shadow-sm: var(--sh-1);
   --shadow: var(--sh-2);
+  --shadow-lg: var(--sh-3);
 
   color: var(--ink);
 }
 
+/* The gym theme. Teal-black surfaces so a bright phone at six in the morning
+   does not blind anyone, and the same saffron action colour, which survives
+   the swap because it was picked to sit on both grounds. Declared twice — once
+   for the system preference, once for an explicit choice — because a media
+   query and an attribute selector cannot share one rule. Keep them in step. */
 @media (prefers-color-scheme: dark) {
   :root:where(:not([data-theme='light'])) {
     color-scheme: dark;
 
-    --page: #101010;
-    --card: #1a1a19;
-    --raised: #211f1d;
-    --sunken: #0b0b0a;
+    --page: #061f1c;
+    --card: #0b2c28;
+    --raised: #103b34;
+    --sunken: #041514;
 
-    --ink: #f2efe9;
-    --ink-2: #a6a199;
-    --ink-3: #6d6860;
-    --ink-inv: #151413;
+    --ink: #edf3ea;
+    --ink-2: #bdd3c9;
+    --ink-3: #8aa79d;
+    --ink-4: #638077;
+    --ink-inv: #061f1c;
 
-    --line: rgba(255, 252, 245, 0.1);
-    --line-2: rgba(255, 252, 245, 0.18);
-    --hair: rgba(255, 252, 245, 0.055);
+    --line: #16443c;
+    --line-2: #22574d;
+    --hair: rgba(237, 243, 234, 0.07);
 
-    --accent: #5b9be6;
-    --accent-ink: #0b1420;
-    --accent-soft: rgba(91, 155, 230, 0.16);
-    --accent-line: rgba(91, 155, 230, 0.4);
-    --accent-hover: #7bb0ec;
+    --brand: #6fb6ab;
+    --brand-fill: #15786b;
+    --brand-ink: #cfe0bc;
+    --brand-soft: #103b34;
 
-    --s-weight: #6aa4ec;
-    --s-energy: #f4885c;
-    --s-activity: #38c996;
-    --s-sleep: #f0b93f;
-    --s-weight-soft: rgba(106, 164, 236, 0.18);
-    --s-energy-soft: rgba(244, 136, 92, 0.18);
-    --s-activity-soft: rgba(56, 201, 150, 0.16);
-    --s-sleep-soft: rgba(240, 185, 63, 0.16);
+    --accent: #f4a52a;
+    --accent-press: #fbba4d;
+    --accent-soft: #123028;
+    --on-accent: #08332f;
+    --accent-line: rgba(244, 165, 42, 0.5);
 
-    --good: #3ecb52;
-    --good-soft: rgba(62, 203, 82, 0.16);
-    --warn: #f0b93f;
-    --warn-soft: rgba(240, 185, 63, 0.15);
-    --serious: #f19b78;
-    --serious-soft: rgba(241, 155, 120, 0.16);
-    --crit: #ef6a6a;
-    --crit-soft: rgba(239, 106, 106, 0.15);
+    --pos: #94b97f;
+    --neg: #e08b72;
+    --neg-soft: #3a1c15;
 
-    --grid: rgba(255, 252, 245, 0.07);
-    --grid-2: rgba(255, 252, 245, 0.14);
-    --axis: #6d6860;
+    --s-weight: #cfe0bc;
+    --s-energy: #f4a52a;
+    --s-activity: #6fb6ab;
+    --s-sleep: #7fa6c6;
+    --s-weight-soft: rgba(207, 224, 188, 0.18);
+    --s-energy-soft: rgba(244, 165, 42, 0.18);
+    --s-activity-soft: rgba(111, 182, 171, 0.18);
+    --s-sleep-soft: rgba(127, 166, 198, 0.18);
+
+    --good: #94b97f;
+    --good-soft: rgba(148, 185, 127, 0.16);
+    --warn: #f4a52a;
+    --warn-soft: rgba(244, 165, 42, 0.16);
+    --serious: #e0a172;
+    --serious-soft: rgba(224, 161, 114, 0.16);
+    --crit: #e08b72;
+    --crit-soft: #3a1c15;
+
+    --grid: rgba(237, 243, 234, 0.07);
+    --grid-2: rgba(237, 243, 234, 0.14);
+    --axis: #8aa79d;
+
+    --duo-dark: #041514;
+    --duo-light: #6fb6ab;
+    --art-bg: #0a2320;
+    --art-chip: rgba(237, 243, 234, 0.14);
+    --art-chip-fg: #edf3ea;
+
+    --hero: #0f3b34;
+    --hero-2: #06211e;
+    --hero-ink: #edf3ea;
+    --hero-sub: #cfe0bc;
+    --hero-line: rgba(237, 243, 234, 0.16);
+    --hero-veil: rgba(237, 243, 234, 0.07);
 
     --sh-1: 0 1px 2px rgba(0, 0, 0, 0.4);
-    --sh-2: 0 2px 6px rgba(0, 0, 0, 0.5), 0 16px 40px -12px rgba(0, 0, 0, 0.6);
+    --sh-2: 0 6px 16px rgba(0, 0, 0, 0.45);
+    --sh-3: 0 14px 32px rgba(0, 0, 0, 0.55);
   }
 }
 
 :root[data-theme='dark'] {
   color-scheme: dark;
 
-  --page: #101010;
-  --card: #1a1a19;
-  --raised: #211f1d;
-  --sunken: #0b0b0a;
+  --page: #061f1c;
+  --card: #0b2c28;
+  --raised: #103b34;
+  --sunken: #041514;
 
-  --ink: #f2efe9;
-  --ink-2: #a6a199;
-  --ink-3: #6d6860;
-  --ink-inv: #151413;
+  --ink: #edf3ea;
+  --ink-2: #bdd3c9;
+  --ink-3: #8aa79d;
+  --ink-4: #638077;
+  --ink-inv: #061f1c;
 
-  --line: rgba(255, 252, 245, 0.1);
-  --line-2: rgba(255, 252, 245, 0.18);
-  --hair: rgba(255, 252, 245, 0.055);
+  --line: #16443c;
+  --line-2: #22574d;
+  --hair: rgba(237, 243, 234, 0.07);
 
-  --accent: #5b9be6;
-  --accent-ink: #0b1420;
-  --accent-soft: rgba(91, 155, 230, 0.16);
-  --accent-line: rgba(91, 155, 230, 0.4);
-  --accent-hover: #7bb0ec;
+  --brand: #6fb6ab;
+  --brand-fill: #15786b;
+  --brand-ink: #cfe0bc;
+  --brand-soft: #103b34;
 
-  --s-weight: #6aa4ec;
-  --s-energy: #f4885c;
-  --s-activity: #38c996;
-  --s-sleep: #f0b93f;
-  --s-weight-soft: rgba(106, 164, 236, 0.18);
-  --s-energy-soft: rgba(244, 136, 92, 0.18);
-  --s-activity-soft: rgba(56, 201, 150, 0.16);
-  --s-sleep-soft: rgba(240, 185, 63, 0.16);
+  --accent: #f4a52a;
+  --accent-press: #fbba4d;
+  --accent-soft: #123028;
+  --on-accent: #08332f;
+  --accent-line: rgba(244, 165, 42, 0.5);
 
-  --good: #3ecb52;
-  --good-soft: rgba(62, 203, 82, 0.16);
-  --warn: #f0b93f;
-  --warn-soft: rgba(240, 185, 63, 0.15);
-  --serious: #f19b78;
-  --serious-soft: rgba(241, 155, 120, 0.16);
-  --crit: #ef6a6a;
-  --crit-soft: rgba(239, 106, 106, 0.15);
+  --pos: #94b97f;
+  --neg: #e08b72;
+  --neg-soft: #3a1c15;
 
-  --grid: rgba(255, 252, 245, 0.07);
-  --grid-2: rgba(255, 252, 245, 0.14);
-  --axis: #6d6860;
+  --s-weight: #cfe0bc;
+  --s-energy: #f4a52a;
+  --s-activity: #6fb6ab;
+  --s-sleep: #7fa6c6;
+  --s-weight-soft: rgba(207, 224, 188, 0.18);
+  --s-energy-soft: rgba(244, 165, 42, 0.18);
+  --s-activity-soft: rgba(111, 182, 171, 0.18);
+  --s-sleep-soft: rgba(127, 166, 198, 0.18);
+
+  --good: #94b97f;
+  --good-soft: rgba(148, 185, 127, 0.16);
+  --warn: #f4a52a;
+  --warn-soft: rgba(244, 165, 42, 0.16);
+  --serious: #e0a172;
+  --serious-soft: rgba(224, 161, 114, 0.16);
+  --crit: #e08b72;
+  --crit-soft: #3a1c15;
+
+  --grid: rgba(237, 243, 234, 0.07);
+  --grid-2: rgba(237, 243, 234, 0.14);
+  --axis: #8aa79d;
+
+  --duo-dark: #041514;
+  --duo-light: #6fb6ab;
+  --art-bg: #0a2320;
+  --art-chip: rgba(237, 243, 234, 0.14);
+  --art-chip-fg: #edf3ea;
+
+  --hero: #0f3b34;
+  --hero-2: #06211e;
+  --hero-ink: #edf3ea;
+  --hero-sub: #cfe0bc;
+  --hero-line: rgba(237, 243, 234, 0.16);
+  --hero-veil: rgba(237, 243, 234, 0.07);
 
   --sh-1: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --sh-2: 0 2px 6px rgba(0, 0, 0, 0.5), 0 16px 40px -12px rgba(0, 0, 0, 0.6);
+  --sh-2: 0 6px 16px rgba(0, 0, 0, 0.45);
+  --sh-3: 0 14px 32px rgba(0, 0, 0, 0.55);
 }
 
 /* --- base ----------------------------------------------------------------- */
 
 * {
   box-sizing: border-box;
+  /* No grey flash under a set chip that gets hit with a chalky thumb. */
+  -webkit-tap-highlight-color: transparent;
 }
 
 html {
@@ -211,9 +308,9 @@ body {
   margin: 0;
   background: var(--page);
   color: var(--ink);
-  font-family: var(--font);
+  font-family: var(--font-text);
   font-size: 15px;
-  line-height: 1.5;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -225,6 +322,31 @@ h4,
 p,
 figure {
   margin: 0;
+}
+
+/* Headings carry the display face; the tight tracking is what keeps Baloo's
+   round forms from reading as a children's book at 26px and up. */
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.12;
+  text-wrap: balance;
+}
+
+/* Prose sets ragged rather than orphaned. */
+p {
+  text-wrap: pretty;
+}
+
+/* Figures are tabular everywhere rather than per-component: a weight, a rep
+   count and a macro total all sit in columns somewhere in this app, and a
+   column that reflows as its digits change is the thing that makes a log hard
+   to read at arm's length. Inherited from the root so nothing has to opt in. */
+body {
+  font-variant-numeric: tabular-nums;
 }
 
 a {
@@ -253,7 +375,10 @@ a {
 
 .app {
   display: grid;
-  grid-template-columns: 248px 1fr;
+  /* An icon rail, not a nav drawer. Five sections with a word under each read
+     fine at 96px, and the width it gives back goes to the content column —
+     which is the only part of this app anybody is here to read. */
+  grid-template-columns: 96px 1fr;
   min-height: 100dvh;
   background: var(--page);
   color: var(--ink);
@@ -262,8 +387,9 @@ a {
 .sidebar {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 20px 14px;
+  align-items: center;
+  gap: 4px;
+  padding: 20px 0;
   border-right: 1px solid var(--line);
   background: var(--card);
   position: sticky;
@@ -276,15 +402,17 @@ a {
   display: flex;
   align-items: center;
   gap: 11px;
-  padding: 6px 8px 18px;
+  padding: 0 0 14px;
 }
 
+/* The mark is the one round green plate in the chrome, with the heart struck
+   in saffron: the product's two colours in a single 40px badge. */
 .brand-mark {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  background: var(--accent);
-  color: var(--accent-ink);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-pill);
+  background: var(--hero);
+  color: var(--accent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -292,8 +420,15 @@ a {
 }
 
 .brand-mark .ic {
-  width: 19px;
-  height: 19px;
+  width: 20px;
+  height: 20px;
+  stroke-width: 2;
+}
+
+/* On the rail the wordmark is redundant — the badge is the wordmark. It comes
+   back on the auth screens, which have no rail to carry it. */
+.sidebar .brand-text {
+  display: none;
 }
 
 .brand-text {
@@ -320,26 +455,30 @@ a {
 
 .navitem {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 10px 11px;
-  border-radius: 10px;
-  color: var(--ink-2);
+  justify-content: center;
+  gap: 5px;
+  width: 76px;
+  min-height: 56px;
+  padding: 6px 4px;
+  border-radius: var(--r-md);
+  color: var(--ink-3);
   font-family: inherit;
-  font-weight: 600;
-  font-size: 14px;
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.01em;
   cursor: pointer;
   text-decoration: none;
   position: relative;
   background: none;
   border: 0;
-  text-align: left;
-  width: 100%;
+  text-align: center;
 }
 
 .navitem .ic {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
 }
 
 .navitem:hover {
@@ -348,19 +487,9 @@ a {
 }
 
 .navitem[aria-current='page'] {
-  background: var(--accent-soft);
-  color: var(--accent);
-}
-
-.navitem[aria-current='page']::before {
-  content: '';
-  position: absolute;
-  left: -14px;
-  top: 9px;
-  bottom: 9px;
-  width: 3px;
-  border-radius: 0 3px 3px 0;
-  background: var(--accent);
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-weight: 600;
 }
 
 .navitem:focus-visible {
@@ -395,22 +524,50 @@ a {
   align-items: center;
   justify-content: center;
   /* Sized from the box so one rule covers the 24px rail and the 36px card. */
-  font-size: 0.42em;
-  font-weight: 700;
+  font-size: 0.4em;
+  font-family: var(--font-num);
+  font-weight: 600;
   letter-spacing: 0.02em;
-  color: var(--ink-2);
-  background: var(--accent-soft);
+  color: var(--accent);
+  background: var(--hero);
   user-select: none;
+}
+
+/* Theme swap. It groups with the account button at the foot of the rail —
+   both are "about this session" rather than "about your log", and pushing the
+   pair down is what keeps the five sections reading as one list. */
+.themetoggle {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.themetoggle:hover {
+  border-color: var(--line-2);
+  color: var(--ink);
+}
+
+.themetoggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* The rail's account button. Sits directly above the sync pill, and pushing
    it down is what keeps both anchored to the bottom of the sidebar. */
 .accountpill {
-  margin-top: auto;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  padding: 7px 10px;
+  padding: 7px;
   border: 0;
   border-radius: 999px;
   background: transparent;
@@ -432,6 +589,17 @@ a {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* No room for a name beside a 28px avatar, and the avatar already answers
+   "whose log is this". The button keeps its aria-label either way. */
+.sidebar .account-name,
+.sidebar .sync-text {
+  display: none;
+}
+
+.sidebar .syncpill {
+  padding: 9px;
 }
 
 /* The identity block at the head of the Settings profile card. */
@@ -479,32 +647,59 @@ a {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  padding: 22px 30px 40px;
+  /* One measure for every section. Past ~860px a table of five readings stops
+     being a table and becomes a search, so the column stops there and the rest
+     of the window stays margin. */
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 18px 20px 110px;
 }
 
-/* Page header — the design's topbar/greet/date treatment. */
+/* Page header — overline over title, actions on the right.
+   The subtitle is written after the heading in every page's markup, because
+   that is the order it should be read in by anything that ignores CSS. Here it
+   is lifted above as a mono overline, which is what gives each section a label
+   without spending a second line of display type on it. */
 .page-head {
+  position: sticky;
+  top: 0;
+  z-index: 5;
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
   flex-wrap: wrap;
-  padding: 0 0 18px;
+  margin: -18px -20px 14px;
+  padding: 14px 20px 12px;
+  background: var(--page);
+  border-bottom: 1px solid var(--line);
+}
+
+.page-head > div:first-child {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .page-title {
-  font-family: var(--serif);
-  font-weight: 500;
-  font-size: 30px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 28px;
   letter-spacing: -0.01em;
-  line-height: 1.05;
+  line-height: 1.14;
   color: var(--ink);
 }
 
 .page-sub {
-  font-size: 13px;
+  order: -1;
+  margin: 0 0 1px;
+  font-family: var(--font-num);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: var(--ink-3);
-  margin-top: 3px;
 }
 
 /* mobile tab bar */
@@ -513,7 +708,8 @@ a {
   align-items: stretch;
   justify-content: space-around;
   padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
-  background: var(--card);
+  background: color-mix(in srgb, var(--card) 92%, transparent);
+  backdrop-filter: blur(10px);
   border-top: 1px solid var(--line);
   position: fixed;
   left: 0;
@@ -546,7 +742,192 @@ a {
 }
 
 .tabitem[aria-current='page'] {
-  color: var(--accent);
+  color: var(--brand);
+}
+
+/* --- phone quick log ------------------------------------------------------ */
+
+/* Phone only: on a wide screen every section is one click away on the rail and
+   the pages have room for their own forms. */
+.fab {
+  display: none;
+  position: fixed;
+  right: 16px;
+  bottom: calc(84px + env(safe-area-inset-bottom));
+  z-index: 29;
+  width: 58px;
+  height: 58px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 20px;
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: var(--sh-3);
+  cursor: pointer;
+}
+
+.fab .ic {
+  width: 26px;
+  height: 26px;
+  stroke-width: 2.2;
+}
+
+.fab:active {
+  background: var(--accent-press);
+}
+
+.fab:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+/* The dialog fills the viewport so a press anywhere outside the sheet lands on
+   it; the sheet itself is the child pinned to the bottom edge. */
+.sheet {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+}
+
+.sheet[open] {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.sheet::backdrop {
+  background: color-mix(in srgb, var(--sunken) 76%, transparent);
+}
+
+.sheet-body {
+  width: min(100%, 520px);
+  max-height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 18px calc(18px + env(safe-area-inset-bottom));
+  border: 1px solid var(--line-2);
+  border-bottom: 0;
+  border-radius: 26px 26px 0 0;
+  background: var(--card);
+  animation: sheet-up 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+.sheet-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sheet-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 1.1;
+}
+
+.sheet-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.sheet-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-height: 72px;
+  padding: 14px;
+  border: 0;
+  border-radius: var(--r-lg);
+  background: var(--sunken);
+  color: var(--ink);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sheet-tile strong,
+.sheet-row-text strong {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.sheet-tile span,
+.sheet-row-text span {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.sheet-tile:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.sheet-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px 10px 14px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-lg);
+}
+
+.sheet-row-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.sheet-row .btn {
+  min-width: 68px;
+  min-height: 46px;
+  font-family: var(--font-num);
+}
+
+.sheet-train {
+  min-height: 54px;
+  font-size: 15px;
+}
+
+/* --- settings: jump between cards ----------------------------------------- */
+
+/* One row that scrolls sideways on a phone rather than wrapping to three. */
+.jumpnav {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.jumpnav .btn {
+  flex: none;
+  min-height: 44px;
+}
+
+/* The page header is sticky, so a card scrolled to the very top of the window
+   would land underneath it. */
+.card[id] {
+  scroll-margin-top: 96px;
 }
 
 /* --- card ----------------------------------------------------------------- */
@@ -590,6 +971,444 @@ a {
   border-top: 1px solid var(--hair);
   font-size: 12px;
   color: var(--ink-3);
+}
+
+/* --- the week strip ------------------------------------------------------- */
+
+/* Seven days ending today. Not a control — there is no per-day view to open —
+   so it is a list, and its job is to show the shape of the week at a glance:
+   where the training days fell and where the gaps are. */
+.weekstrip {
+  display: flex;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.weekday {
+  flex: 1;
+  min-width: 0;
+  min-height: 68px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--card);
+}
+
+.weekday.is-today {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.weekday-name {
+  font-family: var(--font-num);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-3);
+}
+
+.weekday.is-today .weekday-name {
+  color: var(--accent-press);
+}
+
+.weekday-num {
+  font-family: var(--font-num);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* Hollow for a day with nothing in it, filled for a day that was logged, and
+   the brand colour for a day that was trained. */
+.weekday-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: var(--r-pill);
+  background: var(--line-2);
+}
+
+.weekday-dot.logged {
+  background: var(--ink-3);
+}
+
+.weekday-dot.trained {
+  background: var(--brand);
+}
+
+/* --- today: the training plate -------------------------------------------- */
+
+/* Today opens on the gym, not on a number. The plate is the same dark green
+   surface as the Trainer's day plate, so pressing its button feels like
+   walking into the room it was describing. */
+.nextup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 20px;
+  padding: 22px;
+  border-radius: var(--r-lg);
+  background: linear-gradient(155deg, var(--hero), var(--hero-2));
+  color: var(--hero-ink);
+  box-shadow: var(--sh-1);
+}
+
+.nextup-text {
+  min-width: 0;
+}
+
+.nextup-over {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-family: var(--font-num);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--hero-sub);
+}
+
+.nextup-over .ic {
+  width: 14px;
+  height: 14px;
+}
+
+.nextup-title {
+  margin: 8px 0 4px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+.nextup-sub {
+  margin: 0;
+  font-size: 13px;
+  color: var(--hero-sub);
+}
+
+.nextup .btn {
+  min-height: 48px;
+  padding-inline: 24px;
+  font-size: 15px;
+}
+
+/* --- today: the day so far ------------------------------------------------ */
+
+/* One row per thing the day is measured by. Name, reading, meter, and a single
+   button — the same four columns every time, so the eye learns the list once
+   and after that only reads the numbers. */
+.ledger {
+  padding: 4px 18px;
+}
+
+.ledger-row {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 168px) minmax(56px, 1fr) 44px;
+  align-items: center;
+  gap: 6px 16px;
+  padding: 11px 0;
+  border-top: 1px solid var(--line);
+}
+
+.ledger-row:first-child {
+  border-top: 0;
+}
+
+.ledger-name {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.ledger-val {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.ledger-val small {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ink-3);
+}
+
+.ledger-note {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.ledger-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line-2);
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.ledger-add .ic {
+  width: 18px;
+  height: 18px;
+}
+
+.ledger-add:hover {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+}
+
+.ledger-add:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Too narrow for four columns: the meter drops under the name and reading,
+   and the button spans both lines so it stays a full-size target. */
+@media (max-width: 560px) {
+  .ledger-row {
+    grid-template-columns: minmax(0, 1fr) auto 44px;
+  }
+
+  .ledger-row > .meter-track,
+  .ledger-row > .ledger-note {
+    grid-column: 1 / 3;
+    grid-row: 2;
+  }
+
+  .ledger-add {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+  }
+
+  .nextup .btn {
+    width: 100%;
+  }
+}
+
+/* --- food: what is left, and the day by meal ------------------------------ */
+
+.budget {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px 36px;
+  padding: 22px;
+}
+
+.budget-main {
+  flex: 999 1 300px;
+  min-width: 0;
+}
+
+.budget-figure,
+.bodyhero-figure {
+  margin: 0;
+  font-family: var(--font-num);
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.budget-figure strong,
+.bodyhero-figure strong {
+  font-size: 56px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+/* Segments sit edge to edge with a hairline of track between them, so two
+   neighbours of similar weight still read as two. */
+.budget-bar {
+  display: flex;
+  gap: 2px;
+  height: 14px;
+  margin-top: 16px;
+  border-radius: 999px;
+  background: var(--sunken);
+  overflow: hidden;
+}
+
+.budget-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.budget-legend li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.budget-legend .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.budget-macros {
+  flex: 1 1 220px;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+.budget-macros > div {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+
+.budget-macros > div:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.budget-macros dt {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.budget-macros dd {
+  margin: 0;
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.budget-macros small {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ink-3);
+}
+
+.budget-macros .meter-track {
+  grid-column: 1 / -1;
+}
+
+.meals {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.meal {
+  padding: 4px 8px 4px 18px;
+}
+
+.meal-hd {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+}
+
+.meal-name {
+  flex: 1;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.meal-total {
+  font-family: var(--font-num);
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.meal-items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.meal-items li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+}
+
+.meal-item-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.meal-item-macros {
+  font-family: var(--font-num);
+  font-size: 12px;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.meal-item-kcal {
+  min-width: 48px;
+  text-align: right;
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+@media (max-width: 560px) {
+  .budget-figure strong,
+  .bodyhero-figure strong {
+    font-size: 46px;
+  }
+
+  .meal-item-macros {
+    display: none;
+  }
+}
+
+/* --- body: the reading on its own trend line ------------------------------ */
+
+.bodyhero {
+  padding: 22px;
+}
+
+.bodyhero-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px 20px;
+  margin-bottom: 14px;
+}
+
+.bodyhero-note {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  text-align: right;
+}
+
+.bodyhero-note strong {
+  color: var(--ink);
 }
 
 /* --- stat tiles ----------------------------------------------------------- */
@@ -901,39 +1720,6 @@ a {
   cursor: not-allowed;
 }
 
-/* quick-add pills on the dashboard header */
-.quickadd {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 11px 16px;
-  border-radius: var(--r-pill);
-  background: var(--card);
-  border: 1px solid var(--line-2);
-  font-family: inherit;
-  font-weight: 600;
-  font-size: 13.5px;
-  color: var(--ink);
-  cursor: pointer;
-  box-shadow: var(--sh-1);
-  white-space: nowrap;
-}
-
-.quickadd:hover {
-  border-color: var(--accent-line);
-  color: var(--accent);
-}
-
-.quickadd:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-.quickadd .plus {
-  color: var(--accent);
-  font-weight: 700;
-}
-
 /* --- forms ---------------------------------------------------------------- */
 
 .field {
@@ -1078,57 +1864,107 @@ input[type='radio'] {
   outline-offset: 2px;
 }
 
-/* 1–5 face rating */
+/* The Programme / Mobility / History switch under the Train slot. Same control
+   as the segmented buttons, built from links because each view is an address. */
+.trainswitch {
+  align-self: flex-start;
+  margin-bottom: 14px;
+}
+
+.trainswitch a {
+  color: var(--ink-2);
+  font-weight: 600;
+  font-size: 13px;
+  padding: 12px 15px;
+  border-radius: 6px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.trainswitch a[aria-current='page'] {
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: var(--sh-1);
+}
+
+.trainswitch a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* 1–5 rating: a number over a word, five across */
 .rating {
   display: flex;
-  gap: 8px;
+  gap: 6px;
 }
 
 .rating button {
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 56px;
+  border-radius: var(--r-md);
   border: 1px solid var(--line-2);
   background: var(--raised);
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 2px;
   cursor: pointer;
-  color: var(--ink-3);
-  font-size: 24px;
-  line-height: 1;
+  color: var(--ink-2);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
   transition: 0.12s;
-  padding: 0;
+  padding: 4px 2px;
+}
+
+.rating-n {
+  font-family: var(--font-num);
+  font-size: 17px;
+  font-weight: 600;
 }
 
 .rating button:hover {
   border-color: var(--accent-line);
 }
 
-.rating button[aria-pressed='true'] {
-  border-color: transparent;
-  color: #fff;
-}
-
-.rating button:nth-child(1)[aria-pressed='true'] {
-  background: var(--crit);
-}
-.rating button:nth-child(2)[aria-pressed='true'] {
-  background: var(--serious);
-}
-.rating button:nth-child(3)[aria-pressed='true'] {
-  background: var(--warn);
-}
-.rating button:nth-child(4)[aria-pressed='true'] {
-  background: var(--s-activity);
-}
-.rating button:nth-child(5)[aria-pressed='true'] {
-  background: var(--good);
-}
-
 .rating button:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+/* One selected colour for all five. The old scale ran red to green, which
+   put white text on saffron in the middle and told a colour-blind reader
+   nothing the position had not already said. */
+.rating button[aria-pressed='true'] {
+  border-color: transparent;
+  background: var(--brand-fill);
+  color: var(--hero-ink);
+  font-weight: 700;
+}
+
+/* A number field with a button either side of it. */
+.stepper {
+  display: flex;
+  gap: 6px;
+}
+
+.stepper input {
+  flex: 1 1 0;
+  min-width: 0;
+  text-align: center;
+  font-family: var(--font-num);
+  font-weight: 600;
+}
+
+.stepper .btn {
+  flex: none;
+  width: 46px;
+  padding: 0;
+  font-size: 20px;
+  line-height: 1;
 }
 
 /* stepper (water) */
@@ -1500,9 +2336,9 @@ tbody tr:hover {
 }
 
 .auth-title {
-  font-family: var(--serif);
-  font-size: 28px;
-  font-weight: 500;
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 700;
   letter-spacing: -0.015em;
   line-height: 1.1;
   color: var(--ink);
@@ -2118,6 +2954,52 @@ tbody tr:hover {
   margin: 0 6px;
 }
 
+/* The day plate. The one full-bleed dark surface in the app, and the only
+   place the number gets to be this large — from a rack, at arm's length, "Day
+   4" is the whole question. The stripes are there to keep a flat green
+   rectangle from reading as a loading state. */
+.dayhero {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin: -20px -20px 16px;
+  padding: 20px;
+  overflow: hidden;
+  background: linear-gradient(155deg, var(--hero), var(--hero-2));
+  color: var(--hero-ink);
+}
+
+.dayhero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    122deg,
+    var(--hero-veil) 0 3px,
+    transparent 3px 11px
+  );
+}
+
+.dayhero-n {
+  position: relative;
+  font-family: var(--font-display);
+  font-size: 46px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.dayhero-focus {
+  position: relative;
+  font-family: var(--font-num);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--hero-sub);
+}
+
 .daybar {
   display: flex;
   flex-direction: column;
@@ -2166,6 +3048,30 @@ tbody tr:hover {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
   gap: 14px;
+}
+
+/* One exercise at a time: the card gets the column to itself. */
+.ex-grid.is-one {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Back and Next under the one card on screen. Next takes the room, because it
+   carries the name of what is coming and is the one pressed every time. */
+.pager {
+  display: flex;
+  gap: 10px;
+}
+
+.pager .btn {
+  min-height: 52px;
+}
+
+.pager .btn:last-child {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ex-card {
@@ -2258,8 +3164,8 @@ tbody tr:hover {
 
 .notfound-title {
   margin: 0;
-  font-family: var(--serif);
-  font-weight: 500;
+  font-family: var(--font-display);
+  font-weight: 700;
   font-size: clamp(21px, 4vw, 28px);
 }
 
@@ -2273,14 +3179,30 @@ tbody tr:hover {
    start and the finish of the movement. The source frames are 3:2 with the
    lifter centred and dead space either side, so the box crops rather than fits.
    Sits on --sunken in both themes; the photos carry their own background. */
+/* The demonstration photographs are public-domain plates from a dozen sources,
+   shot decades apart under a dozen different lights. Pushing all of them
+   through one treatment is what makes them read as a single deliberate set
+   rather than as a scrapbook: greyscale on the plate, then one tint laid over
+   it that keeps the photograph luminosity and takes its hue from the theme.
+   The tint swaps with the room, so the photos do too. */
 .ex-fig {
   position: relative;
   margin: 0;
   aspect-ratio: 4 / 3;
   max-height: 200px;
-  background: var(--sunken);
+  background: var(--art-bg);
   border-bottom: 1px solid var(--line);
   overflow: hidden;
+  isolation: isolate;
+}
+
+.ex-fig::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--duo-light);
+  mix-blend-mode: color;
+  pointer-events: none;
 }
 
 .ex-frame {
@@ -2291,6 +3213,10 @@ tbody tr:hover {
   height: 100%;
   object-fit: cover;
   object-position: center;
+  /* Greyscale here, hue from the overlay below. The blend deliberately
+     stays off the images themselves: two frames stacked for the rep
+     animation would blend into each other rather than with the plate. */
+  filter: grayscale(1) contrast(1.05);
 }
 
 /* Only the finish frame animates — the start frame sits under it at full
@@ -2463,11 +3389,13 @@ tbody tr:hover {
   margin: 0;
 }
 
+/* Scheme over chips, not beside them: at 52px the chip row wants the whole
+   width of the card, and the prescription is a caption for it. */
 .ex-sets {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 7px;
   margin-top: 2px;
 }
 
@@ -2480,37 +3408,71 @@ tbody tr:hover {
   white-space: nowrap;
 }
 
+/* The chips take the full width of the card and split it evenly. A set is
+   banked mid-exercise with one thumb, by someone not looking closely at the
+   phone, so the row is sized to be hit rather than to be tidy. */
 .setchips {
   display: flex;
   gap: 6px;
-  margin-left: auto;
+  width: 100%;
 }
 
 .setchip {
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
+  flex: 1;
+  min-width: 0;
+  min-height: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: 4px;
+  border-radius: 12px;
   border: 1px solid var(--line-2);
-  background: var(--raised);
-  color: var(--ink-3);
-  font-family: var(--mono);
-  font-size: 12px;
-  font-weight: 500;
+  background: var(--card);
+  color: var(--ink);
+  font-family: var(--font-num);
   cursor: pointer;
   transition: 0.1s;
-  font-variant-numeric: tabular-nums;
+}
+
+/* The prescribed reps, which is what gets read at a glance between sets. */
+.setchip-reps {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.setchip-n {
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-3);
 }
 
 .setchip:hover {
-  border-color: var(--ex-color, var(--accent));
-  color: var(--ink);
+  border-color: var(--ex-color, var(--brand));
 }
 
+/* Banked. Filled in the muscle group's own colour, so a card half done reads
+   as half done from the length of the fill rather than from the numbers. */
 .setchip[aria-pressed='true'] {
-  background: var(--ex-color, var(--accent));
+  background: var(--ex-color, var(--brand-fill));
   border-color: transparent;
-  color: #fff;
-  font-weight: 700;
+  color: var(--ink-inv);
+}
+
+.setchip[aria-pressed='true'] .setchip-n {
+  color: color-mix(in srgb, var(--ink-inv) 72%, transparent);
+}
+
+/* The cooldown holds bank one thing, not a set of them — a square rather than
+   a row that stretches across the card. */
+.setchip-hold {
+  flex: 0 0 auto;
+  width: 52px;
+  margin-left: auto;
 }
 
 .setchip:focus-visible {
@@ -2646,48 +3608,16 @@ tbody tr:hover {
 
 /* --- responsive ----------------------------------------------------------- */
 
-/* Tablet: the sidebar collapses to an icon rail. */
+/* Tablet: the same rail, one size down, so the content column keeps its
+   measure on an 834px iPad in portrait. */
 @media (max-width: 1080px) and (min-width: 861px) {
   .app {
-    grid-template-columns: 72px 1fr;
-  }
-
-  .sidebar {
-    padding: 20px 10px;
+    grid-template-columns: 84px 1fr;
   }
 
   .navitem {
-    justify-content: center;
-    padding: 11px;
-  }
-
-  .navitem .nav-text,
-  .navitem .badge {
-    display: none;
-  }
-
-  .navitem[aria-current='page']::before {
-    left: -10px;
-  }
-
-  .brand {
-    justify-content: center;
-    padding: 6px 0 18px;
-  }
-
-  .brand-text {
-    display: none;
-  }
-
-  .syncpill,
-  .accountpill {
-    justify-content: center;
-    padding: 9px;
-  }
-
-  .syncpill .sync-text,
-  .accountpill .account-name {
-    display: none;
+    width: 68px;
+    min-height: 52px;
   }
 }
 
@@ -2705,12 +3635,23 @@ tbody tr:hover {
     display: flex;
   }
 
+  .fab {
+    display: flex;
+  }
+
   .rest {
     bottom: calc(80px + env(safe-area-inset-bottom));
   }
 
   .main {
     padding: 16px 16px calc(88px + env(safe-area-inset-bottom));
+  }
+
+  /* The header bleeds to the screen edge, so its negative margin has to match
+     whatever padding .main is carrying at this width. */
+  .page-head {
+    margin: -16px -16px 12px;
+    padding: 12px 16px 10px;
   }
 
   .page-title {
@@ -2736,38 +3677,6 @@ tbody tr:hover {
 
   .mobile-only {
     display: flex;
-  }
-}
-
-/* Eight tab slots on a narrow phone: shave the label so "Settings" and
-   "Mobility" still fit on one line rather than wrapping and shunting the bar
-   taller. Two steps, because the eighth tab took the old single step past its
-   limit on the narrowest phones still in use. */
-@media (max-width: 380px) {
-  .tabitem {
-    font-size: 9px;
-    letter-spacing: 0;
-  }
-
-  .tabitem .ic {
-    width: 20px;
-    height: 20px;
-  }
-}
-
-@media (max-width: 340px) {
-  .tabbar {
-    padding-inline: 2px;
-  }
-
-  .tabitem {
-    font-size: 8px;
-    gap: 3px;
-  }
-
-  .tabitem .ic {
-    width: 18px;
-    height: 18px;
   }
 }
 

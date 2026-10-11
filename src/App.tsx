@@ -2,15 +2,14 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import type { ComponentType } from 'react';
 import { useHealth } from './state/HealthProvider';
 import ErrorBoundary from './components/ErrorBoundary';
+import QuickLog from './components/QuickLog';
 import { Avatar, firstName } from './components/ui';
 import {
   IconBody,
   IconFood,
   IconHabits,
   IconHeart,
-  IconMobility,
-  IconMovement,
-  IconSettings,
+  IconMoon,
   IconToday,
   IconTrainer,
 } from './components/icons';
@@ -41,18 +40,40 @@ const Mobility = lazy(() => import('./pages/Mobility'));
 import { applyPageMeta } from './lib/pageMeta';
 import { markReturningVisitor } from './lib/returningVisitor';
 
+/**
+ * The five places the rail and the phone bar send you.
+ *
+ * Eight slots did not fit a phone: the labels had to shrink twice to stay on
+ * one line. Five do, at a size a thumb can hit. The three sections that lost
+ * their slot are still addresses — see ROUTES — they just hang off something
+ * that kept one.
+ */
 const TABS = [
   { id: 'dashboard', label: 'Today', Icon: IconToday },
-  { id: 'trainer', label: 'Trainer', Icon: IconTrainer },
-  { id: 'mobility', label: 'Mobility', Icon: IconMobility },
-  { id: 'body', label: 'Body', Icon: IconBody },
+  { id: 'trainer', label: 'Train', Icon: IconTrainer },
   { id: 'food', label: 'Food', Icon: IconFood },
-  { id: 'movement', label: 'Move', Icon: IconMovement },
-  { id: 'daily', label: 'Habits', Icon: IconHabits },
-  { id: 'settings', label: 'Settings', Icon: IconSettings },
+  { id: 'body', label: 'Body', Icon: IconBody },
+  { id: 'daily', label: 'Check-in', Icon: IconHabits },
 ] as const satisfies readonly { id: string; label: string; Icon: ComponentType }[];
 
-type TabId = (typeof TABS)[number]['id'];
+/**
+ * Every section with an address. Mobility and the workout history are views of
+ * Train, reached from the switch at the top of each; Settings is behind the
+ * account button. Old bookmarks to any of them keep working.
+ */
+const ROUTES = [...TABS.map((t) => t.id), 'mobility', 'movement', 'settings'] as const;
+
+type TabId = (typeof ROUTES)[number];
+
+/**
+ * Where the phone's quick-log button is offered. Not on the two pages that run
+ * a timer along the bottom of the screen — it would sit on top of the rest
+ * countdown — and not on Settings, where nothing is being logged.
+ */
+const QUICK_LOG_ON: readonly TabId[] = ['dashboard', 'food', 'body', 'daily', 'movement'];
+
+/** Which bar slot lights up for a section that has no slot of its own. */
+const BAR_SLOT: Partial<Record<TabId, TabId>> = { mobility: 'trainer', movement: 'trainer' };
 
 /**
  * The section named by the hash, or null if the hash names nothing.
@@ -65,7 +86,7 @@ type TabId = (typeof TABS)[number]['id'];
 function currentTab(): TabId | null {
   const hash = window.location.hash.replace(/^#\/?/, '');
   if (!hash) return 'dashboard';
-  return TABS.find((t) => t.id === hash)?.id ?? null;
+  return ROUTES.find((id) => id === hash) ?? null;
 }
 
 /**
@@ -202,9 +223,26 @@ function NotFoundPanel({ onHome }: { onHome: () => void }) {
   );
 }
 
+/** The order the rail's theme button steps through, and what to call each. */
+const THEMES = [
+  { id: 'system', label: 'matching your device' },
+  { id: 'light', label: 'daylight' },
+  { id: 'dark', label: 'the gym theme' },
+] as const;
+
 export default function App() {
-  const { data, sync, error, storeLabel, authReady, user, emailVerified, firebaseAvailable, offlineMode } =
-    useHealth();
+  const {
+    data,
+    sync,
+    error,
+    storeLabel,
+    authReady,
+    user,
+    emailVerified,
+    firebaseAvailable,
+    offlineMode,
+    updateSettings,
+  } = useHealth();
   const [tab, setTab] = useState<TabId | null>(currentTab);
 
   useEffect(() => {
@@ -275,6 +313,14 @@ export default function App() {
   // the pill reads as a broken control rather than an account.
   const accountName = data.settings.name.trim() || user?.email || 'You';
 
+  // Daylight to gym theme without a trip to Settings — the swap is the one
+  // preference that gets changed mid-session, because the room changes. The
+  // three-way picker in Settings still writes the same field.
+  const themeIdx = THEMES.findIndex((t) => t.id === data.settings.theme);
+  const nextTheme = THEMES[(themeIdx + 1) % THEMES.length];
+
+  const barTab = tab ? (BAR_SLOT[tab] ?? tab) : null;
+
   const syncDot =
     sync === 'error' ? 'var(--crit)' : sync === 'ready' ? 'var(--good)' : 'var(--warn)';
   const syncText = sync === 'error' ? 'Save failed' : sync === 'saving' ? 'Saving…' : storeLabel;
@@ -298,16 +344,26 @@ export default function App() {
             type="button"
             className="navitem"
             // The label is hidden by CSS on a narrow rail and on a phone, which
-            // left eight buttons with no accessible name at all — the icon is
+            // left the buttons with no accessible name at all — the icon is
             // aria-hidden, so there was nothing else to read.
             aria-label={label}
-            aria-current={tab === id ? 'page' : undefined}
+            aria-current={barTab === id ? 'page' : undefined}
             onClick={() => go(id)}
           >
             <Icon />
             <span className="nav-text">{label}</span>
           </button>
         ))}
+
+        <button
+          type="button"
+          className="themetoggle"
+          onClick={() => updateSettings({ theme: nextTheme.id })}
+          aria-label={`Theme: switch to ${nextTheme.label}`}
+          title={`Switch to ${nextTheme.label}`}
+        >
+          <IconMoon />
+        </button>
 
         {/* Which account is open. On a shared laptop the sync dot says the
             data is saving; it does not say whose. */}
@@ -317,7 +373,7 @@ export default function App() {
           onClick={() => go('settings')}
           aria-label={`Signed in as ${accountName}. Open settings`}
         >
-          <Avatar name={accountName} url={data.settings.avatarUrl} />
+          <Avatar name={accountName} url={data.settings.avatarUrl} size={30} />
           <span className="account-name">{firstName(accountName)}</span>
         </button>
 
@@ -363,15 +419,17 @@ export default function App() {
         </ErrorBoundary>
       </main>
 
-      {/* Phone navigation. The design mocks a five-slot bar, but every section
-          has to stay reachable on a phone, so all seven ride the bar here. */}
+      {tab && QUICK_LOG_ON.includes(tab) && sync !== 'loading' && <QuickLog onNavigate={go} />}
+
+      {/* Phone navigation: the same five slots as the rail. Settings has no
+          slot here — on a phone it is behind the avatar on Today. */}
       <nav className="tabbar" aria-label="Sections">
         {TABS.map(({ id, label, Icon }) => (
           <button
             key={id}
             type="button"
             className="tabitem"
-            aria-current={tab === id ? 'page' : undefined}
+            aria-current={barTab === id ? 'page' : undefined}
             onClick={() => go(id)}
           >
             <Icon />

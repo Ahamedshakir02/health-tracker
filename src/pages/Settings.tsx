@@ -16,6 +16,15 @@ import {
   type UnitSystem,
 } from '../types';
 
+const SECTIONS = [
+  ['set-profile', 'Profile'],
+  ['set-gym', 'In the gym'],
+  ['set-targets', 'Daily targets'],
+  ['set-habits', 'Habits'],
+  ['set-account', 'Account'],
+  ['set-data', 'Your data'],
+] as const;
+
 export default function SettingsPage() {
   const {
     data,
@@ -127,8 +136,24 @@ export default function SettingsPage() {
         </div>
       </header>
 
+      {/* Six cards is a long page to scroll for the one switch you came for.
+          These are buttons, not links: the address hash is the app's router,
+          so an in-page anchor would read as a section that does not exist. */}
+      <nav className="jumpnav" aria-label="Settings sections">
+        {SECTIONS.map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            className="btn btn-sm"
+            onClick={() => document.getElementById(id)?.scrollIntoView({ block: 'start' })}
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
+
       <div className="stack">
-        <Card title="Profile">
+        <Card id="set-profile" title="Profile">
           {/* Which account this is. The name below is the app's own copy and is
               yours to change; this is the identity you signed in with, and it
               is the thing you need when two accounts exist on one machine. */}
@@ -236,7 +261,7 @@ export default function SettingsPage() {
           </div>
         </Card>
 
-        <Card title="In the gym" note="How the Trainer behaves while you are training.">
+        <Card id="set-gym" title="In the gym" note="How the Trainer behaves while you are training.">
           <div className="row" style={{ gap: 24 }}>
             <div className="field">
               <span className="label">Where you are training</span>
@@ -323,7 +348,7 @@ export default function SettingsPage() {
           </div>
         </Card>
 
-        <Card title="Daily targets" note="These drive every progress meter and target line.">
+        <Card id="set-targets" title="Daily targets" note="These drive every progress meter and target line.">
           <div className="form-grid">
             <Field label={`Goal weight (${u.weight})`}>
               <input
@@ -405,7 +430,7 @@ export default function SettingsPage() {
           </div>
         </Card>
 
-        <Card title="Habits" note="Shown as chips on the daily check-in.">
+        <Card id="set-habits" title="Habits" note="Shown as chips on the daily check-in.">
           <div className="stack">
             <div className="table-wrap">
               <table>
@@ -483,6 +508,7 @@ export default function SettingsPage() {
         </Card>
 
         <Card
+          id="set-account"
           title="Account"
           note={
             firebaseAvailable
@@ -571,6 +597,7 @@ export default function SettingsPage() {
         <HealthLink />
 
         <Card
+          id="set-data"
           title="Your data"
           note={storeKind === 'firebase' ? 'Syncing to Firestore' : 'Stored locally as JSON'}
         >

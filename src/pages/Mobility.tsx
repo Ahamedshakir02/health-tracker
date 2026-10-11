@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Card, Empty } from '../components/ui';
+import { Card, Empty, TrainSwitch } from '../components/ui';
 import ExerciseAnim from '../components/ExerciseAnim';
 import { IconCheck, IconMobility } from '../components/icons';
 import { ROUTINES, STRETCHES, routineStretches, type MobilityArea, type MobilityRoutine, type Stretch } from '../data/mobility';
@@ -155,6 +155,8 @@ export default function Mobility() {
           </div>
         )}
       </header>
+
+      <TrainSwitch current="mobility" />
 
       <div className="stack">
         {routine && current ? (

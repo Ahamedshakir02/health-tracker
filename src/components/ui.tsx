@@ -19,6 +19,7 @@ export function Card({
   footer,
   children,
   className = '',
+  id,
 }: {
   title?: string;
   note?: string;
@@ -26,9 +27,11 @@ export function Card({
   footer?: ReactNode;
   children: ReactNode;
   className?: string;
+  /** For a page that jumps between its own cards. */
+  id?: string;
 }) {
   return (
-    <section className={`card ${className}`}>
+    <section id={id} className={`card ${className}`}>
       {(title || action) && (
         <header className="card-hd">
           <div>
@@ -213,30 +216,64 @@ export function Segmented<T extends string | number>({
   );
 }
 
+const TRAIN_VIEWS = [
+  { id: 'trainer', label: 'Programme' },
+  { id: 'mobility', label: 'Mobility' },
+  { id: 'movement', label: 'History' },
+] as const;
+
+/**
+ * The three views that share the Train slot in the bar.
+ *
+ * Links rather than buttons: each view is its own address, so the back button
+ * steps between them and a bookmark to Mobility still lands on Mobility.
+ */
+export function TrainSwitch({ current }: { current: (typeof TRAIN_VIEWS)[number]['id'] }) {
+  return (
+    <nav className="segmented trainswitch" aria-label="Train views">
+      {TRAIN_VIEWS.map((v) => (
+        <a key={v.id} href={`#/${v.id}`} aria-current={v.id === current ? 'page' : undefined}>
+          {v.label}
+        </a>
+      ))}
+    </nav>
+  );
+}
+
+/**
+ * A one-to-five scale with a word under each number.
+ *
+ * It used to be five emoji. A face is quick to read but says nothing to a
+ * screen reader, and "which of these two smiles is the better one" is a real
+ * question at arm's length. A number and a word answer it in both cases.
+ */
 export function Rating({
   value,
   onChange,
-  faces,
+  labels,
   ariaLabel,
 }: {
   value?: number;
   onChange: (value: number) => void;
-  faces: string[];
+  labels: string[];
   ariaLabel: string;
 }) {
   return (
     <div className="rating" role="group" aria-label={ariaLabel}>
-      {faces.map((face, i) => {
+      {labels.map((label, i) => {
         const score = i + 1;
         return (
           <button
             key={score}
             type="button"
             aria-pressed={value === score}
-            aria-label={`${ariaLabel}: ${score} of ${faces.length}`}
+            aria-label={`${ariaLabel}: ${score} of ${labels.length}, ${label}`}
             onClick={() => onChange(score)}
           >
-            {face}
+            <span className="rating-n" aria-hidden="true">
+              {score}
+            </span>
+            <span aria-hidden="true">{label}</span>
           </button>
         );
       })}
