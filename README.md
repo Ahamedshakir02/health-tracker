@@ -111,16 +111,22 @@ before anything else.
 
 ## What's tracked
 
-| Screen | Contents |
+The rail (and the tab bar on a phone) has five sections. Three more screens hang off
+them rather than taking a slot of their own.
+
+| Section | Contents |
 |---|---|
-| **Today** | Headline tiles, 90-day weight trend, this week's calories, a 7-day table of everything |
-| **Trainer** | The gym schedule book — 13 schedules, 46 days, 360 exercises each with an animated demonstration, set-by-set logging, last-time and personal records, and a rest timer |
-| **Mobility** | 7 stretch routines and 61 stretches by body area, with a guided hold timer — plus an automatic cool-down at the foot of every training day |
-| **Body** | Weight, body fat %, waist / chest / hips, BMI, trend chart with a goal line |
-| **Food** | Meals by slot, calories and macros, daily targets, one-click re-log of recent foods |
-| **Move** | Workouts (type, minutes, intensity, distance, burn), daily steps, active-minute charts |
-| **Habits** | Sleep hours and quality, resting HR, water, mood, notes, habit chips with streaks |
-| **Settings** | Profile, units, theme, targets, habits, health-data import, data and account |
+| **Today** | A plate naming the next training day with one button to start it, then the day as one list — calories, protein, water, sleep, steps, habits, weight — each with its reading, target, meter and a single "+". Water logs a glass in place. Below: 90-day weight trend, this week's calories, a 7-day table of everything |
+| **Train** | Three views behind one switch: **Programme** (the schedule book — 13 schedules, 46 days, 360 exercises each with an animated demonstration, set-by-set logging, last-time and personal records, and a rest timer), **Mobility** (7 stretch routines and 61 stretches by body area, with a guided hold timer, plus an automatic cool-down after every training day) and **History** (workouts by type, minutes, intensity, distance and burn, daily steps, active-minute charts) |
+| **Food** | Calories left for the day over a bar split by meal, protein against its target, then the day grouped into breakfast, lunch, dinner and snack — each with its own total and "+". One-click re-log of recent foods |
+| **Body** | The current weight on its own trend chart with the 7-day change and the distance to goal, then body fat %, BMI, resting burn, waist / chest / hips |
+| **Check-in** | Sleep hours (with quarter-hour − / + buttons) and quality, resting HR, mood, water, notes, habit chips with streaks. Mood and sleep quality are a number over a word, not a face |
+| *Settings* | Behind the account button — on the rail on a wide screen, on Today's header on a phone. Profile, units, theme, targets, habits, health-data import, data and account, with a row of buttons to jump between them |
+
+On a phone a **+** button sits above the tab bar on every page except the two that run a
+timer along the bottom edge. It opens a sheet with the things worth logging in one tap:
+a meal, a weight, sleep and mood, another workout, water by the glass or bottle, and the
+day's training.
 
 ## Trainer
 
@@ -148,6 +154,7 @@ Pick a schedule, pick a day, and work down it:
 | **Last time** | What you lifted the last time you did this movement, read by movement rather than by position, so it survives the book calling the same lift two different things. |
 | **Records** | Your best set, ranked by an estimated one-rep max (Epley), with a PR badge the moment you beat it. An estimate from a formula, and labelled as one. |
 | **Rest timer** | Starts when a set is ticked. Off-switchable, and it keeps the screen awake while you train. |
+| **One at a time** | On a phone a day opens on the first exercise with a set left and shows only that card, with Back and Next under it; Next names what is coming. "Whole day" in the day's header shows every card, and is the default on a wide screen. |
 
 ### Your programme
 
@@ -212,6 +219,7 @@ is routinely several hundred MB, which a DOM would not survive.
 ```
 src/
   components/   charts.tsx (Recharts wrappers), ui.tsx (tiles, fields, pills),
+                QuickLog.tsx (the phone's + button and sheet),
                 ErrorBoundary.tsx, HealthLink.tsx (export import UI)
   lib/          calc.ts, dates.ts, units.ts, validate.ts, store.ts,
                 firestoreStore.ts, firebase.ts, healthImport.ts, sample.ts,

@@ -38,7 +38,7 @@ A design system was produced in Claude Design and then implemented by hand:
   progress meter with four goal states (no-goal / under / on-track / over).
 - **Navigation** — the unicode glyphs (`◎ 🏋 ⚖`) were replaced with a real stroked icon
   set (`src/components/icons.tsx`). Sidebar on desktop, icon rail on tablet, bottom tab
-  bar on phone.
+  bar on phone. (Later cut from eight sections to five — see section 6.)
 - **Charts** restyled: mono axis labels, softer gridlines, dashed goal lines, themed
   tooltips.
 - **Both themes** reworked — the dark theme is designed for a dark surface, not inverted.
@@ -93,6 +93,28 @@ Useful for UI work: no sign-in round trip, no Firestore reads or writes, no risk
 data.
 
 ---
+
+### 6. Cut the app to five sections
+
+Eight sections never fit a phone tab bar — the labels had been shrunk twice to stay on
+one line. The app was redrawn in Claude Design around five, then implemented:
+
+- **Navigation** — Today, Train, Food, Body, Check-in. Mobility and the workout history
+  became views of Train behind a Programme / Mobility / History switch; Settings moved
+  behind the account button. Every old address still resolves.
+- **Today** — the three rings and six stat tiles said the same things twice. They were
+  replaced by a plate naming the next training day and one list of the day so far.
+- **Food** — leads with calories left over a bar split by meal; the meals table became
+  four groups, one per meal.
+- **Body** — the current weight and its 7-day change became the header of the trend chart.
+- **Check-in** — mood and sleep quality are a number over a word instead of five emoji,
+  in one selected colour rather than a red-to-green run; sleep steps by the quarter hour.
+- **Phone** — a + button opens a quick-log sheet, and a training day is shown one
+  exercise at a time.
+- **Settings** — a row of buttons jumps between its cards.
+
+The design canvas also drew a desktop top bar and a two-column Settings. Neither was
+built: the rail was kept because five items fit it, and Settings kept its cards.
 
 ## How it is hosted
 

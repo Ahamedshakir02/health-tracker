@@ -90,8 +90,29 @@ Three guards keep it from trapping anyone:
 ## Routing
 
 There is no router library. `App.tsx` reads `window.location.hash`, maps it to
-one of eight tab ids, and renders the matching page component. Every section is
+one of eight route ids, and renders the matching page component. Every section is
 `React.lazy`, so opening the Trainer does not download the charting library.
+
+Eight routes, five slots. `TABS` is the five sections the rail and the phone tab
+bar show — Today, Train, Food, Body, Check-in. `ROUTES` is those plus
+`mobility`, `movement` and `settings`, which are still addresses but have no
+slot of their own:
+
+- **Mobility and the workout history are views of Train.** `BAR_SLOT` maps both
+  to `trainer`, so the Train slot stays lit on them, and `TrainSwitch` (in
+  `ui.tsx`) renders the Programme / Mobility / History switch at the top of all
+  three pages. It is built from links, not buttons, so the back button steps
+  between the views.
+- **Settings is behind the account button** — on the rail on a wide screen, in
+  Today's header on a phone, where there is no rail.
+
+Do not use an in-page anchor (`href="#something"`) anywhere in the app: the hash
+is the router, so it would resolve to a section that does not exist. Settings
+jumps between its own cards with buttons and `scrollIntoView` for that reason.
+
+`QuickLog` (the phone's + button and its sheet) is rendered by `App.tsx`, not by
+any page, and only on the routes listed in `QUICK_LOG_ON` — it is left off the
+Trainer and Mobility, where it would sit on top of the rest countdown.
 
 - `#/trainer` → the Trainer section
 - no hash → Today
