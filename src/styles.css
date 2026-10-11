@@ -1013,6 +1013,189 @@ a {
   }
 }
 
+/* --- food: what is left, and the day by meal ------------------------------ */
+
+.budget {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px 36px;
+  padding: 22px;
+}
+
+.budget-main {
+  flex: 999 1 300px;
+  min-width: 0;
+}
+
+.budget-figure {
+  margin: 0;
+  font-family: var(--font-num);
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.budget-figure strong {
+  font-size: 56px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+/* Segments sit edge to edge with a hairline of track between them, so two
+   neighbours of similar weight still read as two. */
+.budget-bar {
+  display: flex;
+  gap: 2px;
+  height: 14px;
+  margin-top: 16px;
+  border-radius: 999px;
+  background: var(--sunken);
+  overflow: hidden;
+}
+
+.budget-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.budget-legend li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.budget-legend .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.budget-macros {
+  flex: 1 1 220px;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+.budget-macros > div {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+
+.budget-macros > div:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.budget-macros dt {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.budget-macros dd {
+  margin: 0;
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.budget-macros small {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ink-3);
+}
+
+.budget-macros .meter-track {
+  grid-column: 1 / -1;
+}
+
+.meals {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.meal {
+  padding: 4px 8px 4px 18px;
+}
+
+.meal-hd {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+}
+
+.meal-name {
+  flex: 1;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.meal-total {
+  font-family: var(--font-num);
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.meal-items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.meal-items li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+}
+
+.meal-item-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.meal-item-macros {
+  font-family: var(--font-num);
+  font-size: 12px;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.meal-item-kcal {
+  min-width: 48px;
+  text-align: right;
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+@media (max-width: 560px) {
+  .budget-figure strong {
+    font-size: 46px;
+  }
+
+  .meal-item-macros {
+    display: none;
+  }
+}
+
 /* --- stat tiles ----------------------------------------------------------- */
 
 .grid-stats {
