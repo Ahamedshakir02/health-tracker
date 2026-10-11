@@ -1,5 +1,5 @@
 // GENERATED from Gym_Training_Plan.docx — do not hand-edit.
-// Revolution Gym & Fitness schedule book: 13 schedules,
+// The gym schedule book: 13 schedules,
 // 46 training days, 360 exercises.
 // Exercise media is no longer keyed from here: see src/data/exerciseMedia.ts,
 // which maps exercise *name* to an animated demonstration. `img` below is the

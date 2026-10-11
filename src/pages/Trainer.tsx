@@ -54,7 +54,7 @@ import {
 } from '../types';
 
 /**
- * The Revolution Gym & Fitness schedule book, rendered as the Trainer section.
+ * The gym schedule book, rendered as the Trainer section.
  *
  * The content is the book's, unchanged — every schedule, day, section and
  * exercise in its original order. What this adds is what the paper version
@@ -455,7 +455,7 @@ export default function Trainer() {
         <div>
           <h1 className="page-title">Trainer</h1>
           <p className="page-sub">
-            Revolution Gym &amp; Fitness — {TRAINING_PLAN.length} schedules, 360 exercises
+            {TRAINING_PLAN.length} schedules, 360 exercises
           </p>
         </div>
         <div className="row">
@@ -1005,7 +1005,7 @@ export default function Trainer() {
         )}
 
         <p className="hint">
-          Transcribed from the Revolution Gym &amp; Fitness schedule book — every exercise in its
+          Transcribed from the printed schedule book — every exercise in its
           original section and order. Schedule 11 is not in the source book, so the numbering runs
           1–10, then 12, 13, 14. Weights are stored in {u.weight}; reps left blank are recorded as
           the {scheme.reps || 'prescribed'} the book prescribes. Records rank by an estimated one-rep

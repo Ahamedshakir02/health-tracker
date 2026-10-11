@@ -48,7 +48,7 @@ A design system was produced in Claude Design and then implemented by hand:
 ### 2. Rebuilt the Trainer around the gym schedule book
 
 The Trainer used to generate an adaptive week from logged data. It now presents the
-**Revolution Gym & Fitness Training Schedule Book** exactly as written.
+**gym training schedule book** exactly as written.
 
 `Gym_Training_Plan.docx` was parsed programmatically into `src/data/trainingPlan.ts`:
 

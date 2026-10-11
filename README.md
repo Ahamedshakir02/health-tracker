@@ -124,7 +124,7 @@ before anything else.
 
 ## Trainer
 
-The Trainer screen is the **Revolution Gym & Fitness Training Schedule Book**, transcribed
+The Trainer screen is a **gym training schedule book**, transcribed
 from the printed original and rendered as something you can work through in the gym.
 
 **13 schedules · 46 training days · 360 exercises · 7 muscle groups.** Every exercise keeps
