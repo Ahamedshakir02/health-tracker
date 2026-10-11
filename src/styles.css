@@ -1954,9 +1954,20 @@ input[type='radio'] {
 .stepper input {
   flex: 1 1 0;
   min-width: 0;
+  /* The buttons take 104px of the field between them. Default input padding
+     on top of that leaves no room for four characters. */
+  padding-inline: 6px;
   text-align: center;
   font-family: var(--font-num);
   font-weight: 600;
+}
+
+/* In a two-column form on a phone a stepper gets half of 300px, which shows
+   "7" for 7.75. It takes the full row there instead. */
+@media (max-width: 560px) {
+  .form-grid > :has(.stepper) {
+    grid-column: 1 / -1;
+  }
 }
 
 .stepper .btn {
@@ -2006,6 +2017,12 @@ input[type='radio'] {
 /* --- tables & list rows --------------------------------------------------- */
 
 .table-wrap {
+  /* Positioned so it is the containing block for anything absolute inside the
+     table. The habit grid puts a screen-reader-only label in every cell, and
+     .sr-only is absolutely positioned: without this those labels escape the
+     scroll box, the page becomes as wide as the table, and on a phone the tab
+     bar and the quick-log button stretch off the screen with it. */
+  position: relative;
   overflow-x: auto;
   margin: 0 -4px;
   padding: 0 4px;
