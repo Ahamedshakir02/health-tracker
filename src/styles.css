@@ -908,6 +908,28 @@ a {
   font-size: 15px;
 }
 
+/* --- settings: jump between cards ----------------------------------------- */
+
+/* One row that scrolls sideways on a phone rather than wrapping to three. */
+.jumpnav {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.jumpnav .btn {
+  flex: none;
+  min-height: 44px;
+}
+
+/* The page header is sticky, so a card scrolled to the very top of the window
+   would land underneath it. */
+.card[id] {
+  scroll-margin-top: 96px;
+}
+
 /* --- card ----------------------------------------------------------------- */
 
 .card {

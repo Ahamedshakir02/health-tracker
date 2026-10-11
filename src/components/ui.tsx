@@ -19,6 +19,7 @@ export function Card({
   footer,
   children,
   className = '',
+  id,
 }: {
   title?: string;
   note?: string;
@@ -26,9 +27,11 @@ export function Card({
   footer?: ReactNode;
   children: ReactNode;
   className?: string;
+  /** For a page that jumps between its own cards. */
+  id?: string;
 }) {
   return (
-    <section className={`card ${className}`}>
+    <section id={id} className={`card ${className}`}>
       {(title || action) && (
         <header className="card-hd">
           <div>
