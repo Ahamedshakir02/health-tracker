@@ -1411,6 +1411,15 @@ a {
   color: var(--ink);
 }
 
+/* A change that went the way the goal points, and one that did not. */
+.bodyhero-note strong.is-toward {
+  color: var(--good);
+}
+
+.bodyhero-note strong.is-away {
+  color: var(--serious);
+}
+
 /* --- stat tiles ----------------------------------------------------------- */
 
 .grid-stats {
