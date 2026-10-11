@@ -3050,6 +3050,30 @@ tbody tr:hover {
   gap: 14px;
 }
 
+/* One exercise at a time: the card gets the column to itself. */
+.ex-grid.is-one {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Back and Next under the one card on screen. Next takes the room, because it
+   carries the name of what is coming and is the one pressed every time. */
+.pager {
+  display: flex;
+  gap: 10px;
+}
+
+.pager .btn {
+  min-height: 52px;
+}
+
+.pager .btn:last-child {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .ex-card {
   position: relative;
   display: flex;

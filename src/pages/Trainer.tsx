@@ -89,6 +89,11 @@ function countExercises(day: PlanDay): number {
   return day.sections.reduce((n, s) => n + s.exercises.length, 0);
 }
 
+const DAY_VIEWS: { value: 'one' | 'all'; label: string }[] = [
+  { value: 'one', label: 'One at a time' },
+  { value: 'all', label: 'Whole day' },
+];
+
 export default function Trainer() {
   const { data, update, updateSettings } = useHealth();
   const units = data.settings.units;
@@ -155,6 +160,19 @@ export default function Trainer() {
   /** Epoch ms the current rest finishes, or null when nothing is resting. */
   const [restEnd, setRestEnd] = useState<number | null>(null);
   const [restTotal, setRestTotal] = useState(0);
+  /**
+   * One exercise on screen, or the whole day.
+   *
+   * A phone in a gym gets one: the day as a scroll of eight cards means
+   * hunting for your place with chalk on your thumb after every set. A wide
+   * screen gets the whole day, which is the better view for planning it.
+   * Either can be switched from the day's own header.
+   */
+  const [oneAtATime, setOneAtATime] = useState(
+    () => window.matchMedia('(max-width: 860px)').matches,
+  );
+  /** The exercise stepped to by hand, or null to use where the day opened. */
+  const [stepped, setStepped] = useState<number | null>(null);
 
   useEffect(() => {
     saveScratch(store);
@@ -266,6 +284,45 @@ export default function Trainer() {
   }, [day, scratch, scheme.sets]);
 
   const pct = tally.total ? Math.round((tally.done / tally.total) * 100) : 0;
+
+  /**
+   * The day as one flat run of exercises, in the order the book lists them.
+   * Names are the ones on screen, so a home edition's stand-in is what "Next"
+   * announces.
+   */
+  const order = useMemo(
+    () =>
+      day.sections.flatMap((section, si) =>
+        section.exercises.map((ex) => ({
+          key: progressKey(si, ex.n),
+          name: homeExerciseFor(prefs.equipment, section.name, ex.name)?.name ?? ex.name,
+        })),
+      ),
+    [day, prefs.equipment],
+  );
+
+  // Where a day opens when it is shown one exercise at a time: the first
+  // exercise with a set still to do. Worked out when the day is opened and
+  // then left alone — recomputing it as sets are ticked would whisk the card
+  // away on the last tick, before the weight for that set has been typed.
+  const openedAt = useMemo(() => {
+    const entries = store[key]?.entries;
+    const i = order.findIndex(
+      (o) => !normalise(entries?.[o.key], scheme.sets).done.every(Boolean),
+    );
+    return i < 0 ? Math.max(0, order.length - 1) : i;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key, view, order]);
+
+  useEffect(() => {
+    setStepped(null);
+  }, [key, view]);
+
+  const at = Math.min(stepped ?? openedAt, Math.max(0, order.length - 1));
+  const atKey = order[at]?.key;
+  const atDone = Boolean(
+    atKey && normalise(scratch?.entries[atKey], scheme.sets).done.every(Boolean),
+  );
   const inSession = Boolean(scratch && hasProgress(scratch) && !scratch.promotedAs);
   // Only while a session is genuinely under way. Holding the lock for someone
   // reading the book on the sofa would flatten their battery for nothing.
@@ -569,9 +626,22 @@ export default function Trainer() {
           title={`Day ${day.n} — ${day.focus}`}
           note={`${day.reps} reps × sets · ${tally.exercises} exercises · ${tally.total} sets`}
           action={
-            <button type="button" className="btn btn-sm" onClick={resetDay} disabled={!tally.done}>
-              Reset day
-            </button>
+            <div className="row">
+              <Segmented
+                options={DAY_VIEWS}
+                value={oneAtATime ? 'one' : 'all'}
+                onChange={(v) => setOneAtATime(v === 'one')}
+                ariaLabel="How the day is shown"
+              />
+              <button
+                type="button"
+                className="btn btn-sm"
+                onClick={resetDay}
+                disabled={!tally.done}
+              >
+                Reset day
+              </button>
+            </div>
           }
         >
           {/* The plate the design puts at the head of a day: the day's number
@@ -624,17 +694,28 @@ export default function Trainer() {
 
         {day.sections.map((section, si) => {
           const color = colorFor(section.name);
+          if (
+            oneAtATime &&
+            !section.exercises.some((ex) => progressKey(si, ex.n) === atKey)
+          ) {
+            return null;
+          }
           return (
             <section className="musc" key={`${section.name}-${si}`}>
               <header className="musc-hd">
                 <span className="musc-swatch" style={{ background: color }} aria-hidden="true" />
                 <h2 className="musc-name">{section.name}</h2>
-                <span className="musc-count">{section.exercises.length} exercises</span>
+                <span className="musc-count">
+                  {oneAtATime
+                    ? `${at + 1} of ${order.length}`
+                    : `${section.exercises.length} exercises`}
+                </span>
               </header>
 
-              <div className="ex-grid">
+              <div className={`ex-grid${oneAtATime ? ' is-one' : ''}`}>
                 {section.exercises.map((ex) => {
                   const exKey = progressKey(si, ex.n);
+                  if (oneAtATime && exKey !== atKey) return null;
                   const entry = normalise(scratch?.entries[exKey], scheme.sets);
                   const complete = entry.done.every(Boolean);
                   const hint = hints[hintKey(schedule.id, day.n, si, ex.n)];
@@ -843,7 +924,30 @@ export default function Trainer() {
           );
         })}
 
-        {cooldown.length > 0 && (
+        {oneAtATime && order.length > 1 && (
+          <nav className="pager" aria-label="Exercises">
+            <button
+              type="button"
+              className="btn"
+              onClick={() => setStepped(at - 1)}
+              disabled={at === 0}
+            >
+              Back
+            </button>
+            <button
+              type="button"
+              // Saffron only once this exercise is finished: until then the
+              // thing to press is a set, not this.
+              className={`btn${atDone ? ' btn-primary' : ''}`}
+              onClick={() => setStepped(at + 1)}
+              disabled={at >= order.length - 1}
+            >
+              {at < order.length - 1 ? `Next · ${order[at + 1]?.name}` : 'Last exercise'}
+            </button>
+          </nav>
+        )}
+
+        {cooldown.length > 0 && (!oneAtATime || tally.done === tally.total) && (
           <section className="musc cooldown">
             <header className="musc-hd">
               <span
