@@ -237,30 +237,40 @@ export function TrainSwitch({ current }: { current: (typeof TRAIN_VIEWS)[number]
   );
 }
 
+/**
+ * A one-to-five scale with a word under each number.
+ *
+ * It used to be five emoji. A face is quick to read but says nothing to a
+ * screen reader, and "which of these two smiles is the better one" is a real
+ * question at arm's length. A number and a word answer it in both cases.
+ */
 export function Rating({
   value,
   onChange,
-  faces,
+  labels,
   ariaLabel,
 }: {
   value?: number;
   onChange: (value: number) => void;
-  faces: string[];
+  labels: string[];
   ariaLabel: string;
 }) {
   return (
     <div className="rating" role="group" aria-label={ariaLabel}>
-      {faces.map((face, i) => {
+      {labels.map((label, i) => {
         const score = i + 1;
         return (
           <button
             key={score}
             type="button"
             aria-pressed={value === score}
-            aria-label={`${ariaLabel}: ${score} of ${faces.length}`}
+            aria-label={`${ariaLabel}: ${score} of ${labels.length}, ${label}`}
             onClick={() => onChange(score)}
           >
-            {face}
+            <span className="rating-n" aria-hidden="true">
+              {score}
+            </span>
+            <span aria-hidden="true">{label}</span>
           </button>
         );
       })}

@@ -9,8 +9,10 @@ import { labels, round, toDisplay } from '../lib/units';
 import type { DayLog } from '../types';
 
 const GLASS_ML = 250;
-const MOOD_FACES = ['😞', '🙁', '😐', '🙂', '😄'];
-const SLEEP_FACES = ['😵', '😪', '😐', '😌', '🤩'];
+const MOOD_LABELS = ['Rough', 'Low', 'Okay', 'Good', 'Great'];
+const SLEEP_LABELS = ['Awful', 'Poor', 'Fair', 'Good', 'Deep'];
+/** One press of the sleep stepper. Nobody knows their night to the minute. */
+const SLEEP_STEP = 0.25;
 
 export default function Daily() {
   const { data, update } = useHealth();
@@ -34,6 +36,13 @@ export default function Daily() {
 
   function toggleHabit(habitId: string) {
     patchDay({ habits: { ...log.habits, [habitId]: !log.habits[habitId] } });
+  }
+
+  /** Nudge last night's sleep; an unlogged night starts from the target. */
+  function stepSleep(direction: 1 | -1) {
+    const from = log.sleepHours ?? goals.sleepHours;
+    const next = Math.round((from + direction * SLEEP_STEP) / SLEEP_STEP) * SLEEP_STEP;
+    patchDay({ sleepHours: Math.min(24, Math.max(0, next)) });
   }
 
   function addWater(ml: number) {
@@ -87,7 +96,7 @@ export default function Daily() {
           />
           <StatTile
             label="Mood"
-            value={log.mood ? MOOD_FACES[log.mood - 1] : '—'}
+            value={log.mood ? MOOD_LABELS[log.mood - 1] : '—'}
             foot={log.mood ? `${log.mood} of 5` : 'Not recorded'}
           />
           <StatTile
@@ -108,20 +117,41 @@ export default function Daily() {
             <div className="stack">
               <div className="form-grid">
                 <Field label="Hours slept">
-                  <input
-                    type="number"
-                    step="0.25"
-                    min="0"
-                    max="24"
-                    inputMode="decimal"
-                    placeholder="7.5"
-                    value={log.sleepHours ?? ''}
-                    onChange={(e) =>
-                      patchDay({
-                        sleepHours: e.target.value === '' ? undefined : Number(e.target.value),
-                      })
-                    }
-                  />
+                  {/* Typing a number on a phone is the slow way to say "a bit
+                      less than usual". The two buttons are the fast way; the
+                      field between them still takes a typed value. */}
+                  <div className="stepper">
+                    <button
+                      type="button"
+                      className="btn"
+                      onClick={() => stepSleep(-1)}
+                      aria-label="A quarter of an hour less sleep"
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      step={SLEEP_STEP}
+                      min="0"
+                      max="24"
+                      inputMode="decimal"
+                      placeholder="7.5"
+                      value={log.sleepHours ?? ''}
+                      onChange={(e) =>
+                        patchDay({
+                          sleepHours: e.target.value === '' ? undefined : Number(e.target.value),
+                        })
+                      }
+                    />
+                    <button
+                      type="button"
+                      className="btn"
+                      onClick={() => stepSleep(1)}
+                      aria-label="A quarter of an hour more sleep"
+                    >
+                      +
+                    </button>
+                  </div>
                 </Field>
                 <Field label="Resting heart rate">
                   <input
@@ -143,7 +173,7 @@ export default function Daily() {
               <div className="field">
                 <span className="label">Sleep quality</span>
                 <Rating
-                  faces={SLEEP_FACES}
+                  labels={SLEEP_LABELS}
                   value={log.sleepQuality}
                   ariaLabel="Sleep quality"
                   onChange={(v) => patchDay({ sleepQuality: v as DayLog['sleepQuality'] })}
@@ -153,7 +183,7 @@ export default function Daily() {
               <div className="field">
                 <span className="label">Mood</span>
                 <Rating
-                  faces={MOOD_FACES}
+                  labels={MOOD_LABELS}
                   value={log.mood}
                   ariaLabel="Mood"
                   onChange={(v) => patchDay({ mood: v as DayLog['mood'] })}
