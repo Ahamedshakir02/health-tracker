@@ -17,6 +17,7 @@ import {
   workoutsInLastDays,
 } from '../lib/calc';
 import { addDays, formatLong, formatWeekday, lastNDays, parseISO, todayISO } from '../lib/dates';
+import { changeVerdict, weightDirection } from '../lib/guidance';
 import { nextDay } from '../lib/programme';
 import { labels, round, toDisplay } from '../lib/units';
 
@@ -118,6 +119,11 @@ export default function Dashboard({ onNavigate }: { onNavigate: (id: Section) =>
     ? schedule.days.find((d) => d.n === nextDay(schedule, data.sessions, programme))
     : undefined;
   const trainedToday = workoutDates.has(today);
+  // Green for a change that went the way the goal points, whichever way that
+  // is; no colour at all when there is no goal to judge it against.
+  const weekVerdict = week
+    ? changeVerdict(week.delta, weightDirection(latest?.weightKg, goals.weightKg))
+    : null;
 
   const showWeight = (kg: number) => toDisplay('weight', kg, units).toFixed(1);
   const showVolume = (ml: number) => round(toDisplay('volume', ml, units), 0);
@@ -296,7 +302,9 @@ export default function Dashboard({ onNavigate }: { onNavigate: (id: Section) =>
                   <span className="ledger-note">
                     {week ? (
                       <>
-                        <span className={`stat-delta ${week.delta > 0 ? 'up' : 'down'}`}>
+                        <span
+                          className={`stat-delta${weekVerdict === 'toward' ? ' down' : weekVerdict === 'away' ? ' up' : ''}`}
+                        >
                           {week.delta > 0 ? <IconArrowUp /> : <IconArrowDown />}
                           {showWeight(Math.abs(week.delta))} {u.weight}
                         </span>{' '}

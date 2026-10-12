@@ -14,6 +14,14 @@ import {
   uid,
   weightChange,
 } from '../lib/calc';
+import {
+  changeVerdict,
+  paceFlag,
+  waistToHeight,
+  waistToHeightBand,
+  weeklyRate,
+  weightDirection,
+} from '../lib/guidance';
 import { labels, round, toCanonical, toDisplay } from '../lib/units';
 import type { WeightEntry } from '../types';
 
@@ -67,6 +75,18 @@ export default function Body() {
       trend: trend[i]?.value ?? null,
     }));
   }, [data.weights, range]);
+
+  // Judged against the goal, not against "down is good": a loss is only
+  // progress for someone trying to lose.
+  const verdict = week
+    ? changeVerdict(week.delta, weightDirection(latest?.weightKg, goals.weightKg))
+    : null;
+  const rate = weeklyRate(data.weights);
+  const pace = paceFlag(rate, latest?.weightKg);
+
+  const latestWaist = sortByDateDesc(data.weights).find((w) => w.waistCm != null)?.waistCm;
+  const whtr = waistToHeight(latestWaist, heightCm);
+  const whtrBand = whtr ? waistToHeightBand(whtr) : null;
 
   const bmiValue = latest && heightCm ? bmi(latest.weightKg, heightCm) : null;
   const band = bmiValue ? bmiBand(bmiValue) : null;
@@ -134,7 +154,13 @@ export default function Body() {
             <p className="bodyhero-note">
               {latest ? (
                 <>
-                  <strong>{deltaLabel(week)}</strong>
+                  <strong
+                    className={
+                      verdict === 'toward' ? 'is-toward' : verdict === 'away' ? 'is-away' : undefined
+                    }
+                  >
+                    {deltaLabel(week)}
+                  </strong>
                   {week && ' in 7 days'}
                   <br />
                   {goals.weightKg
@@ -160,6 +186,26 @@ export default function Body() {
             Scale weight bounces with hydration — read the trend line, not the dots.
           </p>
         </section>
+
+        {/* Only when the readings span a fortnight and the pace is past one
+            percent of body weight a week. Said once, plainly, with the number
+            it is measured against — not a red state on every tile. */}
+        {pace && rate != null && latest && (
+          <div className="banner" role="note">
+            <span aria-hidden="true">⚠</span>
+            <span>
+              {pace === 'fast-loss' ? 'You are losing' : 'You are gaining'} about{' '}
+              <strong>
+                {showWeight(Math.abs(rate))} {u.weight} a week
+              </strong>
+              . Past roughly 1% of body weight a week — {showWeight(latest.weightKg * 0.01)}{' '}
+              {u.weight} for you —{' '}
+              {pace === 'fast-loss'
+                ? 'more of what goes is muscle and water, and it tends not to stay off. Easing the deficit usually holds the result better.'
+                : 'most of the extra is fat rather than muscle, however hard the training.'}
+            </span>
+          </div>
+        )}
 
         <div className="grid grid-stats">
           <StatTile label="Last 30 days" value={deltaLabel(month)} foot="First to latest reading" />
@@ -193,7 +239,26 @@ export default function Body() {
                 : 'Needs height, birth year and sex in Settings'
             }
           />
+          <StatTile
+            label="Waist to height"
+            value={whtr ? whtr.toFixed(2) : '—'}
+            foot={
+              whtrBand ? (
+                <Pill status={whtrBand.status}>{whtrBand.label}</Pill>
+              ) : heightCm ? (
+                'Log a waist measurement below'
+              ) : (
+                'Needs a waist reading and your height'
+              )
+            }
+          />
         </div>
+
+        <p className="hint">
+          BMI cannot tell muscle from fat, so it reads high for people who lift. Waist to height —
+          keep your waist under half your height — is the better check on where weight is carried.
+          Both are rules of thumb for adults, not a diagnosis.
+        </p>
 
         <Card title="Log a reading" note="Re-entering a date replaces that day's reading.">
           <form onSubmit={submit}>

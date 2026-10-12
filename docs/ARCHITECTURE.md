@@ -343,6 +343,7 @@ deploy indefinitely.
 | An exercise → animation mapping | `ALIAS` in `scripts/build-exercise-media.mjs`, then re-run it (`--verify` prints the table first) |
 | The stretch set or a routine | `STRETCHES` / `ROUTINES` in `scripts/build-exercise-media.mjs`, then re-run it |
 | Which stretches follow a training day | `SECTION_AREAS` in `src/lib/mobility.ts` |
+| Any health rule of thumb — calorie and protein suggestions, pace limits, waist-to-height bands | `src/lib/guidance.ts` (arithmetic on logged data stays in `calc.ts`) |
 | A home substitution | the home-edition `.docx`, then re-run `scripts/build-home-plans.mjs` |
 | What a training mode is called, or assumes you have | `EQUIPMENT_NOTES` in `src/types.ts` |
 | Who can sign in | `firestore.rules` — nowhere else |

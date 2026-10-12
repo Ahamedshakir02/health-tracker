@@ -4,7 +4,8 @@ import { Avatar, Card, Field, Pill, Segmented } from '../components/ui';
 import HealthLink from '../components/HealthLink';
 import { sampleData } from '../lib/sample';
 import { labels, round, toCanonical, toDisplay } from '../lib/units';
-import { uid } from '../lib/calc';
+import { ageFrom, bmr, latestWeight, uid } from '../lib/calc';
+import { calorieFloor, proteinRange, suggestCalories, weightDirection } from '../lib/guidance';
 import {
   DEFAULT_TRAINER_PREFS,
   EQUIPMENT_MODES,
@@ -46,6 +47,23 @@ export default function SettingsPage() {
   const units = settings.units;
   const u = labels(units);
   const fileInput = useRef<HTMLInputElement>(null);
+
+  // What the two food targets would be if they were worked out from this
+  // person rather than left on the defaults. Offered in the targets card.
+  const currentWeight = latestWeight(data.weights)?.weightKg;
+  const calories = suggestCalories({
+    bmr: bmr({
+      weightKg: currentWeight,
+      heightCm: settings.heightCm,
+      age: ageFrom(settings.birthYear),
+      sex: settings.sex,
+    }),
+    workoutsPerWeek: goals.workoutsPerWeek,
+    direction: weightDirection(currentWeight, goals.weightKg),
+    sex: settings.sex,
+  });
+  const protein = proteinRange(currentWeight);
+  const floor = calorieFloor(settings.sex);
 
   const [newHabit, setNewHabit] = useState({ name: '', emoji: '⭐' });
   const [habitError, setHabitError] = useState<string | null>(null);
@@ -349,6 +367,74 @@ export default function SettingsPage() {
         </Card>
 
         <Card id="set-targets" title="Daily targets" note="These drive every progress meter and target line.">
+          {/* The defaults are one size for everybody. These are the same two
+              targets worked out from the person, offered beside the fields
+              rather than written into them: a suggestion is only useful if it
+              can be seen next to what it would replace. */}
+          <div className="suggest">
+            <p className="label">From your numbers</p>
+            {calories ? (
+              <div className="suggest-row">
+                <p>
+                  <strong>{calories.target.toLocaleString()} kcal</strong> a day
+                  {calories.direction === 'lose'
+                    ? ' to lose about half a kilo a week'
+                    : calories.direction === 'gain'
+                      ? ' to gain slowly'
+                      : ' to hold steady'}
+                  . You burn roughly {calories.maintenance.toLocaleString()} at{' '}
+                  {goals.workoutsPerWeek} sessions a week.
+                </p>
+                <button
+                  type="button"
+                  className="btn btn-sm"
+                  onClick={() => setGoal({ calories: calories.target })}
+                  disabled={goals.calories === calories.target}
+                >
+                  {goals.calories === calories.target ? 'In use' : 'Use'}
+                </button>
+              </div>
+            ) : (
+              <p className="hint">
+                Add your height, birth year and sex above, and log a weight, to get a calorie
+                target worked out for you.
+              </p>
+            )}
+            {protein ? (
+              <div className="suggest-row">
+                <p>
+                  <strong>{protein.suggested} g</strong> of protein a day — the middle of the{' '}
+                  {protein.low}–{protein.high} g range for someone your weight who trains.
+                </p>
+                <button
+                  type="button"
+                  className="btn btn-sm"
+                  onClick={() => setGoal({ proteinG: protein.suggested })}
+                  disabled={goals.proteinG === protein.suggested}
+                >
+                  {goals.proteinG === protein.suggested ? 'In use' : 'Use'}
+                </button>
+              </div>
+            ) : (
+              <p className="hint">Log a weight to get a protein range.</p>
+            )}
+            {goals.calories > 0 && goals.calories < floor && (
+              <p className="hint suggest-warn">
+                Your calorie target is under {floor.toLocaleString()} kcal. Going that low is
+                normally done with a doctor or dietitian, not alone.
+              </p>
+            )}
+            {goals.sleepHours > 0 && goals.sleepHours < 7 && (
+              <p className="hint suggest-warn">
+                Adults are generally advised to get at least 7 hours of sleep.
+              </p>
+            )}
+            <p className="hint">
+              Estimates from general guidance for healthy adults — not medical advice, and not
+              for pregnancy, under-18s or a medical condition.
+            </p>
+          </div>
+
           <div className="form-grid">
             <Field label={`Goal weight (${u.weight})`}>
               <input

@@ -205,6 +205,14 @@ is routinely several hundred MB, which a DOM would not survive.
 
 - **Units.** Everything is stored metric (kg, cm, ml, km); imperial is a display-time
   conversion, so switching the toggle never rewrites or rounds your history.
+- **Guidance, not judgement.** The seven-day weight change is coloured by whether it went
+  the way your goal points, and left uncoloured with no goal. Body flags a pace past about
+  1% of body weight a week and shows waist-to-height beside BMI, which cannot tell muscle
+  from fat. Settings offers a calorie target (Mifflin-St Jeor resting burn × an activity
+  factor from sessions a week, −500 to lose, +300 to gain, never under 1,200 / 1,500 kcal)
+  and a protein range of 1.2–2.0 g per kg — as suggestions with a button, never written in
+  for you. All of it is general guidance for healthy adults, lives in `src/lib/guidance.ts`,
+  and is not medical advice.
 - **Weight trend.** Day-to-day scale weight is mostly water. The raw readings are drawn
   in neutral ink and the 7-day centred rolling mean carries the series colour — the
   trend line is the thing to read.
@@ -221,7 +229,7 @@ src/
   components/   charts.tsx (Recharts wrappers), ui.tsx (tiles, fields, pills),
                 QuickLog.tsx (the phone's + button and sheet),
                 ErrorBoundary.tsx, HealthLink.tsx (export import UI)
-  lib/          calc.ts, dates.ts, units.ts, validate.ts, store.ts,
+  lib/          calc.ts, guidance.ts, dates.ts, units.ts, validate.ts, store.ts,
                 firestoreStore.ts, firebase.ts, healthImport.ts, sample.ts,
                 session.ts, programme.ts, movementKey.ts, mobility.ts,
                 rest.ts, beep.ts, wakeLock.ts
