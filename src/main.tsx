@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 import { HealthProvider } from './state/HealthProvider';
+import { registerServiceWorker } from './lib/serviceWorker';
 
 // Self-hosted so the app keeps its `font-src 'self'` CSP and makes no
 // third-party request on load — a health log should not phone a CDN.
@@ -29,3 +30,5 @@ createRoot(document.getElementById('root')!).render(
     </HealthProvider>
   </StrictMode>,
 );
+
+registerServiceWorker();
