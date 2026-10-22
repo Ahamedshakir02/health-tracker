@@ -134,7 +134,7 @@ function mealEntry(raw: unknown, index: number): MealEntry | null {
   if (!isRecord(raw)) return null;
   const date = isoDate(raw.date);
   if (!date) return null;
-  return {
+  const entry: MealEntry = {
     id: idOf(raw.id, 'm', index),
     date,
     slot: oneOf(raw.slot, SLOTS) ?? 'snack',
@@ -144,6 +144,9 @@ function mealEntry(raw: unknown, index: number): MealEntry | null {
     carbsG: num(raw.carbsG, 0, 10_000) ?? 0,
     fatG: num(raw.fatG, 0, 10_000) ?? 0,
   };
+  const fiberG = num(raw.fiberG, 0, 10_000);
+  if (fiberG !== undefined) entry.fiberG = fiberG;
+  return entry;
 }
 
 function workoutEntry(raw: unknown, index: number): WorkoutEntry | null {

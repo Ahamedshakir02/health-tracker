@@ -91,3 +91,47 @@ export function db(): Firestore {
   }
   return dbInstance;
 }
+
+let appCheckStarted = false;
+
+/**
+ * The Firebase app with App Check switched on, for Firebase AI Logic.
+ *
+ * AI Logic is called straight from the browser, so App Check is what stops
+ * anyone who copies the public config from spending this project's Gemini
+ * quota. Firebase enforces it for AI Logic from November 2026.
+ *
+ * It is started on first use rather than at boot: the reCAPTCHA script it
+ * loads is only worth downloading for someone who actually scans a photo, and
+ * Firestore and Auth do not need it.
+ *
+ * Provider: reCAPTCHA v3 by default, or Enterprise with
+ * VITE_APPCHECK_PROVIDER=enterprise.
+ *
+ * Local development: set VITE_APPCHECK_DEBUG=true and register the debug token
+ * the console prints under App Check -> Apps -> Manage debug tokens.
+ */
+export async function aiApp(): Promise<FirebaseApp> {
+  const instance = ensureApp();
+  const siteKey = read(import.meta.env.VITE_APPCHECK_SITE_KEY);
+  if (!appCheckStarted && siteKey) {
+    const { initializeAppCheck, ReCaptchaEnterpriseProvider, ReCaptchaV3Provider } = await import(
+      'firebase/app-check'
+    );
+    if (import.meta.env.DEV && read(import.meta.env.VITE_APPCHECK_DEBUG) === 'true') {
+      (self as unknown as { FIREBASE_APPCHECK_DEBUG_TOKEN?: boolean }).FIREBASE_APPCHECK_DEBUG_TOKEN =
+        true;
+    }
+    initializeAppCheck(instance, {
+      // reCAPTCHA v3 keys work on the free Spark plan with no Cloud billing;
+      // Enterprise keys need the reCAPTCHA Enterprise API on the Cloud project.
+      provider:
+        read(import.meta.env.VITE_APPCHECK_PROVIDER) === 'enterprise'
+          ? new ReCaptchaEnterpriseProvider(siteKey)
+          : new ReCaptchaV3Provider(siteKey),
+      isTokenAutoRefreshEnabled: true,
+    });
+    appCheckStarted = true;
+  }
+  return instance;
+}

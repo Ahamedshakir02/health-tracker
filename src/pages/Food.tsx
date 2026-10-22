@@ -3,6 +3,7 @@ import { useHealth } from '../state/HealthProvider';
 import { Card, Field, Segmented, meterPercent } from '../components/ui';
 import { IconPlus } from '../components/icons';
 import { MyFoods } from '../components/MyFoods';
+import { FoodScan } from '../components/FoodScan';
 import { DailyBars, MacroStack, SERIES } from '../components/charts';
 import { byDate, dailySeries, sortByDateDesc, sumMacros, uid } from '../lib/calc';
 import { addDays, relativeLabel, todayISO } from '../lib/dates';
@@ -34,10 +35,11 @@ const blankForm = (slot: MealSlot = 'breakfast') => ({
   proteinG: '',
   carbsG: '',
   fatG: '',
+  fiberG: '',
 });
 
 export default function Food() {
-  const { data, update, updateSettings } = useHealth();
+  const { data, update, updateSettings, firebaseAvailable } = useHealth();
   const goals = data.settings.goals;
   const [date, setDate] = useState(todayISO());
   const [range, setRange] = useState(14);
@@ -94,6 +96,7 @@ export default function Food() {
       proteinG: Number(form.proteinG) || 0,
       carbsG: Number(form.carbsG) || 0,
       fatG: Number(form.fatG) || 0,
+      ...(Number(form.fiberG) > 0 ? { fiberG: Number(form.fiberG) } : {}),
     });
     if (saveFood) {
       updateSettings({
@@ -235,6 +238,12 @@ export default function Food() {
                 </span>
               )}
             </div>
+            <div>
+              <dt>Fiber</dt>
+              <dd>
+                {Math.round(totals.fiberG)} <small>g</small>
+              </dd>
+            </div>
           </dl>
         </section>
 
@@ -305,6 +314,17 @@ export default function Food() {
           ))}
         </div>
 
+        <FoodScan
+          available={firebaseAvailable}
+          slot={form.slot}
+          slots={SLOTS}
+          onSlotChange={(slot) => setForm((current) => ({ ...current, slot }))}
+          onLog={(entries) => {
+            const stamped = entries.map((e) => ({ ...e, id: uid('m'), date }));
+            update('meals', (current) => [...current, ...stamped]);
+          }}
+        />
+
         <Card title="Add food" note="Macros are optional — calories alone still count.">
           <form onSubmit={submit}>
             <div className="form-grid">
@@ -374,6 +394,16 @@ export default function Food() {
                   onChange={(e) => setForm({ ...form, fatG: e.target.value })}
                 />
               </Field>
+              <Field label="Fiber (g)">
+                <input
+                  type="number"
+                  min="0"
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={form.fiberG}
+                  onChange={(e) => setForm({ ...form, fiberG: e.target.value })}
+                />
+              </Field>
               <label className="pref">
                 <input
                   type="checkbox"
@@ -419,6 +449,7 @@ export default function Food() {
                         proteinG: meal.proteinG,
                         carbsG: meal.carbsG,
                         fatG: meal.fatG,
+                        ...(meal.fiberG ? { fiberG: meal.fiberG } : {}),
                       })
                     }
                   >

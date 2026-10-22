@@ -64,6 +64,8 @@ export interface MealEntry {
   proteinG: number;
   carbsG: number;
   fatG: number;
+  /** Optional: older entries and quick calorie-only logs have none. */
+  fiberG?: number;
 }
 
 export interface WorkoutEntry {

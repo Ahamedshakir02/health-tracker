@@ -96,6 +96,17 @@ describe('healthData', () => {
     expect(out.workouts[0].intensity).toBe('moderate');
   });
 
+  it('keeps a valid fiber figure on a meal and drops a bad one', () => {
+    const out = healthData({
+      meals: [
+        { date: '2026-01-01', name: 'Dal', calories: 300, fiberG: 8 },
+        { date: '2026-01-01', name: 'Toast', calories: 200, fiberG: -3 },
+      ],
+    });
+    expect(out.meals[0].fiberG).toBe(8);
+    expect('fiberG' in out.meals[1]).toBe(false);
+  });
+
   it('keeps only boolean habit ticks', () => {
     const out = healthData({
       days: [{ date: '2026-01-01', habits: { a: true, b: 'yes', c: 1, d: false } }],
