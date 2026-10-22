@@ -18,6 +18,10 @@
       behind a real server? Also send frame-ancestors 'none' as an HTTP header —
       that directive is ignored in a meta tag.
 
+      www.google.com is reCAPTCHA, which App Check uses to prove
+      photo-scan requests come from this site. It is loaded only when someone
+      scans a food photo; Gemini itself is reached on *.googleapis.com.
+
       Note there is no analytics origin here. Analytics runs on the public
       landing page only; the signed-in app stays free of third-party requests.
     -->
@@ -31,9 +35,9 @@
         img-src 'self' data: blob: https://*.googleusercontent.com;
         style-src 'self' 'unsafe-inline';
         font-src 'self' data:;
-        script-src 'self' https://apis.google.com https://*.gstatic.com;
-        connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://*.web.app https://accounts.google.com;
-        frame-src 'self' https://*.firebaseapp.com https://*.web.app https://accounts.google.com;
+        script-src 'self' https://apis.google.com https://*.gstatic.com https://www.google.com;
+        connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://*.web.app https://accounts.google.com https://www.google.com;
+        frame-src 'self' https://*.firebaseapp.com https://*.web.app https://accounts.google.com https://www.google.com;
       "
     />
     <meta name="referrer" content="strict-origin-when-cross-origin" />

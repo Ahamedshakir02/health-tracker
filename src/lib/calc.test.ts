@@ -16,13 +16,18 @@ const meal = (date: string, over: Partial<MealEntry> = {}): MealEntry => ({
 
 describe('sumMacros', () => {
   it('sums an empty list to zero rather than NaN', () => {
-    expect(sumMacros([])).toEqual({ calories: 0, proteinG: 0, carbsG: 0, fatG: 0 });
+    expect(sumMacros([])).toEqual({ calories: 0, proteinG: 0, carbsG: 0, fatG: 0, fiberG: 0 });
   });
 
   it('adds each macro independently', () => {
     const totals = sumMacros([meal('2026-01-01'), meal('2026-01-01', { calories: 100 })]);
     expect(totals.calories).toBe(600);
     expect(totals.proteinG).toBe(60);
+  });
+
+  it('counts fiber where logged and treats a missing one as zero', () => {
+    const totals = sumMacros([meal('2026-01-01', { fiberG: 7 }), meal('2026-01-01')]);
+    expect(totals.fiberG).toBe(7);
   });
 });
 
