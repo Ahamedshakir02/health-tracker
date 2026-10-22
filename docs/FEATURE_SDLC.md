@@ -33,7 +33,7 @@ no CI.
 
 **Gaps found during this audit, not yet written down anywhere:**
 
-1. **`site.webmanifest` exists but there is no service worker.** The app is installable but
+1. ~~**`site.webmanifest` exists but there is no service worker.**~~ Fixed (row 6 below). The app is installable but
    not offline-capable — which is the one place it is used most (a gym basement).
 2. **Firestore offline persistence is not enabled.** `firebase.ts` uses the default
    memory cache, so a dropped connection loses the read cache on reload.
@@ -272,7 +272,7 @@ Value is "how much better is the app for its one user"; effort is solo-dev days.
 | 3 | GitHub Actions CI | E | High | 0.3 d | ✅ **Done** — typecheck, tests, build |
 | 4 | Workout history + "last time" + PRs | A | **Highest** | 4–6 d | ✅ **Done** — `sessions` slice, `lib/session.ts` |
 | 5 | Rest timer + wake lock | A | High | 1 d | ✅ **Done** |
-| 6 | Service worker / offline | D1 | High | 1–2 d | Sprint 2 |
+| 6 | Service worker / offline | D1 | High | 1–2 d | ✅ **Done**: hand-written `src/sw/sw.js`, file list built by `scripts/sw-plugin.ts` |
 | 7 | Saved foods + portions + copy day | B1/B2 | High | 1.5 d | Sprint 2 |
 | 8 | Adaptive TDEE + energy balance | C | High | 1.5 d | Sprint 2 |
 | 9 | Weekly review screen | C | Med | 1 d | Sprint 3 |
