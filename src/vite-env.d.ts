@@ -17,6 +17,12 @@ interface ImportMetaEnv {
   readonly VITE_FIREBASE_STORAGE_BUCKET?: string;
   readonly VITE_FIREBASE_MESSAGING_SENDER_ID?: string;
   readonly VITE_FIREBASE_APP_ID?: string;
+  /** reCAPTCHA Enterprise site key for App Check (photo scanning). Public by design. */
+  readonly VITE_APPCHECK_SITE_KEY?: string;
+  /** "true" in local dev to use an App Check debug token instead of reCAPTCHA. */
+  readonly VITE_APPCHECK_DEBUG?: string;
+  /** Gemini model used for photo scanning; defaults to the one in lib/foodScan.ts. */
+  readonly VITE_GEMINI_MODEL?: string;
 }
 
 interface ImportMeta {
