@@ -3,16 +3,18 @@
  *
  * ffmpeg has no SVG decoder and there is no image library in this project, so
  * the shapes are rasterised directly and the PNG/ICO containers are written by
- * hand. That sounds worse than it is — the mark is a rounded square and a heart
- * built from two circles and a triangle, which is exactly the geometry of the
- * path in src/components/icons.tsx — and it keeps the icon set reproducible
- * with zero dependencies.
+ * hand. That sounds worse than it is: the mark is a rounded square, a heart
+ * outline of two arcs and two curves, and a heartbeat trace of straight
+ * segments cut out of it. The heart and trace below are copied from
+ * public/favicon.svg, in its 64×64 space, so the PNGs match it exactly. The
+ * script still needs no dependencies, so the icon set is easy to rebuild.
  *
  *   node scripts/build-icons.mjs
  *
  * favicon.svg stays the source of truth for modern browsers; these are the
  * fallbacks (Safari's touch icon, the .ico for older tab strips, and the
- * manifest icons for an installed PWA).
+ * manifest icons for an installed PWA). Change the mark there first, then
+ * mirror it here.
  */
 
 import { deflateSync, crc32 as zlibCrc32 } from 'node:zlib';
@@ -28,7 +30,7 @@ const MARK = [0xf4, 0xa5, 0x2a]; // --accent, the saffron heart struck on it
 /** 4× supersampling in each axis: plenty for flat shapes, and cheap. */
 const SS = 4;
 
-/* --- geometry ------------------------------------------------------------- */
+/* --- geometry (favicon.svg's 64×64 space) --------------------------------- */
 
 /** Rounded-square tile, in 0..1 space with the given corner radius. */
 function inTile(x, y, r) {
@@ -37,28 +39,116 @@ function inTile(x, y, r) {
   return (x - cx) ** 2 + (y - cy) ** 2 <= r * r;
 }
 
-/**
- * Heart: two lobes and a point, in a -1..1 box. The same construction as the
- * icon path — two arcs meeting at the top dimple, falling to a point at the
- * bottom — rather than the (x²+y²−1)³ = x²y³ curve, which is rounder and would
- * not match the app's mark.
- */
-function inHeart(x, y) {
-  const lobeR = 0.5;
-  const lobeY = -0.35; // y grows downward
-  if ((x + 0.5) ** 2 + (y - lobeY) ** 2 <= lobeR * lobeR) return true;
-  if ((x - 0.5) ** 2 + (y - lobeY) ** 2 <= lobeR * lobeR) return true;
-  // Triangle from the lobes' widest point down to the tip. The taper has to
-  // start at the lobe edges (±1 at y = lobeY) or the shoulders stick out past
-  // the curves and it stops reading as a heart.
-  if (y < lobeY) return false;
-  const tipY = 0.98;
-  const halfWidth = (tipY - y) / (tipY - lobeY);
-  return y <= tipY && Math.abs(x) <= halfWidth;
+function cubic(p0, p1, p2, p3, steps = 48) {
+  const pts = [];
+  for (let i = 1; i <= steps; i++) {
+    const t = i / steps;
+    const m = 1 - t;
+    pts.push([
+      m ** 3 * p0[0] + 3 * m * m * t * p1[0] + 3 * m * t * t * p2[0] + t ** 3 * p3[0],
+      m ** 3 * p0[1] + 3 * m * m * t * p1[1] + 3 * m * t * t * p2[1] + t ** 3 * p3[1],
+    ]);
+  }
+  return pts;
 }
 
-/** Renders the mark at `size`, returning raw RGBA. */
-function renderIcon(size, { radius = 0.234, inset = 0.17 } = {}) {
+/** SVG arc with large-arc 0 and sweep 1 (clockwise on screen), as points. */
+function arc(p0, p1, r, steps = 48) {
+  const mx = (p0[0] + p1[0]) / 2;
+  const my = (p0[1] + p1[1]) / 2;
+  const dx = p1[0] - p0[0];
+  const dy = p1[1] - p0[1];
+  const half = Math.hypot(dx, dy) / 2;
+  const h = Math.sqrt(Math.max(0, r * r - half * half));
+  const nx = -dy / (2 * half);
+  const ny = dx / (2 * half);
+  // Of the two possible centres, sweep 1 + small arc is the one where the
+  // angle grows from p0 to p1 by less than half a turn.
+  for (const s of [1, -1]) {
+    const cx = mx + s * h * nx;
+    const cy = my + s * h * ny;
+    const a0 = Math.atan2(p0[1] - cy, p0[0] - cx);
+    let da = Math.atan2(p1[1] - cy, p1[0] - cx) - a0;
+    while (da <= 0) da += 2 * Math.PI;
+    if (da <= Math.PI) {
+      const pts = [];
+      for (let i = 1; i <= steps; i++) {
+        const a = a0 + (da * i) / steps;
+        pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]);
+      }
+      return pts;
+    }
+  }
+  throw new Error('arc has no centre');
+}
+
+/**
+ * The heart from favicon.svg:
+ *   M32 51.2 c-2.67-1.87-21.33-14.4-21.33-29.33 A12 12 0 0 1 32 14.4
+ *   a12 12 0 0 1 21.33 7.47 C53.33 36.8 34.67 49.33 32 51.2z
+ */
+const HEART = (() => {
+  const tip = [32, 51.2];
+  const left = [10.67, 21.87];
+  const top = [32, 14.4];
+  const right = [53.33, 21.87];
+  return [
+    tip,
+    ...cubic(tip, [29.33, 49.33], [10.67, 36.8], left),
+    ...arc(left, top, 12),
+    ...arc(top, right, 12),
+    ...cubic(right, [53.33, 36.8], [34.67, 49.33], tip),
+  ];
+})();
+
+/** Centre the mark is scaled about for the small .ico sizes. */
+const CENTRE = [32, 32.8];
+
+function inHeart(x, y) {
+  let inside = false;
+  for (let i = 0, j = HEART.length - 1; i < HEART.length; j = i++) {
+    const [xi, yi] = HEART[i];
+    const [xj, yj] = HEART[j];
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+/**
+ * The heartbeat trace from favicon.svg: flat, a small bump, a dip, the tall
+ * spike, back to flat. Both ends stop inside the heart so the knockout never
+ * breaks the outline.
+ */
+const PULSE = [
+  [17.6, 28.7],
+  [21.9, 28.7],
+  [25.6, 21.6],
+  [30.4, 36.7],
+  [35.7, 19.5],
+  [39.7, 28.7],
+  [46.4, 28.7],
+];
+
+function distToSegment(x, y, [ax, ay], [bx, by]) {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const t = Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy)));
+  return Math.hypot(x - (ax + t * dx), y - (ay + t * dy));
+}
+
+function inPulse(x, y, halfWidth) {
+  for (let i = 1; i < PULSE.length; i++) {
+    if (distToSegment(x, y, PULSE[i - 1], PULSE[i]) <= halfWidth) return true;
+  }
+  return false;
+}
+
+/**
+ * Renders the mark at `size`, returning raw RGBA. `scale` enlarges the heart
+ * within the tile, and `pulse` is the trace's half-width in 64-unit space
+ * (favicon.svg's stroke-width 4.2 is 2.1).
+ */
+function renderIcon(size, { radius = 15 / 64, scale = 1, pulse = 2.1 } = {}) {
   const px = Buffer.alloc(size * size * 4);
 
   for (let py = 0; py < size; py++) {
@@ -72,10 +162,10 @@ function renderIcon(size, { radius = 0.234, inset = 0.17 } = {}) {
           const v = (py + (sy + 0.5) / SS) / size;
           if (!inTile(u, v, radius)) continue;
           tileHits++;
-          // Map the tile interior onto the heart's -1..1 box.
-          const hx = (u - 0.5) / (0.5 - inset);
-          const hy = (v - 0.5) / (0.5 - inset);
-          if (inHeart(hx, hy)) heartHits++;
+          // Into the favicon's 64-unit space, undoing any scale-up.
+          const x = CENTRE[0] + (u * 64 - CENTRE[0]) / scale;
+          const y = CENTRE[1] + (v * 64 - CENTRE[1]) / scale;
+          if (inHeart(x, y) && !inPulse(x, y, pulse)) heartHits++;
         }
       }
 
@@ -86,7 +176,7 @@ function renderIcon(size, { radius = 0.234, inset = 0.17 } = {}) {
 
       if (alpha === 0) continue;
 
-      // Composite white heart over the accent tile, then apply tile coverage
+      // Composite the saffron heart over the plate, then apply tile coverage
       // as the alpha so the rounded corners stay smooth.
       const mix = heart / alpha;
       for (let c = 0; c < 3; c++) {
@@ -181,12 +271,12 @@ for (const [name, size] of [
   written.push(`${name} (${size}px, ${(buf.length / 1024).toFixed(1)} KB)`);
 }
 
-// Small sizes get a slightly tighter inset so the heart doesn't shrink to mush
-// at 16px in a tab strip.
+// Small sizes get a slightly larger heart so it doesn't shrink to mush
+// at 16px in a tab strip, and a slightly bolder trace so it stays a line.
 const ico = encodeIco([
-  { size: 16, png: png(16, { inset: 0.13 }) },
-  { size: 32, png: png(32, { inset: 0.15 }) },
-  { size: 48, png: png(48, { inset: 0.16 }) },
+  { size: 16, png: png(16, { scale: 1.12, pulse: 2.6 }) },
+  { size: 32, png: png(32, { scale: 1.06, pulse: 2.3 }) },
+  { size: 48, png: png(48, { scale: 1.03 }) },
 ]);
 await writeFile(join(OUT, 'favicon.ico'), ico);
 written.push(`favicon.ico (16/32/48px, ${(ico.length / 1024).toFixed(1)} KB)`);
