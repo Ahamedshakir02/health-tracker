@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   activityFactor,
+  adaptiveMaintenance,
   calorieFloor,
   changeVerdict,
   paceFlag,
@@ -169,5 +170,52 @@ describe('waistToHeight', () => {
     expect(waistToHeightBand(0.47)).toEqual({ label: 'Healthy range', status: 'good' });
     expect(waistToHeightBand(0.5).label).toBe('Increased');
     expect(waistToHeightBand(0.62)).toEqual({ label: 'High', status: 'serious' });
+  });
+});
+
+describe('adaptiveMaintenance', () => {
+  const today = '2026-10-29';
+  // 20 logged days in the window at 2 300 kcal.
+  const meals = Array.from({ length: 20 }, (_, i) => ({
+    date: `2026-10-${String(i + 5).padStart(2, '0')}`,
+    calories: 2300,
+  }));
+  // Losing 0.5 kg a week, weighed every 4 days.
+  const weights = [0, 4, 8, 12, 16, 20, 24].map((d) =>
+    reading(`2026-10-${String(d + 2).padStart(2, '0')}`, 80 - (0.5 / 7) * d),
+  );
+
+  it('adds the energy of the weight lost to what was eaten', () => {
+    const out = adaptiveMaintenance({ meals, weights, direction: 'lose', sex: 'male', today });
+    expect(out).not.toBeNull();
+    // 2300 + 0.5 × 7700 / 7 = 2850
+    expect(out!.maintenance).toBe(2850);
+    expect(out!.target).toBe(2350);
+    expect(out!.kgPerWeek).toBe(-0.5);
+    expect(out!.foodDays).toBe(20);
+  });
+
+  it('holds back with too few food days', () => {
+    expect(
+      adaptiveMaintenance({ meals: meals.slice(0, 10), weights, direction: null, today }),
+    ).toBeNull();
+  });
+
+  it('holds back when the weigh-ins span under two weeks', () => {
+    expect(
+      adaptiveMaintenance({ meals, weights: weights.slice(0, 3), direction: null, today }),
+    ).toBeNull();
+  });
+
+  it('refuses an implausible answer from partial logging', () => {
+    const tiny = meals.map((m) => ({ ...m, calories: 300 }));
+    expect(adaptiveMaintenance({ meals: tiny, weights, direction: null, today })).toBeNull();
+  });
+
+  it('ignores today, which is still being logged', () => {
+    const withToday = [...meals, { date: today, calories: 9000 }];
+    expect(
+      adaptiveMaintenance({ meals: withToday, weights, direction: null, today })!.avgIntake,
+    ).toBe(2300);
   });
 });

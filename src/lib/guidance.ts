@@ -105,10 +105,107 @@ export function suggestCalories(input: {
 }): CalorieSuggestion | null {
   if (!input.bmr) return null;
   const maintenance = roundTo(input.bmr * activityFactor(input.workoutsPerWeek), 50);
-  const direction = input.direction ?? 'hold';
-  const raw =
-    direction === 'lose' ? maintenance - 500 : direction === 'gain' ? maintenance + 300 : maintenance;
-  return { maintenance, target: Math.max(raw, calorieFloor(input.sex)), direction };
+  return suggestFromMaintenance(maintenance, input.direction, input.sex);
+}
+
+/** The step from a maintenance figure to a target, shared by both estimates. */
+function suggestFromMaintenance(
+  maintenance: number,
+  direction: Direction | null,
+  sex?: Sex,
+): CalorieSuggestion {
+  const dir = direction ?? 'hold';
+  const raw = dir === 'lose' ? maintenance - 500 : dir === 'gain' ? maintenance + 300 : maintenance;
+  return { maintenance, target: Math.max(raw, calorieFloor(sex)), direction: dir };
+}
+
+/** Roughly the energy in a kilo of body weight. The usual figure, and only a rule of thumb. */
+const KCAL_PER_KG = 7700;
+/** How far back the logged estimate looks. Four weeks smooths out a bad week. */
+const ADAPTIVE_WINDOW_DAYS = 28;
+/** Fewer logged food days than this and the average intake is mostly luck. */
+const ADAPTIVE_MIN_FOOD_DAYS = 14;
+/** Weigh-ins must span at least this long, or water swings swamp the trend. */
+const ADAPTIVE_MIN_SPAN_DAYS = 14;
+const ADAPTIVE_MIN_WEIGH_INS = 3;
+
+export interface AdaptiveEstimate extends CalorieSuggestion {
+  /** Mean intake on the days food was logged. */
+  avgIntake: number;
+  /** Weight trend over the window, kg per week (negative is a loss). */
+  kgPerWeek: number;
+  foodDays: number;
+  weighIns: number;
+}
+
+/**
+ * Maintenance calories worked out from what was eaten and what the scale did.
+ *
+ * If you ate 2 300 a day on average and lost 0.25 kg a week, you burned about
+ * 2 300 + 0.25 × 7 700 / 7 ≈ 2 575. After a few weeks of logging this beats any
+ * formula, because it is measured on the person rather than predicted for
+ * them. It assumes the days that were logged were logged in full; a day with
+ * one snack on it drags the average down, which is why the screen says so.
+ *
+ * The window ends yesterday — today's log is still being written. The weight
+ * trend is a least-squares line through every weigh-in in the window, not the
+ * first and last reading, so one salty dinner cannot swing it.
+ *
+ * Null until there is enough to go on, and null if the answer is implausible
+ * (under 1 000 or over 6 000), which almost always means partial logging.
+ */
+export function adaptiveMaintenance(input: {
+  meals: { date: ISODate; calories: number }[];
+  weights: WeightEntry[];
+  direction: Direction | null;
+  sex?: Sex;
+  today?: ISODate;
+}): AdaptiveEstimate | null {
+  const today = input.today ?? todayISO();
+  const from = addDays(today, -ADAPTIVE_WINDOW_DAYS);
+  const inWindow = (date: ISODate) => date >= from && date < today;
+
+  const perDay = new Map<ISODate, number>();
+  for (const meal of input.meals) {
+    if (!inWindow(meal.date)) continue;
+    perDay.set(meal.date, (perDay.get(meal.date) ?? 0) + (meal.calories || 0));
+  }
+  const foodDays = [...perDay.values()].filter((kcal) => kcal > 0);
+  if (foodDays.length < ADAPTIVE_MIN_FOOD_DAYS) return null;
+  const avgIntake = foodDays.reduce((a, b) => a + b, 0) / foodDays.length;
+
+  const points = input.weights
+    .filter((w) => inWindow(w.date))
+    .map((w) => ({ x: daysBetween(from, w.date), y: w.weightKg }));
+  if (points.length < ADAPTIVE_MIN_WEIGH_INS) return null;
+  const xs = points.map((p) => p.x);
+  if (Math.max(...xs) - Math.min(...xs) < ADAPTIVE_MIN_SPAN_DAYS) return null;
+  const kgPerDay = slope(points);
+
+  const raw = avgIntake - kgPerDay * KCAL_PER_KG;
+  if (raw < 1_000 || raw > 6_000) return null;
+  const maintenance = roundTo(raw, 50);
+  return {
+    ...suggestFromMaintenance(maintenance, input.direction, input.sex),
+    avgIntake: Math.round(avgIntake),
+    kgPerWeek: Math.round(kgPerDay * 7 * 100) / 100,
+    foodDays: foodDays.length,
+    weighIns: points.length,
+  };
+}
+
+/** Least-squares slope. Callers guarantee at least two distinct x values. */
+function slope(points: { x: number; y: number }[]): number {
+  const n = points.length;
+  const mx = points.reduce((s, p) => s + p.x, 0) / n;
+  const my = points.reduce((s, p) => s + p.y, 0) / n;
+  let num = 0;
+  let den = 0;
+  for (const p of points) {
+    num += (p.x - mx) * (p.y - my);
+    den += (p.x - mx) ** 2;
+  }
+  return den === 0 ? 0 : num / den;
 }
 
 /**

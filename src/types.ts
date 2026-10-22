@@ -188,6 +188,26 @@ export interface Goals {
   sleepHours: number;
   steps: number;
   workoutsPerWeek: number;
+  /** Optional. Only shown as a meter on Food when set; 0 or absent means no target. */
+  carbsG?: number;
+  fatG?: number;
+}
+
+/**
+ * A food you eat often, kept so logging it is a tap rather than four typed
+ * numbers. The macros are for one portion as you described it ("1 bowl",
+ * "100 g"); logging multiplies them by the portion picked at the time.
+ */
+export interface SavedFood {
+  id: string;
+  name: string;
+  /** What one portion means, in the person's own words. Optional. */
+  portion?: string;
+  calories: number;
+  proteinG: number;
+  carbsG: number;
+  fatG: number;
+  fiberG?: number;
 }
 
 /**
@@ -249,6 +269,12 @@ export interface Settings {
   habits: Habit[];
   programme?: Programme;
   trainer?: TrainerPrefs;
+  /**
+   * Saved foods. Rides the settings slice rather than a slice of its own: it is
+   * small, changes rarely, and a new slice would need the Firestore rules
+   * deployed before the bundle.
+   */
+  foods?: SavedFood[];
   /**
    * Set once the first-run questions have been answered or skipped. Absence is
    * what triggers onboarding, so it must be written even on skip — otherwise a

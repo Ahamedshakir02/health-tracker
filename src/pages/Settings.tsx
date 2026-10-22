@@ -5,7 +5,13 @@ import HealthLink from '../components/HealthLink';
 import { sampleData } from '../lib/sample';
 import { labels, round, toCanonical, toDisplay } from '../lib/units';
 import { ageFrom, bmr, latestWeight, uid } from '../lib/calc';
-import { calorieFloor, proteinRange, suggestCalories, weightDirection } from '../lib/guidance';
+import {
+  adaptiveMaintenance,
+  calorieFloor,
+  proteinRange,
+  suggestCalories,
+  weightDirection,
+} from '../lib/guidance';
 import {
   DEFAULT_TRAINER_PREFS,
   EQUIPMENT_MODES,
@@ -63,6 +69,14 @@ export default function SettingsPage() {
     sex: settings.sex,
   });
   const protein = proteinRange(currentWeight);
+  // The same target measured from the logs instead of predicted from a formula.
+  // Only appears after a few weeks of food and weigh-ins.
+  const measured = adaptiveMaintenance({
+    meals: data.meals,
+    weights: data.weights,
+    direction: weightDirection(currentWeight, goals.weightKg),
+    sex: settings.sex,
+  });
   const floor = calorieFloor(settings.sex);
 
   const [newHabit, setNewHabit] = useState({ name: '', emoji: '⭐' });
@@ -400,6 +414,33 @@ export default function SettingsPage() {
                 target worked out for you.
               </p>
             )}
+            {measured ? (
+              <div className="suggest-row">
+                <p>
+                  <strong>{measured.target.toLocaleString()} kcal</strong> a day, measured from
+                  your logs: about {measured.avgIntake.toLocaleString()} kcal eaten a day over{' '}
+                  {measured.foodDays} logged days while your weight{' '}
+                  {measured.kgPerWeek === 0
+                    ? 'held steady'
+                    : `${measured.kgPerWeek < 0 ? 'fell' : 'rose'} ${Math.abs(measured.kgPerWeek)} kg a week`}
+                  , so you burn about {measured.maintenance.toLocaleString()}. Counts only if the
+                  days you logged were logged in full.
+                </p>
+                <button
+                  type="button"
+                  className="btn btn-sm"
+                  onClick={() => setGoal({ calories: measured.target })}
+                  disabled={goals.calories === measured.target}
+                >
+                  {goals.calories === measured.target ? 'In use' : 'Use'}
+                </button>
+              </div>
+            ) : (
+              <p className="hint">
+                Log your food and weigh in for two to four weeks, and a target measured from your
+                own numbers will appear here.
+              </p>
+            )}
             {protein ? (
               <div className="suggest-row">
                 <p>
@@ -470,6 +511,30 @@ export default function SettingsPage() {
                 inputMode="numeric"
                 value={goals.proteinG}
                 onChange={(e) => setGoal({ proteinG: Number(e.target.value) || 0 })}
+              />
+            </Field>
+            <Field label="Carbs (g)">
+              <input
+                type="number"
+                min="0"
+                inputMode="numeric"
+                placeholder="Optional"
+                value={goals.carbsG ?? ''}
+                onChange={(e) =>
+                  setGoal({ carbsG: e.target.value === '' ? undefined : Number(e.target.value) || 0 })
+                }
+              />
+            </Field>
+            <Field label="Fat (g)">
+              <input
+                type="number"
+                min="0"
+                inputMode="numeric"
+                placeholder="Optional"
+                value={goals.fatG ?? ''}
+                onChange={(e) =>
+                  setGoal({ fatG: e.target.value === '' ? undefined : Number(e.target.value) || 0 })
+                }
               />
             </Field>
             <Field label={`Water (${u.volume})`}>
