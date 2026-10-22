@@ -21,6 +21,8 @@ interface ImportMetaEnv {
   readonly VITE_APPCHECK_SITE_KEY?: string;
   /** "true" in local dev to use an App Check debug token instead of reCAPTCHA. */
   readonly VITE_APPCHECK_DEBUG?: string;
+  /** "enterprise" for a reCAPTCHA Enterprise key; anything else means reCAPTCHA v3. */
+  readonly VITE_APPCHECK_PROVIDER?: string;
   /** Gemini model used for photo scanning; defaults to the one in lib/foodScan.ts. */
   readonly VITE_GEMINI_MODEL?: string;
 }
