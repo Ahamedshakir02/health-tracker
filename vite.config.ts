@@ -1,9 +1,11 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
+import serviceWorker from './scripts/sw-plugin';
 
 export default defineConfig({
-  plugins: [react()],
+  // The worker is built last, from the finished bundle's file list.
+  plugins: [react(), serviceWorker('app')],
   // Absolute, not './'. The site now serves pages from more than one path
   // (/, /app, /privacy, /terms), and relative asset URLs resolve against the
   // *current* path — so /app/ with a trailing slash would look for

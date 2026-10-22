@@ -223,6 +223,21 @@ function NotFoundPanel({ onHome }: { onHome: () => void }) {
   );
 }
 
+/** Whether the browser thinks it has a connection, kept current. */
+function useOnline(): boolean {
+  const [online, setOnline] = useState(() => navigator.onLine);
+  useEffect(() => {
+    const update = () => setOnline(navigator.onLine);
+    window.addEventListener('online', update);
+    window.addEventListener('offline', update);
+    return () => {
+      window.removeEventListener('online', update);
+      window.removeEventListener('offline', update);
+    };
+  }, []);
+  return online;
+}
+
 /** The order the rail's theme button steps through, and what to call each. */
 const THEMES = [
   { id: 'system', label: 'matching your device' },
@@ -244,6 +259,7 @@ export default function App() {
     updateSettings,
   } = useHealth();
   const [tab, setTab] = useState<TabId | null>(currentTab);
+  const online = useOnline();
 
   useEffect(() => {
     const onHash = () => setTab(currentTab());
@@ -384,6 +400,14 @@ export default function App() {
       </nav>
 
       <main className="main">
+        {/* Only worth saying when there is a server to be away from. Writes
+            queue in Firestore's local cache and go out on reconnect. */}
+        {firebaseAvailable && !online && (
+          <div className="banner" role="status" style={{ marginBottom: 16 }}>
+            <span aria-hidden="true">⦸</span>
+            <span>You're offline. Anything you log is kept on this device and syncs when you're back.</span>
+          </div>
+        )}
         {error && (
           <div className="banner error" role="alert" style={{ marginBottom: 16 }}>
             <span aria-hidden="true">⚠</span>

@@ -329,6 +329,29 @@ means a page is served at `/`, which a rule targeting `/index.html` never
 matches — without the catch-all default, a phone keeps running the previous
 deploy indefinitely.
 
+### Opening with no signal
+
+`src/sw/sw.js` is a service worker scoped to `/app`, registered from `main.tsx`
+in production builds only. The build fills in its file list
+(`scripts/sw-plugin.ts`): every chunk reachable from the app entry, lazy sections
+included, plus their CSS, the woff2 fonts and the icons. All of that is cached at
+install, so a section never opened online still opens offline.
+
+- **The shell is network first**, with a 4-second wait before the cached copy is
+  used. Cache first would undo the `no-cache` header above and leave a phone on an
+  old bundle.
+- **`/assets/**` is cache first.** The names are content hashes, so a cached file
+  is never stale. Each deploy gets a new cache, named after a hash of its file
+  list, and the previous one is deleted.
+- **`/exercise-anim/**` is cached as clips are seen**, in a cache that outlives
+  deploys. The full set is 6 MB, too much to fetch behind someone's back.
+- **Firebase is not touched.** Its requests are cross-origin. Firestore's
+  persistent cache already holds the data and queues writes (`lib/firebase.ts`).
+
+The landing page sits outside the scope and is never controlled. `sw.js` has
+to keep the default `no-cache` header, or browsers check for a new worker less
+often.
+
 ---
 
 ## Where to change things
@@ -348,3 +371,4 @@ deploy indefinitely.
 | What a training mode is called, or assumes you have | `EQUIPMENT_NOTES` in `src/types.ts` |
 | Who can sign in | `firestore.rules` — nowhere else |
 | Cache or security headers | `firebase.json` |
+| What works offline | `src/sw/sw.js` (rules), `scripts/sw-plugin.ts` (which files) |
