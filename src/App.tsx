@@ -8,7 +8,7 @@ import {
   IconBody,
   IconFood,
   IconHabits,
-  IconHeart,
+  IconVitals,
   IconMoon,
   IconToday,
   IconTrainer,
@@ -149,7 +149,7 @@ function VerifyPanel() {
       <main className="auth-card">
         <div className="auth-brand">
           <span className="brand-mark" aria-hidden="true">
-            <IconHeart />
+            <IconVitals />
           </span>
           <div className="brand-text">
             <span className="brand-name">Vitals</span>
@@ -346,7 +346,7 @@ export default function App() {
       <nav className="sidebar" aria-label="Sections">
         <div className="brand">
           <span className="brand-mark" aria-hidden="true">
-            <IconHeart />
+            <IconVitals />
           </span>
           <span className="brand-text">
             <span className="brand-name">Vitals</span>

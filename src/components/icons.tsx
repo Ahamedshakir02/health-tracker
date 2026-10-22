@@ -18,10 +18,14 @@ function Svg({ className = 'ic', children }: IconProps & { children: React.React
 
 /* --- brand ---------------------------------------------------------------- */
 
-export function IconHeart(props: IconProps) {
+/**
+ * The Vitals mark: a heartbeat trace whose dip and spike form a V. The same
+ * points as public/favicon.svg, scaled into the 24×24 icon box.
+ */
+export function IconVitals(props: IconProps) {
   return (
-    <Svg className={props.className ?? 'ic fill'}>
-      <path d="M12 21c-1-.7-8-5.4-8-11a4.5 4.5 0 0 1 8-2.9A4.5 4.5 0 0 1 20 10c0 5.6-7 10.3-8 11z" />
+    <Svg className={props.className ?? 'ic'}>
+      <path d="M2 12.9h4.4l1.7-3.1 3.5 9.2 4.3-14 1.8 7.9H22" fill="none" />
     </Svg>
   );
 }
