@@ -32,6 +32,11 @@ describe('mealFromFood', () => {
     expect(meal.carbsG).toBe(40.5);
   });
 
+  it('scales fibre when the food has it', () => {
+    expect(mealFromFood({ ...oats, fiberG: 4 }, 2, 'breakfast').fiberG).toBe(8);
+    expect(mealFromFood(oats, 2, 'breakfast')).not.toHaveProperty('fiberG');
+  });
+
   it('treats a nonsense portion as one', () => {
     expect(mealFromFood(oats, 0, 'snack').calories).toBe(155);
     expect(mealFromFood(oats, Number.NaN, 'snack').calories).toBe(155);

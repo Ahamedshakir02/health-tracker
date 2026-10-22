@@ -107,6 +107,7 @@ export default function Food() {
           proteinG: Number(form.proteinG) || 0,
           carbsG: Number(form.carbsG) || 0,
           fatG: Number(form.fatG) || 0,
+          ...(Number(form.fiberG) > 0 ? { fiberG: Number(form.fiberG) } : {}),
         }),
       });
     }

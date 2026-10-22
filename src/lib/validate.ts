@@ -366,6 +366,8 @@ function savedFood(raw: unknown, index: number): SavedFood | null {
   };
   const portion = str(raw.portion, 60);
   if (portion !== undefined) food.portion = portion;
+  const fiberG = num(raw.fiberG, 0, 10_000);
+  if (fiberG !== undefined) food.fiberG = fiberG;
   return food;
 }
 

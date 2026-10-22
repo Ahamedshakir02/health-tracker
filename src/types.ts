@@ -207,6 +207,7 @@ export interface SavedFood {
   proteinG: number;
   carbsG: number;
   fatG: number;
+  fiberG?: number;
 }
 
 /**

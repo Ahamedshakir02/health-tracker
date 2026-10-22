@@ -29,6 +29,7 @@ export function mealFromFood(
     proteinG: round1(food.proteinG * factor),
     carbsG: round1(food.carbsG * factor),
     fatG: round1(food.fatG * factor),
+    ...(food.fiberG ? { fiberG: round1(food.fiberG * factor) } : {}),
   };
 }
 
