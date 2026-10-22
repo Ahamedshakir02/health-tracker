@@ -18,10 +18,32 @@ function Svg({ className = 'ic', children }: IconProps & { children: React.React
 
 /* --- brand ---------------------------------------------------------------- */
 
+/**
+ * The brand mark: a heart with a heartbeat trace cut through it. The trace is
+ * a mask, so whatever the badge sits on shows through. Keep in step with
+ * public/favicon.svg, the marks in index.html/privacy.html, and
+ * scripts/build-icons.mjs.
+ */
 export function IconHeart(props: IconProps) {
   return (
     <Svg className={props.className ?? 'ic fill'}>
-      <path d="M12 21c-1-.7-8-5.4-8-11a4.5 4.5 0 0 1 8-2.9A4.5 4.5 0 0 1 20 10c0 5.6-7 10.3-8 11z" />
+      <defs>
+        <mask id="vitals-pulse">
+          <rect width="24" height="24" fill="#fff" />
+          <path
+            d="M6.6 12.5h1.6l1.4-2.7 1.8 5.7 2-6.5 1.5 3.5h2.5"
+            fill="none"
+            stroke="#000"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </mask>
+      </defs>
+      <path
+        d="M12 21c-1-.7-8-5.4-8-11a4.5 4.5 0 0 1 8-2.9A4.5 4.5 0 0 1 20 10c0 5.6-7 10.3-8 11z"
+        mask="url(#vitals-pulse)"
+      />
     </Svg>
   );
 }
