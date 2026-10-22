@@ -14,9 +14,10 @@ export interface Macros {
   proteinG: number;
   carbsG: number;
   fatG: number;
+  fiberG: number;
 }
 
-export const EMPTY_MACROS: Macros = { calories: 0, proteinG: 0, carbsG: 0, fatG: 0 };
+export const EMPTY_MACROS: Macros = { calories: 0, proteinG: 0, carbsG: 0, fatG: 0, fiberG: 0 };
 
 export function sumMacros(meals: MealEntry[]): Macros {
   return meals.reduce<Macros>(
@@ -25,6 +26,7 @@ export function sumMacros(meals: MealEntry[]): Macros {
       proteinG: acc.proteinG + (m.proteinG || 0),
       carbsG: acc.carbsG + (m.carbsG || 0),
       fatG: acc.fatG + (m.fatG || 0),
+      fiberG: acc.fiberG + (m.fiberG || 0),
     }),
     { ...EMPTY_MACROS },
   );
@@ -121,6 +123,7 @@ export interface DailySeriesPoint {
   proteinG: number;
   carbsG: number;
   fatG: number;
+  fiberG: number;
   activeMinutes: number;
   caloriesBurned: number;
   sleepHours: number | null;

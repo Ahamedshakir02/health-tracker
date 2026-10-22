@@ -34,6 +34,8 @@ export default defineConfig({
         // form silently became a build error.
         manualChunks(id: string) {
           if (!id.includes('node_modules')) return;
+          // Photo scanning's SDKs load on first scan, not with the app.
+          if (/[\\/]node_modules[\\/]@?firebase[\\/](ai|app-check)[\\/]/.test(id)) return 'firebase-ai';
           if (/[\\/]node_modules[\\/]@?firebase/.test(id)) return 'firebase';
           if (/[\\/]node_modules[\\/](recharts|d3-|victory-)/.test(id)) return 'charts';
         },
