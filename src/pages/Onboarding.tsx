@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useHealth } from '../state/HealthProvider';
 import { Field, Segmented } from '../components/ui';
-import { IconCheck, IconHeart } from '../components/icons';
+import { IconCheck, IconVitals } from '../components/icons';
 import { uid } from '../lib/calc';
 import { todayISO } from '../lib/dates';
 import { labels, round, toCanonical, toDisplay } from '../lib/units';
@@ -105,7 +105,7 @@ export default function Onboarding() {
       <main className="auth-card onboard-card">
         <div className="auth-brand">
           <span className="brand-mark" aria-hidden="true">
-            <IconHeart />
+            <IconVitals />
           </span>
           <div className="brand-text">
             <span className="brand-name">Vitals</span>

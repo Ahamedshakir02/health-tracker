@@ -3,10 +3,9 @@
  *
  * ffmpeg has no SVG decoder and there is no image library in this project, so
  * the shapes are rasterised directly and the PNG/ICO containers are written by
- * hand. That sounds worse than it is — the mark is a rounded square and a heart
- * built from two circles and a triangle, which is exactly the geometry of the
- * path in src/components/icons.tsx — and it keeps the icon set reproducible
- * with zero dependencies.
+ * hand. That sounds worse than it is — the mark is a rounded square and one
+ * round-capped heartbeat line, exactly the geometry of public/favicon.svg — and
+ * it keeps the icon set reproducible with zero dependencies.
  *
  *   node scripts/build-icons.mjs
  *
@@ -23,76 +22,88 @@ import { fileURLToPath } from 'node:url';
 const OUT = join(dirname(fileURLToPath(import.meta.url)), '..', 'public');
 
 const PLATE = [0x1e, 0x4d, 0x2b]; // --hero, the forest plate the mark sits on
-const MARK = [0xf4, 0xa5, 0x2a]; // --accent, the saffron heart struck on it
+const MARK = [0xf4, 0xa5, 0x2a]; // --accent, the saffron pulse struck on it
+
+/**
+ * The pulse, in favicon.svg's 64×64 space: a flat trace, a small blip, then
+ * the deep dip and tall spike that make the V of Vitals. Keep these points in
+ * step with the polyline in favicon.svg.
+ */
+const PULSE = [
+  [9, 33],
+  [19, 33],
+  [23, 26],
+  [31, 47],
+  [41, 15],
+  [45, 33],
+  [55, 33],
+];
+const PULSE_WIDTH = 5.5;
+const TILE_RADIUS = 15;
 
 /** 4× supersampling in each axis: plenty for flat shapes, and cheap. */
 const SS = 4;
 
 /* --- geometry ------------------------------------------------------------- */
 
-/** Rounded-square tile, in 0..1 space with the given corner radius. */
-function inTile(x, y, r) {
-  const cx = Math.min(Math.max(x, r), 1 - r);
-  const cy = Math.min(Math.max(y, r), 1 - r);
+/** Rounded-square tile filling the 64×64 box. */
+function inTile(x, y) {
+  const r = TILE_RADIUS;
+  const cx = Math.min(Math.max(x, r), 64 - r);
+  const cy = Math.min(Math.max(y, r), 64 - r);
   return (x - cx) ** 2 + (y - cy) ** 2 <= r * r;
 }
 
+/** Squared distance from (x, y) to the segment a–b. */
+function segDist2(x, y, [ax, ay], [bx, by]) {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const t = Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy)));
+  return (x - ax - t * dx) ** 2 + (y - ay - t * dy) ** 2;
+}
+
 /**
- * Heart: two lobes and a point, in a -1..1 box. The same construction as the
- * icon path — two arcs meeting at the top dimple, falling to a point at the
- * bottom — rather than the (x²+y²−1)³ = x²y³ curve, which is rounder and would
- * not match the app's mark.
+ * A stroke with round caps and joins is every point within half the width of
+ * any segment, which is exactly what stroke-linecap/linejoin="round" draw.
  */
-function inHeart(x, y) {
-  const lobeR = 0.5;
-  const lobeY = -0.35; // y grows downward
-  if ((x + 0.5) ** 2 + (y - lobeY) ** 2 <= lobeR * lobeR) return true;
-  if ((x - 0.5) ** 2 + (y - lobeY) ** 2 <= lobeR * lobeR) return true;
-  // Triangle from the lobes' widest point down to the tip. The taper has to
-  // start at the lobe edges (±1 at y = lobeY) or the shoulders stick out past
-  // the curves and it stops reading as a heart.
-  if (y < lobeY) return false;
-  const tipY = 0.98;
-  const halfWidth = (tipY - y) / (tipY - lobeY);
-  return y <= tipY && Math.abs(x) <= halfWidth;
+function inPulse(x, y, width) {
+  const r2 = (width / 2) ** 2;
+  for (let i = 1; i < PULSE.length; i++) {
+    if (segDist2(x, y, PULSE[i - 1], PULSE[i]) <= r2) return true;
+  }
+  return false;
 }
 
 /** Renders the mark at `size`, returning raw RGBA. */
-function renderIcon(size, { radius = 0.234, inset = 0.17 } = {}) {
+function renderIcon(size, { width = PULSE_WIDTH } = {}) {
   const px = Buffer.alloc(size * size * 4);
+  const scale = 64 / size;
 
   for (let py = 0; py < size; py++) {
     for (let pxi = 0; pxi < size; pxi++) {
       let tileHits = 0;
-      let heartHits = 0;
+      let markHits = 0;
 
       for (let sy = 0; sy < SS; sy++) {
         for (let sx = 0; sx < SS; sx++) {
-          const u = (pxi + (sx + 0.5) / SS) / size;
-          const v = (py + (sy + 0.5) / SS) / size;
-          if (!inTile(u, v, radius)) continue;
+          const x = (pxi + (sx + 0.5) / SS) * scale;
+          const y = (py + (sy + 0.5) / SS) * scale;
+          if (!inTile(x, y)) continue;
           tileHits++;
-          // Map the tile interior onto the heart's -1..1 box.
-          const hx = (u - 0.5) / (0.5 - inset);
-          const hy = (v - 0.5) / (0.5 - inset);
-          if (inHeart(hx, hy)) heartHits++;
+          if (inPulse(x, y, width)) markHits++;
         }
       }
 
-      const total = SS * SS;
-      const alpha = tileHits / total;
-      const heart = heartHits / total;
+      if (tileHits === 0) continue;
       const i = (py * size + pxi) * 4;
 
-      if (alpha === 0) continue;
-
-      // Composite white heart over the accent tile, then apply tile coverage
-      // as the alpha so the rounded corners stay smooth.
-      const mix = heart / alpha;
+      // Composite the pulse over the plate, then apply tile coverage as the
+      // alpha so the rounded corners stay smooth.
+      const mix = markHits / tileHits;
       for (let c = 0; c < 3; c++) {
         px[i + c] = Math.round(PLATE[c] * (1 - mix) + MARK[c] * mix);
       }
-      px[i + 3] = Math.round(alpha * 255);
+      px[i + 3] = Math.round((tileHits / (SS * SS)) * 255);
     }
   }
   return px;
@@ -181,12 +192,12 @@ for (const [name, size] of [
   written.push(`${name} (${size}px, ${(buf.length / 1024).toFixed(1)} KB)`);
 }
 
-// Small sizes get a slightly tighter inset so the heart doesn't shrink to mush
-// at 16px in a tab strip.
+// Small sizes get a heavier line so the pulse doesn't thin to a hairline at
+// 16px in a tab strip.
 const ico = encodeIco([
-  { size: 16, png: png(16, { inset: 0.13 }) },
-  { size: 32, png: png(32, { inset: 0.15 }) },
-  { size: 48, png: png(48, { inset: 0.16 }) },
+  { size: 16, png: png(16, { width: 7.5 }) },
+  { size: 32, png: png(32, { width: 6.5 }) },
+  { size: 48, png: png(48, { width: 6 }) },
 ]);
 await writeFile(join(OUT, 'favicon.ico'), ico);
 written.push(`favicon.ico (16/32/48px, ${(ico.length / 1024).toFixed(1)} KB)`);
