@@ -273,8 +273,8 @@ Value is "how much better is the app for its one user"; effort is solo-dev days.
 | 4 | Workout history + "last time" + PRs | A | **Highest** | 4–6 d | ✅ **Done** — `sessions` slice, `lib/session.ts` |
 | 5 | Rest timer + wake lock | A | High | 1 d | ✅ **Done** |
 | 6 | Service worker / offline | D1 | High | 1–2 d | Sprint 2 |
-| 7 | Saved foods + portions + copy day | B1/B2 | High | 1.5 d | Sprint 2 |
-| 8 | Adaptive TDEE + energy balance | C | High | 1.5 d | Sprint 2 |
+| 7 | Saved foods + portions + copy day | B1/B2 | High | 1.5 d | ✅ **Done** — `settings.foods`, `lib/foods.ts` |
+| 8 | Adaptive TDEE + energy balance | C | High | 1.5 d | ◐ Adaptive maintenance done (`adaptiveMaintenance` in `lib/guidance.ts`, offered in Settings → Daily targets); energy-balance tile still to do |
 | 9 | Weekly review screen | C | Med | 1 d | Sprint 3 |
 | 10 | CSV export + printable report | C | Med | 1 d | Sprint 3 |
 | 11 | Barcode → Open Food Facts | B3 | Med-High | 2–3 d | Sprint 3 (after the privacy call) |
