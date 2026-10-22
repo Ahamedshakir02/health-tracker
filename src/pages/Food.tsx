@@ -2,10 +2,12 @@ import { useMemo, useRef, useState, type FormEvent } from 'react';
 import { useHealth } from '../state/HealthProvider';
 import { Card, Field, Segmented, meterPercent } from '../components/ui';
 import { IconPlus } from '../components/icons';
+import { MyFoods } from '../components/MyFoods';
 import { DailyBars, MacroStack, SERIES } from '../components/charts';
 import { byDate, dailySeries, sortByDateDesc, sumMacros, uid } from '../lib/calc';
-import { relativeLabel, todayISO } from '../lib/dates';
-import type { MealEntry, MealSlot } from '../types';
+import { addDays, relativeLabel, todayISO } from '../lib/dates';
+import { copyMeals, mealFromFood, upsertFood } from '../lib/foods';
+import type { MealEntry, MealSlot, SavedFood } from '../types';
 
 /**
  * The four slots, in the order a day runs. The colours are the four series
@@ -35,12 +37,15 @@ const blankForm = (slot: MealSlot = 'breakfast') => ({
 });
 
 export default function Food() {
-  const { data, update } = useHealth();
+  const { data, update, updateSettings } = useHealth();
   const goals = data.settings.goals;
   const [date, setDate] = useState(todayISO());
   const [range, setRange] = useState(14);
   const [form, setForm] = useState(() => blankForm());
   const [error, setError] = useState<string | null>(null);
+  const [saveFood, setSaveFood] = useState(false);
+  const foods = data.settings.foods ?? [];
+  const yesterday = addDays(date, -1);
   const nameInput = useRef<HTMLInputElement>(null);
 
   const dayMeals = data.meals.filter(byDate(date));
@@ -63,6 +68,18 @@ export default function Food() {
     update('meals', (current) => [...current, meal]);
   }
 
+  function logFood(food: SavedFood, portion: number) {
+    addMeal(mealFromFood(food, portion, form.slot));
+  }
+
+  /** Yesterday's meals onto the day on screen: one slot, or the whole day. */
+  function copyYesterday(slot?: MealSlot) {
+    const copies = copyMeals(data.meals, yesterday, date, () => uid('m'), slot);
+    if (copies.length) update('meals', (current) => [...current, ...copies]);
+  }
+  const hasYesterday = (slot?: MealSlot) =>
+    data.meals.some((m) => m.date === yesterday && (slot === undefined || m.slot === slot));
+
   function submit(event: FormEvent) {
     event.preventDefault();
     if (!form.name.trim()) {
@@ -78,6 +95,18 @@ export default function Food() {
       carbsG: Number(form.carbsG) || 0,
       fatG: Number(form.fatG) || 0,
     });
+    if (saveFood) {
+      updateSettings({
+        foods: upsertFood(foods, {
+          id: uid('f'),
+          name: form.name.trim(),
+          calories: Number(form.calories) || 0,
+          proteinG: Number(form.proteinG) || 0,
+          carbsG: Number(form.carbsG) || 0,
+          fatG: Number(form.fatG) || 0,
+        }),
+      });
+    }
     setForm(blankForm(form.slot));
   }
 
@@ -92,6 +121,8 @@ export default function Food() {
   const share = (grams: number, kcalPerGram: number) =>
     Math.round((grams * kcalPerGram * 100) / Math.max(totals.calories, 1));
   const proteinPct = meterPercent(goals.proteinG ? totals.proteinG / goals.proteinG : null);
+  const carbsPct = meterPercent(goals.carbsG ? totals.carbsG / goals.carbsG : null);
+  const fatPct = meterPercent(goals.fatG ? totals.fatG / goals.fatG : null);
 
   /** The "+" on a meal: aim the form at that slot and put the cursor in it. */
   function startAdd(slot: MealSlot) {
@@ -173,14 +204,36 @@ export default function Food() {
             <div>
               <dt>Carbs</dt>
               <dd>
-                {Math.round(totals.carbsG)} <small>g · {share(totals.carbsG, 4)}%</small>
+                {Math.round(totals.carbsG)}{' '}
+                <small>
+                  {goals.carbsG ? `/ ${goals.carbsG} g` : 'g'} · {share(totals.carbsG, 4)}%
+                </small>
               </dd>
+              {carbsPct != null && (
+                <span className="meter-track" aria-hidden="true">
+                  <span
+                    className="meter-fill"
+                    style={{ width: `${carbsPct}%`, background: 'var(--s-activity)' }}
+                  />
+                </span>
+              )}
             </div>
             <div>
               <dt>Fat</dt>
               <dd>
-                {Math.round(totals.fatG)} <small>g · {share(totals.fatG, 9)}%</small>
+                {Math.round(totals.fatG)}{' '}
+                <small>
+                  {goals.fatG ? `/ ${goals.fatG} g` : 'g'} · {share(totals.fatG, 9)}%
+                </small>
               </dd>
+              {fatPct != null && (
+                <span className="meter-track" aria-hidden="true">
+                  <span
+                    className="meter-fill"
+                    style={{ width: `${fatPct}%`, background: 'var(--s-energy)' }}
+                  />
+                </span>
+              )}
             </div>
           </dl>
         </section>
@@ -188,14 +241,33 @@ export default function Food() {
         {/* The day as it was eaten: four meals, each with its own total and its
             own way in. An empty slot stays on the page — "not logged" is
             information, and it is where the next "+" is. */}
+        {dayMeals.length === 0 && hasYesterday() && (
+          <div className="row">
+            <button type="button" className="btn btn-sm" onClick={() => copyYesterday()}>
+              Copy everything from the day before
+            </button>
+          </div>
+        )}
+
         <div className="meals">
           {bySlot.map((s) => (
             <section className="card meal" key={s.value} aria-label={s.label}>
               <header className="meal-hd">
                 <h2 className="meal-name">{s.label}</h2>
-                <span className="meal-total">
-                  {s.meals.length ? `${Math.round(s.calories)} kcal` : 'Not logged'}
-                </span>
+                {s.meals.length > 0 || !hasYesterday(s.value) ? (
+                  <span className="meal-total">
+                    {s.meals.length ? `${Math.round(s.calories)} kcal` : 'Not logged'}
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn btn-sm"
+                    onClick={() => copyYesterday(s.value)}
+                    aria-label={`Same ${s.label.toLowerCase()} as the day before`}
+                  >
+                    Same as day before
+                  </button>
+                )}
                 <button
                   type="button"
                   className="ledger-add"
@@ -302,11 +374,30 @@ export default function Food() {
                   onChange={(e) => setForm({ ...form, fatG: e.target.value })}
                 />
               </Field>
+              <label className="pref">
+                <input
+                  type="checkbox"
+                  checked={saveFood}
+                  onChange={(e) => setSaveFood(e.target.checked)}
+                />
+                <span>Save to my foods</span>
+              </label>
               <button className="btn btn-primary" type="submit">
                 Add to {SLOTS.find((x) => x.value === form.slot)?.label.toLowerCase()}
               </button>
             </div>
           </form>
+
+          <hr className="divider" style={{ margin: '16px 0 12px' }} />
+          <p className="label" style={{ marginBottom: 8 }}>
+            My foods
+          </p>
+          <MyFoods
+            foods={foods}
+            slotLabel={SLOTS.find((x) => x.value === form.slot)?.label ?? ''}
+            onLog={logFood}
+            onRemove={(id) => updateSettings({ foods: foods.filter((f) => f.id !== id) })}
+          />
 
           {recent.length > 0 && (
             <>
