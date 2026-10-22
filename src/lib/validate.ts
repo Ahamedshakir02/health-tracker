@@ -9,6 +9,7 @@ import type {
   MealSlot,
   MobilitySession,
   Programme,
+  SavedFood,
   SessionExercise,
   SetLog,
   Settings,
@@ -339,7 +340,30 @@ function goals(raw: unknown): Goals {
   };
   const weightKg = num(raw.weightKg, 0, 1_000);
   if (weightKg !== undefined) out.weightKg = weightKg;
+  const carbsG = num(raw.carbsG, 0, 10_000);
+  const fatG = num(raw.fatG, 0, 10_000);
+  if (carbsG !== undefined) out.carbsG = carbsG;
+  if (fatG !== undefined) out.fatG = fatG;
   return out;
+}
+
+const MAX_FOODS = 500;
+
+function savedFood(raw: unknown, index: number): SavedFood | null {
+  if (!isRecord(raw)) return null;
+  const name = str(raw.name, MAX_NAME);
+  if (!name) return null;
+  const food: SavedFood = {
+    id: idOf(raw.id, 'f', index),
+    name,
+    calories: num(raw.calories, 0, 100_000) ?? 0,
+    proteinG: num(raw.proteinG, 0, 10_000) ?? 0,
+    carbsG: num(raw.carbsG, 0, 10_000) ?? 0,
+    fatG: num(raw.fatG, 0, 10_000) ?? 0,
+  };
+  const portion = str(raw.portion, 60);
+  if (portion !== undefined) food.portion = portion;
+  return food;
 }
 
 function programme(raw: unknown): Programme | undefined {
@@ -411,6 +435,12 @@ export function settings(raw: unknown): Settings {
   const prefs = trainerPrefs(raw.trainer);
   if (activeProgramme !== undefined) out.programme = activeProgramme;
   if (prefs !== undefined) out.trainer = prefs;
+  if (Array.isArray(raw.foods)) {
+    out.foods = raw.foods
+      .slice(0, MAX_FOODS)
+      .map(savedFood)
+      .filter((f): f is SavedFood => f !== null);
+  }
   return out;
 }
 

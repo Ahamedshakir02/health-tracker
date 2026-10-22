@@ -208,4 +208,25 @@ describe('trainer preferences', () => {
     // `equipment` key at all; they must land in the gym, not in a blank mode.
     expect(settings({ trainer: { restSeconds: 60 } }).trainer?.equipment).toBe('gym');
   });
+
+  it('keeps saved foods and drops nameless ones', () => {
+    const out = settings({
+      foods: [
+        { id: 'f1', name: 'Oats', portion: '1 bowl', calories: 155, proteinG: 5, carbsG: 27, fatG: 3 },
+        { calories: 100 },
+        null,
+        { name: 'Egg', calories: 'lots' },
+      ],
+    });
+    expect(out.foods).toHaveLength(2);
+    expect(out.foods![0]).toMatchObject({ name: 'Oats', portion: '1 bowl', calories: 155 });
+    expect(out.foods![1]).toMatchObject({ name: 'Egg', calories: 0 });
+  });
+
+  it('keeps optional carb and fat targets when they are numbers', () => {
+    const out = settings({ goals: { carbsG: 250, fatG: 'x' } });
+    expect(out.goals.carbsG).toBe(250);
+    expect(out.goals.fatG).toBeUndefined();
+  });
 });
+
